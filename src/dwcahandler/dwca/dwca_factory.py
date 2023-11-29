@@ -1,5 +1,7 @@
+
 from abc import ABCMeta, abstractmethod
-from dwcahandler.dwca import CsvFileType, BaseDwca, Dwca, LargeDwca
+import pandas as pd
+from dwcahandler.dwca import CsvFileType, BaseDwca, Dwca, LargeDwca, Terms
 import logging
 from pathlib import Path
 
@@ -141,6 +143,12 @@ class DwcaFactoryManager:
 
 
 class DwcaHandler:
+
+    @staticmethod
+    def list_dwc_terms() -> pd.DataFrame:
+        return Terms().dwc_terms_df
+
+
     """Perform various DwCA operations"""
 
     @staticmethod

@@ -30,6 +30,11 @@ poetry shell
 poetry install
 ```
 
+* To update the darwin core terms supported in dwcahandler package
+```
+poetry run update-dwc-terms
+```
+
 ### Build
 To build dwcahandler package
 ```
@@ -62,4 +67,48 @@ ext_csvs = [CsvFileType(files=['/tmp/multimedia.csv'], type='multimedia')]
 DwcaHandler.create_dwca(core_csv=core_csv, ext_csv_list=ext_csvs, output_dwca_path='/tmp/dwca.zip')
 ```
 
+* Merge Darwin Core Archive
+```
+from dwcahandler import DwcaHandler
 
+DwcaHandler.merge_dwca(dwca_file='/tmp/dwca.zip', delta_dwca_file=/tmp/delta-dwca.zip,
+                       output_dwca_path='/tmp/new-dwca.zip', 
+                       keys_lookup={'occurrence':'occurrenceID'})
+```
+
+* Delete Rows from core file in Darwin Core Archive
+```
+from dwcahandler import CsvFileType
+from dwcahandler import DwcaHandler
+
+delete_csv = CsvFileType(files=['/tmp/old-records.csv'], type='occurrence', keys='occurrenceID')
+
+DwcaHandler.delete_records(dwca_file='/tmp/dwca.zip',
+                           records_to_delete=delete_csv, 
+                           output_dwca_path='/tmp/new-dwca.zip')
+```
+
+* Other usages may include subclassing the dwca class, modifying the core dataframe content and rebuilding the dwca.
+```
+from dwcahandler import Dwca
+
+class DerivedDwca(Dwca):
+    """
+    Derived class to perform other custom operations that is not included as part of the core operations
+    """
+    def _drop_columns(self):
+        """
+        Drop existing column in the core content
+        """
+        self.core_content.df_content.drop(columns=['column1', 'column2'], inplace=True)
+        self._update_meta_fields(self.core_content)
+
+
+dwca = DerivedDwca(dwca_file_loc='/tmp/dwca.zip')
+dwca._extract_dwca()
+dwca._drop_columns()
+dwca._generate_eml()
+dwca._generate_meta()
+dwca._write_dwca('/tmp/newdwca.zip')
+
+```

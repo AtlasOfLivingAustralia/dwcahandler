@@ -137,6 +137,7 @@ class Stat:
 
 
 # Imports at end of file to allow classes to be used
+from .terms import Terms
 from .dwca_meta import Element, MetaElementTypes, MetaElementInfo, MetaDwCA
 from .base_dwca import BaseDwca
 from .core_dwca import Dwca, DfContent

@@ -8,21 +8,16 @@ These classes model the schema information required by a DwCA.
 """
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
-import pandas as pd
-from dwcahandler.dwca import CSVEncoding, CoreOrExtType
+from dwcahandler.dwca import CSVEncoding, CoreOrExtType, Terms
 import urllib
-from pathlib import Path
 from dataclasses import dataclass, field, asdict
 from typing import ClassVar
 from typing import Optional
-import os
 import re
 
-this_dir, this_filename = os.path.split(__file__)
 
-
-@dataclass()
-class Element():
+@dataclass
+class Element:
     """A mapping of a name to a URI, giving the class of a row type"""
     name: str
     row_type_ns: str
@@ -113,41 +108,30 @@ class Field:
 
 
 @dataclass
-class MetaElementAttributes():
+class MetaElementAttributes:
     """A meta-description of a DwCA file"""
     meta_element_type: MetaElementInfo
     fields: list[Field] = field(default_factory=list)
 
 
-def absolute_file_paths(directory):
-    """Convert files in a directory into absolute paths and return
-    as a a generator
-
-    :param directory: The directory to scan.
-    :return: An absolute file path.
-    """
-    for dirpath, _, filenames in os.walk(directory):
-        for f in filenames:
-            if re.fullmatch(r'.+\..*', f):
-                yield os.path.abspath(os.path.join(dirpath, f))
-
-
-@dataclass()
+@dataclass
 class MetaDwCA:
     """Complete Metadata for a DwCA including dataset metadata and schema information"""
     EML_XML_FILENAME: str = field(default='eml.xml')
     dwca_meta: ET.Element = field(init=False)
     meta_elements: list[MetaElementAttributes] = field(default_factory=list, init=False)
-    TERMS: list[Path] = field(default_factory=lambda: [c for c in absolute_file_paths(f"{this_dir}/terms")], init=False)
 
     def __post_init__(self):
-        self.terms_df = pd.DataFrame()
-        for term in self.TERMS:
+        self.terms_df = Terms().terms_df
+
+        """
+        for term in self.TERMS_PATH:
             df = pd.read_csv(term, dtype='str')
             if not self.terms_df.empty:
                 self.terms_df = self.terms_df.merge(df, how='outer', left_on=['term', 'uri'], right_on=['term', 'uri'])
             else:
                 self.terms_df = df
+        """
         # initialise own instance of meta content
         self.dwca_meta = ET.Element('archive')
 
@@ -161,10 +145,10 @@ class MetaDwCA:
         meta_element_info = MetaElementInfo(core_or_ext_type=core_or_ext_type,
                                             type=MetaElementTypes.get_element_by_row_type(node_elm.attrib['rowType']),
                                             csv_encoding=CSVEncoding(
-                                                csv_delimiter=node_elm.attrib['fieldsTerminatedBy'],
-                                                csv_eol=node_elm.attrib['linesTerminatedBy'],
-                                                csv_text_enclosure=node_elm.attrib['fieldsEnclosedBy'] if
-                                                node_elm.attrib['fieldsEnclosedBy'] != '' else '"'),
+                                            csv_delimiter=node_elm.attrib['fieldsTerminatedBy'],
+                                            csv_eol=node_elm.attrib['linesTerminatedBy'],
+                                            csv_text_enclosure=node_elm.attrib['fieldsEnclosedBy'] if
+                                            node_elm.attrib['fieldsEnclosedBy'] != '' else '"'),
                                             ignore_header_lines=node_elm.attrib['ignoreHeaderLines'],
                                             charset_encoding=node_elm.attrib['encoding'],
                                             file_name=file_name)
