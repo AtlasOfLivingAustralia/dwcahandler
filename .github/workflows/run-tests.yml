@@ -2,9 +2,9 @@ name: Run pytests
 
 on:
   push:
-    branches: [ "develop" ]
+    branches: [ "develop", "feature/gh-action-test" ]
   pull_request:
-    branches: [ "develop" ]
+    branches: [ "develop", "feature/gh-action-test" ]
 
 permissions:
   contents: read
