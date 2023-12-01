@@ -21,42 +21,42 @@ This package is developed in Python. Tested with Python 3.12, 3.11, 3.10 and 3.9
 
 * Clone the repository. 
 * If using pyenv, install the required python version and activate it locally
-```
+```bash
 pyenv local <python version>
 ```
 * Install the dependency in local virtual environment
-```
+```bash
 poetry shell
 poetry install
 ```
 
 * To update the darwin core terms supported in dwcahandler package
-```
+```bash
 poetry run update-dwc-terms
 ```
 &nbsp;
 ### Build
 To build dwcahandler package
-```
+```bash
 poetry build
 ```
 &nbsp;
 ### Installation
 
 To use locally built package in a virtual environment for eg in preingestion or galaxias:
-```
+```bash
 pip install <folder>/dwcahandler/dist/dwcahandler-<version>.tar.gz
 ```
 
 However, to install published package from testpypi
-```
+```bash
 pip install -i https://test.pypi.org/simple/ dwcahandler
 ```
 &nbsp;
 ### Examples of dwcahandler usages:
 
 * Create Darwin Core Archive from csv file
-```
+```python
 from dwcahandler import CsvFileType
 from dwcahandler import DwcaHandler
 from dwcahandler import Eml
@@ -74,7 +74,7 @@ DwcaHandler.create_dwca(core_csv=core_csv, ext_csv_list=ext_csvs, eml_content=em
 ```
 &nbsp;
 * Create Darwin Core Archive from pandas dataframe
-```
+```python
 from dwcahandler import DwcaHandler
 from dwcahandler.dwca import DataFrameType
 from dwcahandler import Eml
@@ -96,7 +96,7 @@ DwcaHandler.create_dwca(core_csv=core_frame, ext_csv_list=ext_frame, eml_content
 ```
 &nbsp;
 * Merge Darwin Core Archive
-```
+```python
 from dwcahandler import DwcaHandler
 
 DwcaHandler.merge_dwca(dwca_file='/tmp/dwca.zip', delta_dwca_file=/tmp/delta-dwca.zip,
@@ -105,7 +105,7 @@ DwcaHandler.merge_dwca(dwca_file='/tmp/dwca.zip', delta_dwca_file=/tmp/delta-dwc
 ```
 &nbsp;
 * Delete Rows from core file in Darwin Core Archive
-```
+```python
 from dwcahandler import CsvFileType
 from dwcahandler import DwcaHandler
 
@@ -117,7 +117,7 @@ DwcaHandler.delete_records(dwca_file='/tmp/dwca.zip',
 ```
 &nbsp;
 * List darwin core terms that is supported in dwcahandler package
-```
+```python
 from dwca import DwcaHandler
 
 df = DwcaHandler.list_dwc_terms()
@@ -125,7 +125,7 @@ print(df)
 ```
 &nbsp;
 * Other usages may include subclassing the dwca class, modifying the core dataframe content and rebuilding the dwca.
-```
+```python
 from dwcahandler import Dwca
 
 class DerivedDwca(Dwca):
