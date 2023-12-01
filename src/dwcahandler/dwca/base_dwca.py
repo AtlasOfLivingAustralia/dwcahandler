@@ -1,6 +1,7 @@
 from __future__ import annotations
 from abc import ABCMeta, abstractmethod
-from . import CoreOrExtType, CsvFileType, DataFrameType
+from dwcahandler.dwca import CoreOrExtType, CsvFileType, DataFrameType
+from dwcahandler.dwca.eml import Eml
 from typing import Union
 
 class BaseDwca(metaclass=ABCMeta):
@@ -95,7 +96,7 @@ class BaseDwca(metaclass=ABCMeta):
 
     def create_dwca(self, core_csv: Union [CsvFileType, DataFrameType], ext_csv_list: list[CsvFileType],
                     output_dwca_path: str = './dwca/output/', validate_content: bool = True,
-                    eml_content: str = ''):
+                    eml_content: Union[str, Eml] = '' ):
         self._extract_csv_content(core_csv, CoreOrExtType.CORE)
 
         # Only validate core content

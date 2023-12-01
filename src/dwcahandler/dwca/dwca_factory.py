@@ -1,7 +1,6 @@
-
 from abc import ABCMeta, abstractmethod
 import pandas as pd
-from dwcahandler.dwca import CsvFileType, DataFrameType, BaseDwca, Dwca, LargeDwca, Terms
+from dwcahandler.dwca import CsvFileType, DataFrameType, BaseDwca, Dwca, LargeDwca, Terms, Eml
 import logging
 from pathlib import Path
 from typing import Union
@@ -153,10 +152,10 @@ class DwcaHandler:
     """Perform various DwCA operations"""
 
     @staticmethod
-    def create_dwca(core_csv: Union [CsvFileType, DataFrameType], ext_csv_list: list[Union [CsvFileType, DataFrameType]] = [],
+    def create_dwca(core_csv: Union[CsvFileType, DataFrameType], ext_csv_list: list[Union [CsvFileType, DataFrameType]] = [],
                     output_dwca_path: str = './dwca/output/', work_dir: str = './dwca/output/pickle',
                     use_chunking: bool = False, chunk_size=1000, calculate_size=True, validate_content: bool = True,
-                    eml_content: str = ''):
+                    eml_content: Union [str, Eml] = ''):
         """Create a suitable DwCA from a list of CSV files
 
         :param core_csv: The core source
@@ -167,6 +166,7 @@ class DwcaHandler:
         :param chunk_size: The
         :param calculate_size: Check the file size and use it to decide whether to chunk or not
         :param validate_content: Valudate the DwCA before processing
+        :param eml_content: eml content in string or Eml class
         """
         core_csv_source = core_csv.files if isinstance(core_csv, CsvFileType) else core_csv.df
         dwca = DwcaFactoryManager.get_dwca_from_csv(csv_file=core_csv_source, use_chunking=use_chunking,

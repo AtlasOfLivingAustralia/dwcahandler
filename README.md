@@ -60,17 +60,25 @@ pip install -i https://test.pypi.org/simple/ dwcahandler
 ```
 from dwcahandler import CsvFileType
 from dwcahandler import DwcaHandler
+from dwcahandler import Eml
 
 core_csv = CsvFileType(files=['/tmp/occurrence.csv'], type='occurrence', keys='occurrenceID')
 ext_csvs = [CsvFileType(files=['/tmp/multimedia.csv'], type='multimedia')]
 
-DwcaHandler.create_dwca(core_csv=core_csv, ext_csv_list=ext_csvs, output_dwca_path='/tmp/dwca.zip')
+eml = Eml(dataset_name='Test Dataset',
+          description='Dataset description',
+          license='Creative Commons Attribution (International) (CC-BY 4.0 (Int) 4.0)',
+          citation="test citation",
+          rights="test rights")
+
+DwcaHandler.create_dwca(core_csv=core_csv, ext_csv_list=ext_csvs, eml_content=eml, output_dwca_path='/tmp/dwca.zip')
 ```
 
 * Create Darwin Core Archive from pandas dataframe
 ```
 from dwcahandler import DwcaHandler
 from dwcahandler.dwca import DataFrameType
+from dwcahandler import Eml
 import pandas as pd
 
 core_df = pd.read_csv("/tmp/occurrence.csv")
@@ -79,8 +87,13 @@ core_frame = DataFrameType(df=core_df, type='occurrence', keys=['occurrenceID'])
 ext_df = pd.read_csv("/tmp/multimedia.csv")
 ext_frame = [DataFrameType(df=ext_df, type='multimedia')]
 
-DwcaHandler.create_dwca(core_csv=core_frame, ext_csv_list=ext_frame,
-output_dwca_path='/tmp/dwca.zip')
+eml = Eml(dataset_name='Test Dataset',
+          description='Dataset description',
+          license='Creative Commons Attribution (International) (CC-BY 4.0 (Int) 4.0)',
+          citation="test citation",
+          rights="test rights")
+
+DwcaHandler.create_dwca(core_csv=core_frame, ext_csv_list=ext_frame, eml_content=eml, output_dwca_path='/tmp/dwca.zip')
 ```
 
 * Merge Darwin Core Archive

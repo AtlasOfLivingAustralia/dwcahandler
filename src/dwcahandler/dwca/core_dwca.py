@@ -13,7 +13,8 @@ import pandas as pd
 from pandas.errors import EmptyDataError
 from numpy import nan
 
-from . import BaseDwca, CsvFileType, DataFrameType, CSVEncoding, CoreOrExtType, MetaElementTypes, MetaElementInfo, MetaDwCA, Stat
+from dwcahandler.dwca import (BaseDwca, CsvFileType, DataFrameType, CSVEncoding, CoreOrExtType,
+                              MetaElementTypes, MetaElementInfo, MetaDwCA, Eml, Stat)
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.DEBUG)
 log = logging.getLogger("Dwca")
@@ -65,15 +66,17 @@ class Dwca(BaseDwca):
     def __post_init__(self):
         self.meta_content = MetaDwCA(eml_xml_filename=self.EML_XML_FILENAME)
 
-    def _generate_eml(self, eml_content: str = ""):
+    def _generate_eml(self, eml_content: Union[str, Eml] = ""):
         """
         Create the EML for the data source.
 
         The EML file is retrieved from the collectory and placed in the
         eml_content attribute.
         """
-        if eml_content:
-            self.eml_content = eml_content
+        eml_content_str = eml_content.build_eml_xml() if isinstance(eml_content, Eml) else eml_content
+
+        if eml_content_str:
+            self.eml_content = eml_content_str
 
     def _generate_meta(self):
         """Create a meta-file description for the DwCA.

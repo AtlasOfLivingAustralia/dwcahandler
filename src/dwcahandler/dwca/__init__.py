@@ -148,9 +148,11 @@ class Stat:
 
 
 # Imports at end of file to allow classes to be used
-from .terms import Terms
-from .dwca_meta import Element, MetaElementTypes, MetaElementInfo, MetaDwCA
-from .base_dwca import BaseDwca
-from .core_dwca import Dwca, DfContent
-from .large_dwca import LargeDwca
-from .dwca_factory import DwcaFactory, LargeDwcaFactory, DwcaFactoryManager, DwcaHandler
+from dwcahandler.dwca.terms import Terms
+from dwcahandler.dwca.dwca_meta import Element, MetaElementTypes, MetaElementInfo, MetaDwCA
+from dwcahandler.dwca.eml import Eml
+from dwcahandler.dwca.base_dwca import BaseDwca
+from dwcahandler.dwca.core_dwca import Dwca, DfContent
+from dwcahandler.dwca.large_dwca import LargeDwca
+from dwcahandler.dwca.dwca_factory import DwcaFactory, LargeDwcaFactory, DwcaFactoryManager, DwcaHandler
+
