@@ -13,7 +13,7 @@ import pandas as pd
 from pandas.errors import EmptyDataError
 from numpy import nan
 
-from . import BaseDwca, CsvFileType, CSVEncoding, CoreOrExtType, MetaElementTypes, MetaElementInfo, MetaDwCA, Stat
+from . import BaseDwca, CsvFileType, DataFrameType, CSVEncoding, CoreOrExtType, MetaElementTypes, MetaElementInfo, MetaDwCA, Stat
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.DEBUG)
 log = logging.getLogger("Dwca")
@@ -63,7 +63,7 @@ class Dwca(BaseDwca):
     translate_table: dict = field(init=False, default_factory=lambda: {'LF': '\r\n', '\\t': '\t', '\\n': '\n'})
 
     def __post_init__(self):
-        self.meta_content = MetaDwCA(EML_XML_FILENAME=self.EML_XML_FILENAME)
+        self.meta_content = MetaDwCA(eml_xml_filename=self.EML_XML_FILENAME)
 
     def _generate_eml(self, eml_content: str = ""):
         """
@@ -191,10 +191,19 @@ class Dwca(BaseDwca):
             return self.translate_table[v] if v in self.translate_table.keys() else v
 
         with ZipFile(self.dwca_file_loc, 'r') as zf:
+
+            files = zf.namelist()
+
             log.info("Reading from %s", self.dwca_file_loc)
             with zf.open(self.META_XML_FILENAME) as meta_xml_file:
                 self.meta_content.read_meta_file(meta_xml_file)
                 meta_xml_file.close()
+
+            if self.meta_content.eml_xml_filename in files:
+                with zf.open(self.meta_content.eml_xml_filename) as eml_xml_file:
+                    # read as string
+                    self.eml_content = eml_xml_file.read()
+                    eml_xml_file.close()
 
             if len(exclude_ext_files) > 0:
                 self.meta_content.remove_meta_elements(exclude_ext_files)
@@ -508,7 +517,7 @@ class Dwca(BaseDwca):
         content = self._filter_content(delete_content, content.df_content)
         return content
 
-    def _delete_records(self, records_to_delete: CsvFileType):
+    def _delete_records(self, records_to_delete: CsvFileType ):
         """Delete records from either a core or extension content frame
 
         :param records_to_delete: A CSV file of records to delete, keyed to the DwCA file
@@ -802,7 +811,7 @@ class Dwca(BaseDwca):
 
         return True
 
-    def _extract_csv_content(self, csv_info: CsvFileType, core_ext_type: CoreOrExtType):
+    def _extract_csv_content(self, csv_info: Union [CsvFileType, DataFrameType], core_ext_type: CoreOrExtType):
         """Read the files from a CSV descrioption into a content frame and include it in the Dwca.
 
         :param csv_info: The CSV file(s)
@@ -812,7 +821,10 @@ class Dwca(BaseDwca):
         #     if self.__check_csv_info_value(csv_info, 'delimiter') \
         #     else self.csv_encoding
 
-        csv_content = self._combine_contents(csv_info.files, csv_info.csv_encoding)
+        if isinstance(csv_info, DataFrameType):
+            csv_content = csv_info.df
+        else:
+            csv_content = self._combine_contents(csv_info.files, csv_info.csv_encoding)
 
         keys = csv_info.keys if self.__check_csv_info_value(csv_info, 'keys') else self.identifier_keys
         if core_ext_type == CoreOrExtType.CORE:

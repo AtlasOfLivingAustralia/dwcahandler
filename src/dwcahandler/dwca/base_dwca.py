@@ -1,7 +1,7 @@
 from __future__ import annotations
 from abc import ABCMeta, abstractmethod
-from . import CoreOrExtType, CsvFileType
-
+from . import CoreOrExtType, CsvFileType, DataFrameType
+from typing import Union
 
 class BaseDwca(metaclass=ABCMeta):
     """An abstract DwCA that provides basic operations"""
@@ -93,7 +93,7 @@ class BaseDwca(metaclass=ABCMeta):
         self._write_dwca(output_dwca_path)
 
 
-    def create_dwca(self, core_csv: CsvFileType, ext_csv_list: list[CsvFileType],
+    def create_dwca(self, core_csv: Union [CsvFileType, DataFrameType], ext_csv_list: list[CsvFileType],
                     output_dwca_path: str = './dwca/output/', validate_content: bool = True,
                     eml_content: str = ''):
         self._extract_csv_content(core_csv, CoreOrExtType.CORE)

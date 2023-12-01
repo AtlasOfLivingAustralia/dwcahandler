@@ -2,6 +2,7 @@ import pandas as pd
 from numpy import nan
 from dwcahandler.dwca import DwcaHandler, Terms
 
+
 class TestTerms():
     """
     Test for terms
@@ -21,7 +22,7 @@ class TestTerms():
 
     def test_update_list_terms(self, mocker):
         """
-        Test that the terms are stored in the correctly and deprecated terms are not brought over
+        Test that the terms are stored in expected format and deprecated terms are not brought over
         """
         mocker.patch('pandas.read_csv',
                      return_value=pd.DataFrame(

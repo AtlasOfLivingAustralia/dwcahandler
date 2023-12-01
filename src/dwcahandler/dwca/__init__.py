@@ -19,6 +19,8 @@ from collections import namedtuple
 from dataclasses import dataclass, field
 from typing import Optional
 
+import pandas as pd
+
 CoreOrExtType = namedtuple("CoreOrExtType", ["CORE", "EXTENSION"])(
     CORE="core",
     EXTENSION="extension"
@@ -71,6 +73,15 @@ class CsvFileType:
                                             csv_escape_char='"'))
     # delimiter: Optional[str] = None
     # file delimiter type when reading the csv. if not supplied, the collectory setting delimiter is read in for the dr
+
+@dataclass
+class DataFrameType:
+    df: pd.DataFrame
+    type: str  # 'occurrence', 'taxon', 'event', multimedia,...
+    keys: Optional[list] = None  # must be supplied for csv extensions to link extension records to core record
+    # when creating dwca. for core other than occurrence, this neeeds to be supplied as key.
+    # column keys lookup in core or extension for delete records
+    associated_files_loc: Optional[str] = None  # in case there are associated media that need to be packaged in dwca
 
 
 class Stat:

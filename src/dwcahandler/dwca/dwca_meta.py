@@ -117,7 +117,7 @@ class MetaElementAttributes:
 @dataclass
 class MetaDwCA:
     """Complete Metadata for a DwCA including dataset metadata and schema information"""
-    EML_XML_FILENAME: str = field(default='eml.xml')
+    eml_xml_filename: str = field(default='eml.xml')
     dwca_meta: ET.Element = field(init=False)
     meta_elements: list[MetaElementAttributes] = field(default_factory=list, init=False)
 
@@ -291,7 +291,7 @@ class MetaDwCA:
         """Create a `meta.xml` file for this meta-infomation
         """
         self.dwca_meta.attrib['xmlns'] = 'http://rs.tdwg.org/dwc/text/'
-        self.dwca_meta.attrib['metadata'] = self.EML_XML_FILENAME
+        self.dwca_meta.attrib['metadata'] = self.eml_xml_filename
 
         for elm in self.meta_elements:
             self._build_meta_xml(meta_elem_attrib=elm)

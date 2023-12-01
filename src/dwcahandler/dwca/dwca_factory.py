@@ -1,9 +1,10 @@
 
 from abc import ABCMeta, abstractmethod
 import pandas as pd
-from dwcahandler.dwca import CsvFileType, BaseDwca, Dwca, LargeDwca, Terms
+from dwcahandler.dwca import CsvFileType, DataFrameType, BaseDwca, Dwca, LargeDwca, Terms
 import logging
 from pathlib import Path
+from typing import Union
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 log = logging.getLogger("DwcaFactoryManager")
@@ -99,7 +100,7 @@ class DwcaFactoryManager:
         return total_file_size / (1024 * 1024 * 1024)
 
     @staticmethod
-    def get_dwca_from_csv(csv_file: list, use_chunking: bool = False, work_dir: str = './dwca/output/pickle',
+    def get_dwca_from_csv(csv_file: Union [list, pd.DataFrame], use_chunking: bool = False, work_dir: str = './dwca/output/pickle',
                           chunk_size=50000, calculate_size: bool = True) -> BaseDwca:
         """Get a DwCA from a list of CSV files
 
@@ -114,7 +115,7 @@ class DwcaFactoryManager:
         # check csv_file size, then return the appropriate dwca factory
         # 1GB is threshold currently
         if (use_chunking or
-                (DwcaFactoryManager.__get_file_size(
+           (isinstance(csv_file, list) and DwcaFactoryManager.__get_file_size(
                     csv_file) > DwcaFactoryManager.CSV_FILE_SIZE_THRESHOLD and calculate_size)):
             return LargeDwcaFactory().get_dwca(work_dir=work_dir, chunk_size=chunk_size)
         else:
@@ -152,7 +153,7 @@ class DwcaHandler:
     """Perform various DwCA operations"""
 
     @staticmethod
-    def create_dwca(core_csv: CsvFileType, ext_csv_list: list[CsvFileType] = [],
+    def create_dwca(core_csv: Union [CsvFileType, DataFrameType], ext_csv_list: list[Union [CsvFileType, DataFrameType]] = [],
                     output_dwca_path: str = './dwca/output/', work_dir: str = './dwca/output/pickle',
                     use_chunking: bool = False, chunk_size=1000, calculate_size=True, validate_content: bool = True,
                     eml_content: str = ''):
@@ -167,7 +168,8 @@ class DwcaHandler:
         :param calculate_size: Check the file size and use it to decide whether to chunk or not
         :param validate_content: Valudate the DwCA before processing
         """
-        dwca = DwcaFactoryManager.get_dwca_from_csv(csv_file=core_csv.files, use_chunking=use_chunking,
+        core_csv_source = core_csv.files if isinstance(core_csv, CsvFileType) else core_csv.df
+        dwca = DwcaFactoryManager.get_dwca_from_csv(csv_file=core_csv_source, use_chunking=use_chunking,
                                                     work_dir=work_dir,
                                                     chunk_size=chunk_size, calculate_size=calculate_size)
         dwca.create_dwca(core_csv=core_csv, ext_csv_list=ext_csv_list, output_dwca_path=output_dwca_path,
