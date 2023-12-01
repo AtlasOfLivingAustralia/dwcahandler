@@ -16,7 +16,7 @@ The module uses and maintain the standard dwc terms from a point in time version
 
 This package is developed in Python. Tested with Python 3.12, 3.11, 3.10 and 3.9
 
-
+&nbsp;
 ### Setup
 
 * Clone the repository. 
@@ -34,15 +34,14 @@ poetry install
 ```
 poetry run update-dwc-terms
 ```
-
+&nbsp;
 ### Build
 To build dwcahandler package
 ```
 poetry build
 ```
-
-
-### Usage
+&nbsp;
+### Installation
 
 To use locally built package in a virtual environment for eg in preingestion or galaxias:
 ```
@@ -53,7 +52,7 @@ However, to install published package from testpypi
 ```
 pip install -i https://test.pypi.org/simple/ dwcahandler
 ```
-
+&nbsp;
 ### Examples of dwcahandler usages:
 
 * Create Darwin Core Archive from csv file
@@ -73,7 +72,7 @@ eml = Eml(dataset_name='Test Dataset',
 
 DwcaHandler.create_dwca(core_csv=core_csv, ext_csv_list=ext_csvs, eml_content=eml, output_dwca_path='/tmp/dwca.zip')
 ```
-
+&nbsp;
 * Create Darwin Core Archive from pandas dataframe
 ```
 from dwcahandler import DwcaHandler
@@ -95,7 +94,7 @@ eml = Eml(dataset_name='Test Dataset',
 
 DwcaHandler.create_dwca(core_csv=core_frame, ext_csv_list=ext_frame, eml_content=eml, output_dwca_path='/tmp/dwca.zip')
 ```
-
+&nbsp;
 * Merge Darwin Core Archive
 ```
 from dwcahandler import DwcaHandler
@@ -104,7 +103,7 @@ DwcaHandler.merge_dwca(dwca_file='/tmp/dwca.zip', delta_dwca_file=/tmp/delta-dwc
                        output_dwca_path='/tmp/new-dwca.zip', 
                        keys_lookup={'occurrence':'occurrenceID'})
 ```
-
+&nbsp;
 * Delete Rows from core file in Darwin Core Archive
 ```
 from dwcahandler import CsvFileType
@@ -116,7 +115,7 @@ DwcaHandler.delete_records(dwca_file='/tmp/dwca.zip',
                            records_to_delete=delete_csv, 
                            output_dwca_path='/tmp/new-dwca.zip')
 ```
-
+&nbsp;
 * List darwin core terms that is supported in dwcahandler package
 ```
 from dwca import DwcaHandler
@@ -124,7 +123,7 @@ from dwca import DwcaHandler
 df = DwcaHandler.list_dwc_terms()
 print(df)
 ```
-
+&nbsp;
 * Other usages may include subclassing the dwca class, modifying the core dataframe content and rebuilding the dwca.
 ```
 from dwcahandler import Dwca
