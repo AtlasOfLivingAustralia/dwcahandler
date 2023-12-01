@@ -104,6 +104,14 @@ DwcaHandler.delete_records(dwca_file='/tmp/dwca.zip',
                            output_dwca_path='/tmp/new-dwca.zip')
 ```
 
+* List darwin core terms that is supported in dwcahandler package
+```
+from dwca import DwcaHandler
+
+df = DwcaHandler.list_dwc_terms()
+print(df)
+```
+
 * Other usages may include subclassing the dwca class, modifying the core dataframe content and rebuilding the dwca.
 ```
 from dwcahandler import Dwca
