@@ -54,9 +54,9 @@ However, to install published package from testpypi
 pip install -i https://test.pypi.org/simple/ dwcahandler
 ```
 
-#### Examples of dwcahandler usages:
+### Examples of dwcahandler usages:
 
-* Create Darwin Core Archive
+* Create Darwin Core Archive from csv file
 ```
 from dwcahandler import CsvFileType
 from dwcahandler import DwcaHandler
@@ -65,6 +65,22 @@ core_csv = CsvFileType(files=['/tmp/occurrence.csv'], type='occurrence', keys='o
 ext_csvs = [CsvFileType(files=['/tmp/multimedia.csv'], type='multimedia')]
 
 DwcaHandler.create_dwca(core_csv=core_csv, ext_csv_list=ext_csvs, output_dwca_path='/tmp/dwca.zip')
+```
+
+* Create Darwin Core Archive from pandas dataframe
+```
+from dwcahandler import DwcaHandler
+from dwcahandler.dwca import DataFrameType
+import pandas as pd
+
+core_df = pd.read_csv("/tmp/occurrence.csv")
+core_frame = DataFrameType(df=core_df, type='occurrence', keys=['occurrenceID'])
+
+ext_df = pd.read_csv("/tmp/multimedia.csv")
+ext_frame = [DataFrameType(df=ext_df, type='multimedia')]
+
+DwcaHandler.create_dwca(core_csv=core_frame, ext_csv_list=ext_frame,
+output_dwca_path='/tmp/dwca.zip')
 ```
 
 * Merge Darwin Core Archive
