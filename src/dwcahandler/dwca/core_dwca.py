@@ -8,10 +8,12 @@ from functools import wraps
 from pathlib import Path
 from typing import Union
 from zipfile import ZipFile
+import mimetypes
 
 import pandas as pd
 from pandas.errors import EmptyDataError
 from numpy import nan
+
 
 from dwcahandler.dwca import (BaseDwca, CsvFileType, DataFrameType, CSVEncoding, CoreOrExtType,
                               MetaElementTypes, MetaElementInfo, MetaDwCA, Eml, Stat)
@@ -659,6 +661,10 @@ class Dwca(BaseDwca):
             image_df = image_df.assign(identifier=image_df[assoc_media_col].str.split(r'[\\|;]')).explode('identifier')
             image_df.drop(columns=[assoc_media_col], inplace=True)
             content.drop(columns=[assoc_media_col], inplace=True)
+            image_df['format'] = image_df['identifier'].map(lambda x: mimetypes.guess_type(x)[0] if mimetypes.guess_type(x)[0] else '')
+            image_df['type'] = image_df['format'].map(
+                lambda x: 'StillImage' if x.split('/')[0] == 'image' else 'Sound' if x.split('/')[0] == 'audio' else 'MovingImage' if x.split('/')[0] == 'video' else '')
+
         return image_df
 
     def _convert_associated_media_to_extension(self):
