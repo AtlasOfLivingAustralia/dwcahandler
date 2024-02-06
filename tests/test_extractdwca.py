@@ -55,7 +55,7 @@ class TestExtractData():
 
         dwca_creator = Dwca()
 
-        dwca_creator.extract_csv_content(csv_info=test_case['file_type'], core_ext_type=CoreOrExtType.CORE)
+        dwca_creator._extract_csv_content(csv_info=test_case['file_type'], core_ext_type=CoreOrExtType.CORE)
 
         pd.testing.assert_frame_equal(dwca_creator.core_content.df_content.drop(columns=['id']), test_case['expected_result'])
 
