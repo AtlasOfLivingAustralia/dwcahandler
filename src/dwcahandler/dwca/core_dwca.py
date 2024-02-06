@@ -707,7 +707,6 @@ class Dwca(BaseDwca):
                                                     self._read_csv(content, ignore_header_lines=ignore_first_line,
                                                                    csv_encoding_param=csv_encoding,
                                                                    iterator=use_chunking))
-                    ignore_first_line = 1
                 log.info("Extracted total of %d records from %s", self.count_stat(df_content), ','.join(contents))
                 return df_content
         else:
