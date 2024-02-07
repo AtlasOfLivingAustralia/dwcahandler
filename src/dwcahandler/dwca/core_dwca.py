@@ -699,18 +699,23 @@ class Dwca(BaseDwca):
         if len(contents) > 0:
             if isinstance(contents[0], pd.DataFrame):
                 return contents[0]
-            else:
-                df_content = self._init_content()
-                ignore_first_line = 0
-                for content in contents:
-                    df_content = self._add_new_rows(df_content,
-                                                    self._read_csv(content, ignore_header_lines=ignore_first_line,
-                                                                   csv_encoding_param=csv_encoding,
-                                                                   iterator=use_chunking))
-                log.info("Extracted total of %d records from %s", self.count_stat(df_content), ','.join(contents))
-                return df_content
-        else:
-            raise TypeError('content is empty')
+
+            df_content = self._init_content()
+            for content in contents:
+                df_content = self._add_new_rows(df_content,
+                                                self._read_csv(content, ignore_header_lines=0,
+                                                               csv_encoding_param=csv_encoding,
+                                                               iterator=use_chunking))
+
+            log.info("Extracted total of %d records from %s",
+                     self.count_stat(df_content), ','.join(contents))
+            # Drop rows where all the values are duplicates
+            df_content.drop_duplicates(inplace=True)
+            log.debug("Extracted %d unique rows from csv %s",
+                      len(df_content), ','.join(contents))
+            return df_content
+
+        raise ValueError('content is empty')
 
     def __check_csv_info_value(self, csv_info: CsvFileType, col: str):
         """Look for a column in a CSV file

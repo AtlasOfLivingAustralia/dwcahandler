@@ -43,7 +43,8 @@ class TestExtractData():
     single_csv_files, csv_occ_files, tsv_occ_files, duplicates_csv_occ_test
     """
     @pytest.mark.parametrize("test_case",
-                             [single_csv_occ_test, multiple_csv_occ_test, multiple_tsv_occ_test],
+                             [single_csv_occ_test, multiple_csv_occ_test,
+                              multiple_tsv_occ_test, duplicates_csv_occ_test],
                              indirect=True)
     def test_extract_csv_content(self, test_case):
         """
