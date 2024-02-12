@@ -1,9 +1,15 @@
+"""
+Module contains factory class for Dwca. This is used to decide the type of darwin core class to perform the operation.
+
+"""
+
 from abc import ABCMeta, abstractmethod
-import pandas as pd
-from dwcahandler.dwca import CsvFileType, DataFrameType, BaseDwca, Dwca, LargeDwca, Terms, Eml
 import logging
 from pathlib import Path
 from typing import Union
+import pandas as pd
+from dwcahandler.dwca import CsvFileType, DataFrameType, BaseDwca, Dwca, LargeDwca, Terms, Eml
+
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 log = logging.getLogger("DwcaFactoryManager")
@@ -194,7 +200,7 @@ class DwcaHandler:
         dwca = DwcaFactoryManager.get_dwca_from_dwca_file(dwca_file=dwca_file, use_chunking=use_chunking,
                                                           work_dir=work_dir, chunk_size=chunk_size,
                                                           calculate_size=calculate_size)
-        dwca.delete_records(records_to_delete=records_to_delete, output_dwca_path=output_dwca_path)
+        dwca.delete_records_in_dwca(records_to_delete=records_to_delete, output_dwca_path=output_dwca_path)
 
     @staticmethod
     def merge_dwca(dwca_file: str, delta_dwca_file: str, output_dwca_path: str, keys_lookup: dict = {},

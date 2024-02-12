@@ -1,7 +1,7 @@
 
 from dataclasses import dataclass, field
 import metapype.eml.export
-import metapype.eml.names as names
+from metapype.eml import names
 import metapype.model.metapype_io
 from metapype.model.node import Node
 
