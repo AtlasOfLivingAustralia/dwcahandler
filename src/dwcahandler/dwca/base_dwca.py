@@ -126,9 +126,7 @@ class BaseDwca(metaclass=ABCMeta):
         self.write_dwca(output_dwca_path)
 
     # Key lookup: For merging to update content and also used as lookup to link extensions to core records.
-    # If not passed in, it obtains from collectory identifier.
-    # If passed in, this is used instead of from collectory identifiers
-    #    - catered more for non occurrence type of dwca
+    # keys_lookup keys used for merging 2 dwcas
     # regen_ids will generate new uuids for core csv and link coreids extensions to core records.
     # This will consume more time for large dwca
     # https://peps.python.org/pep-0484/#forward-references

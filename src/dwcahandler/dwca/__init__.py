@@ -187,6 +187,5 @@ from dwcahandler.dwca.dwca_meta import Element, MetaElementTypes, MetaElementInf
 from dwcahandler.dwca.eml import Eml
 from dwcahandler.dwca.base_dwca import BaseDwca
 from dwcahandler.dwca.core_dwca import Dwca, DfContent
-from dwcahandler.dwca.large_dwca import LargeDwca
-from dwcahandler.dwca.dwca_factory import DwcaFactory, LargeDwcaFactory, DwcaFactoryManager, DwcaHandler
+from dwcahandler.dwca.dwca_factory import  DwcaHandler
 
