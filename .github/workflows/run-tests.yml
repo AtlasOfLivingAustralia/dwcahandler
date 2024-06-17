@@ -2,9 +2,9 @@ name: Run test
 
 on:
   push:
-    branches: [ "main", "develop" ]
+    branches: [ "main", "develop", "feature/clean_up" ]
   pull_request:
-    branches: [ "main", "develop" ]
+    branches: [ "main", "develop", "feature/clean_up" ]
 
 permissions:
   contents: read
@@ -36,5 +36,7 @@ jobs:
         poetry install
     - name: Test with pytest
       run: |
+        echo ${{ github.workspace }}
+        cd ${{ github.workspace }}/tests
         poetry run pytest
 

@@ -17,6 +17,7 @@ duplicates_csv_occ_test = {"file_paths":single_csv_occ_test["file_paths"] +
                                         multiple_csv_occ_test["file_paths"],
                            "delimiter":","}
 
+
 def get_expected_combined_occ_df(file_paths: list, keys: list, delimiter: str = ","):
     all_records_df = pd.DataFrame()
     dfs = [pd.read_csv(f, dtype='str', delimiter=delimiter) for f in file_paths]
@@ -55,14 +56,17 @@ class TestExtractData():
 
         dwca_creator = Dwca()
 
-        dwca_creator.extract_csv_content(csv_info=test_case['file_type'], core_ext_type=CoreOrExtType.CORE)
+        dwca_creator.extract_csv_content(csv_info=test_case['file_type'],
+                                         core_ext_type=CoreOrExtType.CORE)
 
-        pd.testing.assert_frame_equal(dwca_creator.core_content.df_content.drop(columns=['id']), test_case['expected_result'])
+        # Drop id field from testing
+        pd.testing.assert_frame_equal(dwca_creator.core_content.df_content.drop(
+                                        columns=['id']), test_case['expected_result'])
 
-        meta_columns = list(map(attrgetter('field_name'), dwca_creator.meta_content.meta_elements[0].fields))
+        meta_columns = list(map(attrgetter('field_name'),
+                                dwca_creator.meta_content.meta_elements[0].fields))
+
         assert dwca_creator.core_content.df_content.columns.to_list() == meta_columns
 
-        assert dwca_creator.meta_content.meta_elements[0].meta_element_type.type == MetaElementTypes.get_element('occurrence')
-
-
-
+        assert (dwca_creator.meta_content.meta_elements[0].meta_element_type.type ==
+                MetaElementTypes.get_element('occurrence'))

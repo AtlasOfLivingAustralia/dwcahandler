@@ -3,7 +3,7 @@ from numpy import nan
 from dwcahandler.dwca import DwcaHandler, Terms
 
 
-class TestTerms():
+class TestTerms:
     """
     Test for terms
     """

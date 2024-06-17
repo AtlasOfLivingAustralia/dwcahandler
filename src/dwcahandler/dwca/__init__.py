@@ -18,8 +18,9 @@ the (usuallly Darwin Core) terms that each column contains.
 from collections import namedtuple
 from dataclasses import dataclass, field
 from typing import Optional
-
+import logging
 import pandas as pd
+from functools import wraps
 
 CoreOrExtType = namedtuple("CoreOrExtType", ["CORE", "EXTENSION"])(
     CORE="core",
@@ -73,6 +74,7 @@ class CsvFileType:
                                             csv_escape_char='"'))
     # delimiter: Optional[str] = None
     # file delimiter type when reading the csv. if not supplied, the collectory setting delimiter is read in for the dr
+
 
 @dataclass
 class DataFrameType:
@@ -147,12 +149,43 @@ class Stat:
         return self.get_stat()
 
 
+    """
+    A concrete implementation of a Darwin Core Archive.
+    """
+
+def record_diff_stat(func):
+    """Record stats for dataframe content"""
+    @wraps(func)
+    def wrapper_function(self, record_content, content, *args, **kwargs):
+        ret_value = func(self, record_content, content, *args, **kwargs)
+        record_content.stat.set_stat(self.count_stat(ret_value))
+        logging.debug("%s %s %s stats shows %s",
+                      func.__name__, record_content.meta_info.core_or_ext_type,
+                      record_content.meta_info.type.name, str(record_content.stat))
+        return ret_value
+
+    return wrapper_function
+
+@dataclass
+class Defaults:
+    """
+    A class to hold default properties for Dwca
+    """
+    csv_encoding: CSVEncoding = field(
+        default_factory=lambda: CSVEncoding(csv_delimiter=",", csv_eol="\n", csv_text_enclosure='"',
+                                            csv_escape_char='"'))
+    eml_xml_filename: str = 'eml.xml'
+    meta_xml_filename: str = 'meta.xml'
+    # Translation csv encoding values
+    translate_table: dict = field(init=False,
+                                  default_factory=lambda: {'LF': '\r\n', '\\t': '\t', '\\n': '\n'})
+
+
 # Imports at end of file to allow classes to be used
 from dwcahandler.dwca.terms import Terms
 from dwcahandler.dwca.dwca_meta import Element, MetaElementTypes, MetaElementInfo, MetaDwCA
 from dwcahandler.dwca.eml import Eml
 from dwcahandler.dwca.base_dwca import BaseDwca
 from dwcahandler.dwca.core_dwca import Dwca, DfContent
-from dwcahandler.dwca.large_dwca import LargeDwca
-from dwcahandler.dwca.dwca_factory import DwcaFactory, LargeDwcaFactory, DwcaFactoryManager, DwcaHandler
+from dwcahandler.dwca.dwca_factory import  DwcaHandler
 
