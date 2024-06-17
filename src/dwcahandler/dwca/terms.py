@@ -3,6 +3,7 @@ from pathlib import Path
 from dataclasses import dataclass, field
 import re
 import pandas as pd
+import logging as log
 
 this_dir, this_filename = os.path.split(__file__)
 
@@ -50,8 +51,10 @@ class Terms:
     def update_dwc_terms():
         """
         Pull the latest terms from gbif dwc csv url and update the darwin core vocab terms in the package
-        This is still WIP, do we to pull the
-        :return:
+        Currently only support update darwin-core-terms.csv
+        For reference: dublin-core-terms is derived from
+                        https://www.dublincore.org/specifications/dublin-core/dcmi-terms/ terms namespace
+        :return: dwc_dr dataframe containing the updated term
         """
         df = pd.read_csv(Terms.TERMS_DWC_URL, delimiter=",", encoding='utf-8', dtype='str')
         df = df[df["term_deprecated"].isnull()]
@@ -59,4 +62,5 @@ class Terms:
         dwc_df['term'] = df['term_localName']
         dwc_df['uri'] = df['term_isDefinedBy'] + df['term_localName']
         dwc_df.to_csv(Terms.DWC_FILE_PATH, index=False)
+        log.info("Total terms downloaded: %i", len(dwc_df))
         return dwc_df

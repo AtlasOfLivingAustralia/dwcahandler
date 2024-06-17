@@ -128,7 +128,6 @@ class BaseDwca(metaclass=ABCMeta):
     # Key lookup: For merging to update content and also used as lookup to link extensions to core records.
     # keys_lookup keys used for merging 2 dwcas
     # regen_ids will generate new uuids for core csv and link coreids extensions to core records.
-    # This will consume more time for large dwca
     # https://peps.python.org/pep-0484/#forward-references
     def merge_dwca(self, delta_dwca: BaseDwca, output_dwca_path: str, keys_lookup: dict = None, extension_sync=False,
                    regen_ids: bool = False, validate_delta: bool = True):
