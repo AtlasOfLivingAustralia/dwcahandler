@@ -12,7 +12,7 @@ Note that this structure is considerably more restrictive than a relational data
 A meta-file contains the table descriptions and information about the CSV encoding and the
 links between the files.
 A particular function of the meta-file is that it can link columns to URIs that specify
-the (usuallly Darwin Core) terms that each column contains.
+the (usually Darwin Core) terms that each column contains.
 
 """
 from collections import namedtuple
@@ -149,10 +149,6 @@ class Stat:
         return self.get_stat()
 
 
-    """
-    A concrete implementation of a Darwin Core Archive.
-    """
-
 def record_diff_stat(func):
     """Record stats for dataframe content"""
     @wraps(func)
@@ -165,6 +161,7 @@ def record_diff_stat(func):
         return ret_value
 
     return wrapper_function
+
 
 @dataclass
 class Defaults:
@@ -187,5 +184,5 @@ from dwcahandler.dwca.dwca_meta import Element, MetaElementTypes, MetaElementInf
 from dwcahandler.dwca.eml import Eml
 from dwcahandler.dwca.base_dwca import BaseDwca
 from dwcahandler.dwca.core_dwca import Dwca, DfContent
-from dwcahandler.dwca.dwca_factory import  DwcaHandler
+from dwcahandler.dwca.dwca_factory import DwcaHandler
 

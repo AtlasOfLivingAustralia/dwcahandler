@@ -618,8 +618,8 @@ class Dwca(BaseDwca):
                 self.ext_content.append(delta_content)
                 self._update_meta_fields(delta_content)
 
-        self.core_content.df_content = self._merge_df_content(self.core_content,
-                                            delta_dwca.core_content, self.core_content.keys)
+        self.core_content.df_content = self._merge_df_content(self.core_content, delta_dwca.core_content,
+                                                              self.core_content.keys)
 
         if regen_ids:
             self._update_core_ids(self.core_content.df_content)
