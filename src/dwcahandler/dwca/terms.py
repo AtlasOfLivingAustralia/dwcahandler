@@ -26,9 +26,9 @@ class Terms:
     TERMS_DWC_URL = "https://raw.githubusercontent.com/tdwg/rs.tdwg.org/master/terms/terms.csv"
     DWC_FILENAME = 'darwin-core-terms.csv'
     DUBLIN_CORE_FILENAME = 'dublin-core-terms.csv'
-    TERMS_DIR = f"{this_dir}/terms"
-    DWC_FILE_PATH = f"{TERMS_DIR}/{DWC_FILENAME}"
-    DUBLIN_CORE_PATH = f"{TERMS_DIR}/{DUBLIN_CORE_FILENAME}"
+    TERMS_DIR = os.path.join(this_dir, "terms")
+    DWC_FILE_PATH = os.path.join(TERMS_DIR, DWC_FILENAME)
+    DUBLIN_CORE_PATH = os.path.join(TERMS_DIR, DUBLIN_CORE_FILENAME)
 
     terms_path: list[Path] = field(default_factory=lambda: [c for c in absolute_file_paths(Terms.TERMS_DIR)],
                                    init=False)
