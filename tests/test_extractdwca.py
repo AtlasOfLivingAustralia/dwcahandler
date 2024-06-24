@@ -38,6 +38,7 @@ def test_case (request):
                                                           keys=['catalogNumber'],
                                                           delimiter=request.param["delimiter"])}
 
+
 class TestExtractData():
     """
     Test for extract records from csv or tsv files in Dwca class
