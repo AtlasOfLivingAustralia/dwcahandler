@@ -23,9 +23,10 @@ class DwcaHandler:
 
     @staticmethod
     def create_dwca(core_csv: Union[CsvFileType, DataFrameType],
-                    ext_csv_list: list[Union [CsvFileType, DataFrameType]] = list,
-                    output_dwca_path: str = './dwca/output/', validate_content: bool = True,
-                    eml_content: Union [str, Eml] = ''):
+                    output_dwca_path: str,
+                    ext_csv_list: list[Union[CsvFileType, DataFrameType]] = None,
+                    validate_content: bool = True,
+                    eml_content: Union[str, Eml] = ''):
         """Create a suitable DwCA from a list of CSV files
 
         :param core_csv: The core source
@@ -38,7 +39,7 @@ class DwcaHandler:
                            validate_content=validate_content, eml_content=eml_content)
 
     @staticmethod
-    def remove_extension_files(dwca_file: str, ext_files: list, output_dwca_path: str = './dwca/output/'):
+    def remove_extension_files(dwca_file: str, ext_files: list, output_dwca_path: str):
         """Load a DwCA and remove extension files from it
 
         :param dwca_file: The path to the DwCA
@@ -50,7 +51,7 @@ class DwcaHandler:
 
     @staticmethod
     def delete_records(dwca_file: str, records_to_delete: CsvFileType,
-                       output_dwca_path: str = './dwca/output/'):
+                       output_dwca_path: str):
         """Delete core records listed in the records_to_delete file from DwCA.
         The specified keys listed in records_to_delete param must exist in the dwca core file
 
@@ -62,7 +63,7 @@ class DwcaHandler:
                                                              output_dwca_path=output_dwca_path)
 
     @staticmethod
-    def merge_dwca(dwca_file: str, delta_dwca_file: str, output_dwca_path: str, keys_lookup: dict = {},
+    def merge_dwca(dwca_file: str, delta_dwca_file: str, output_dwca_path: str, keys_lookup: dict = None,
                    extension_sync: bool = False, regen_ids: bool = False, validate_delta_content: bool = True):
         """Merge a DwCA with a delta DwCA of changes.
 
@@ -80,7 +81,7 @@ class DwcaHandler:
                                                  regen_ids=regen_ids, validate_delta=validate_delta_content)
 
     @staticmethod
-    def validate_dwca(dwca_file: str, keys_lookup: dict = {}, error_file: str = None):
+    def validate_dwca(dwca_file: str, keys_lookup: dict = None, error_file: str = None):
         """Test a dwca for consistency
 
         :param dwca_file: The path to the DwCA

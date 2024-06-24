@@ -90,22 +90,26 @@ class BaseDwca(metaclass=ABCMeta):
     def validate_content(self, content_type_to_validate: list[str] = None, error_file: str = None):
         pass
 
-    def remove_extensions(self, exclude_ext_files: list, output_dwca_path: str = './dwca/output/'):
+    def remove_extensions(self, exclude_ext_files: list, output_dwca_path: str):
         self.extract_dwca(exclude_ext_files=exclude_ext_files)
         self.generate_eml()
         self.generate_meta()
         self.write_dwca(output_dwca_path)
 
-    def delete_records_in_dwca(self, records_to_delete: CsvFileType, output_dwca_path: str = './dwca/output/'):
+    def delete_records_in_dwca(self, records_to_delete: CsvFileType, output_dwca_path: str):
         self.extract_dwca()
         self.delete_records(records_to_delete)
         self.generate_eml()
         self.generate_meta()
         self.write_dwca(output_dwca_path)
 
-    def create_dwca(self, core_csv: Union[CsvFileType, DataFrameType], ext_csv_list: list[CsvFileType],
-                    output_dwca_path: str = './dwca/output/', validate_content: bool = True,
+    def create_dwca(self, core_csv: Union[CsvFileType, DataFrameType], output_dwca_path: str,
+                    ext_csv_list: list[CsvFileType] = None, validate_content: bool = True,
                     eml_content: Union[str, Eml] = ''):
+
+        if ext_csv_list is None:
+            ext_csv_list = []
+
         self.extract_csv_content(core_csv, CoreOrExtType.CORE)
 
         # Only validate core content
