@@ -1,0 +1,48 @@
+# This is a basic workflow that is manually triggered
+
+name: Create release branch from develop
+on:
+  workflow_dispatch:
+    branches: [ "develop" ]
+
+jobs:
+  draft-new-release:
+    if:
+      contains(github.ref, 'develop')
+    name: "Draft a new release"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+      - name: Install dependencies
+        run: |
+          python -m pip install poetry
+          poetry install
+      - name: Build
+        id: build-step
+        run: |
+          poetry build
+          VERSION=$(poetry version -s)
+          echo "$VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create release branch
+        run: git checkout -b release/${{ steps.build-step.outputs.version }}
+
+      - name: Push new branch
+        run: git push origin release/${{ steps.build-step.outputs.version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create pull request
+        run: gh pr create -H release/${{ steps.build-step.outputs.version }} -B main
+          --title 'Release v${{ steps.build-step.outputs.version }}'
+          --body 'Created by Github action'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

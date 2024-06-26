@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "dwcahandler"
+version = "0.1.0"
+description = "Python package to handle Darwin Core Archive (DwCA) operations. This includes creating a DwCA zip file from one or more csvs, reading a DwCA, merge two DwCAs, validate DwCA and delete records from DwCA based on one or more key columns"
+authors = ["Atlas of Living Australia data team <support@ala.org.au>"]
+maintainers = ["Atlas of Living Australia data team <support@ala.org.au>"]
+repository = "https://github.com/AtlasOfLivingAustralia/dwcahandler"
+license = "MPL-1.1"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.9"
+pandas = "^2.2.0"
+requests = "^2.32.0"
+pytest = "^8.2.0"
+pytest-mock = "^3.12.0"
+metapype = "^0.0.26"
+
+[tool.poetry.scripts]
+update-dwc-terms = "dwcahandler.scripts.update_dwc_terms:update_terms"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
