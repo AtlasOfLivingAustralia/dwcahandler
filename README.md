@@ -99,7 +99,7 @@ DwcaHandler.create_dwca(core_csv=core_frame, ext_csv_list=ext_frame, eml_content
 ```python
 from dwcahandler import DwcaHandler
 
-DwcaHandler.merge_dwca(dwca_file='/tmp/dwca.zip', delta_dwca_file=/tmp/delta-dwca.zip,
+DwcaHandler.merge_dwca(dwca_file='/tmp/dwca.zip', delta_dwca_file='/tmp/delta-dwca.zip',
                        output_dwca_path='/tmp/new-dwca.zip', 
                        keys_lookup={'occurrence':'occurrenceID'})
 ```
