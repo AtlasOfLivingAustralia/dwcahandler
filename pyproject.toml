@@ -23,3 +23,5 @@ update-dwc-terms = "dwcahandler.scripts.update_dwc_terms:update_terms"
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
+[tool.pytest.ini_options]
+pythonpath = "src"

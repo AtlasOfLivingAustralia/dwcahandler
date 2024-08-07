@@ -61,6 +61,10 @@ pip install -i https://test.pypi.org/simple/ dwcahandler
 ### Examples of dwcahandler usages:
 
 * Create Darwin Core Archive from csv file
+* If creating a dwca with multimedia extension, provide format and type values, otherwise, dwcahandler will
+  attempt to fill these info by guessing the mimetype from url or extracting content type of the url which will
+  slow down the creation of dwca depending on how large the dataset is
+
 ```python
 from dwcahandler import CsvFileType
 from dwcahandler import DwcaHandler
@@ -79,6 +83,7 @@ DwcaHandler.create_dwca(core_csv=core_csv, ext_csv_list=ext_csvs, eml_content=em
 ```
 &nbsp;
 * Create Darwin Core Archive from pandas dataframe
+
 ```python
 from dwcahandler import DwcaHandler
 from dwcahandler.dwca import DataFrameType
@@ -98,6 +103,7 @@ eml = Eml(dataset_name='Test Dataset',
           rights="test rights")
 
 DwcaHandler.create_dwca(core_csv=core_frame, ext_csv_list=ext_frame, eml_content=eml, output_dwca_path='/tmp/dwca.zip')
+
 ```
 &nbsp;
 * Merge Darwin Core Archive
