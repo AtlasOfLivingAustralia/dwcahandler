@@ -6,7 +6,7 @@ Module contains the Darwin Core Base class
 from __future__ import annotations
 from abc import ABCMeta, abstractmethod
 from typing import Union
-from dwcahandler.dwca import CoreOrExtType, CsvFileType, DataFrameType
+from dwcahandler.dwca import CoreOrExtType, CsvFileType, DataFrameType, MetaElementTypes
 from dwcahandler.dwca.eml import Eml
 
 
@@ -90,6 +90,25 @@ class BaseDwca(metaclass=ABCMeta):
     def validate_content(self, content_type_to_validate: list[str] = None, error_file: str = None):
         pass
 
+    @abstractmethod
+    def get_content (self, ext_type: str):
+        pass
+
+    @abstractmethod
+    def add_multimedia_info_to_content(self, multimedia_content):
+        """
+        Add format or type if not provided for multimedia ext
+        """
+        pass
+
+    def fill_additional_info(self):
+        """
+        Adds extra info based on the information in the content, mainly used by ingestion process
+        """
+        multimedia_content, _ = self.get_content(MetaElementTypes.get_element('multimedia').row_type_ns)
+        if multimedia_content:
+            self.add_multimedia_info_to_content(multimedia_content)
+
     def remove_extensions(self, exclude_ext_files: list, output_dwca_path: str):
         self.extract_dwca(exclude_ext_files=exclude_ext_files)
         self.generate_eml()
@@ -125,6 +144,7 @@ class BaseDwca(metaclass=ABCMeta):
         for ext in ext_csv_list:
             self.extract_csv_content(ext, CoreOrExtType.EXTENSION)
 
+        self.fill_additional_info()
         self.generate_eml(eml_content)
         self.generate_meta()
         self.write_dwca(output_dwca_path)
@@ -143,6 +163,7 @@ class BaseDwca(metaclass=ABCMeta):
             raise SystemExit(Exception("Some validations error found in the delta dwca. Dwca is not merged."))
 
         self.merge_contents(delta_dwca, extension_sync, regen_ids)
+        self.fill_additional_info()
         self.generate_eml()
         self.generate_meta()
         self.write_dwca(output_dwca_path)

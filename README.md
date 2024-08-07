@@ -43,12 +43,17 @@ poetry build
 &nbsp;
 ### Installation
 
-To use locally built package in a virtual environment for eg in preingestion or galaxias:
+Install published package
+```bash
+pip install dwcahandler
+```
+
+To use locally built package in a virtual environment:
 ```bash
 pip install <folder>/dwcahandler/dist/dwcahandler-<version>.tar.gz
 ```
 
-However, to install published package from testpypi
+To install published package from testpypi
 ```bash
 pip install -i https://test.pypi.org/simple/ dwcahandler
 ```
@@ -61,7 +66,7 @@ from dwcahandler import CsvFileType
 from dwcahandler import DwcaHandler
 from dwcahandler import Eml
 
-core_csv = CsvFileType(files=['/tmp/occurrence.csv'], type='occurrence', keys='occurrenceID')
+core_csv = CsvFileType(files=['/tmp/occurrence.csv'], type='occurrence', keys=['occurrenceID'])
 ext_csvs = [CsvFileType(files=['/tmp/multimedia.csv'], type='multimedia')]
 
 eml = Eml(dataset_name='Test Dataset',
@@ -109,7 +114,7 @@ DwcaHandler.merge_dwca(dwca_file='/tmp/dwca.zip', delta_dwca_file='/tmp/delta-dw
 from dwcahandler import CsvFileType
 from dwcahandler import DwcaHandler
 
-delete_csv = CsvFileType(files=['/tmp/old-records.csv'], type='occurrence', keys='occurrenceID')
+delete_csv = CsvFileType(files=['/tmp/old-records.csv'], type='occurrence', keys=['occurrenceID'])
 
 DwcaHandler.delete_records(dwca_file='/tmp/dwca.zip',
                            records_to_delete=delete_csv, 
@@ -118,7 +123,7 @@ DwcaHandler.delete_records(dwca_file='/tmp/dwca.zip',
 &nbsp;
 * List darwin core terms that is supported in dwcahandler package
 ```python
-from dwca import DwcaHandler
+from dwcahandler import DwcaHandler
 
 df = DwcaHandler.list_dwc_terms()
 print(df)
@@ -132,7 +137,7 @@ class DerivedDwca(Dwca):
     """
     Derived class to perform other custom operations that is not included as part of the core operations
     """
-    def _drop_columns(self):
+    def drop_columns(self):
         """
         Drop existing column in the core content
         """
@@ -141,10 +146,10 @@ class DerivedDwca(Dwca):
 
 
 dwca = DerivedDwca(dwca_file_loc='/tmp/dwca.zip')
-dwca._extract_dwca()
-dwca._drop_columns()
-dwca._generate_eml()
-dwca._generate_meta()
-dwca._write_dwca('/tmp/newdwca.zip')
+dwca.extract_dwca()
+dwca.drop_columns()
+dwca.generate_eml()
+dwca.generate_meta()
+dwca.write_dwca('/tmp/newdwca.zip')
 
 ```
