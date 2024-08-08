@@ -127,5 +127,3 @@ class TestWriteDwca:
                 pd.testing.assert_frame_equal(df.drop(columns=['coreid']), sample_multimedia_df)
 
             zf.close()
-
-

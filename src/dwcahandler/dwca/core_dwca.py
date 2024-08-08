@@ -522,7 +522,7 @@ class Dwca(BaseDwca):
         content = self._filter_content(delete_content, content.df_content)
         return content
 
-    def _delete_records(self, records_to_delete: CsvFileType):
+    def delete_records(self, records_to_delete: CsvFileType):
         """Delete records from either a core or extension content frame
 
         :param records_to_delete: A CSV file of records to delete, keyed to the DwCA file
@@ -685,19 +685,22 @@ class Dwca(BaseDwca):
             else:
                 media_type = row['type']
 
-            return [media_format, media_type]
+            row['format'] = media_format
+            row['type'] = media_type
+            return row
 
         def populate_format_type(row: dict):
-            return pd.Series(get_multimedia_format_type(row))
+            return get_multimedia_format_type(row)
 
         if 'format' in multimedia_df.columns:
             multimedia_without_format = multimedia_df[multimedia_df['format'].isnull()]
             if len(multimedia_without_format) > 0:
-                multimedia_without_format[['format', 'type']] = multimedia_without_format.apply(
-                                                                lambda row: populate_format_type(row), axis=1)
+                multimedia_without_format = multimedia_without_format.apply(
+                                                                lambda row: populate_format_type(row),
+                                                                axis=1)
                 multimedia_df.update(multimedia_without_format)
         else:
-            multimedia_df[['format', 'type']] = multimedia_df.apply(
+            multimedia_df = multimedia_df.apply(
                 lambda row: populate_format_type(row), axis=1)
 
         multimedia_without_type = multimedia_df
@@ -706,8 +709,10 @@ class Dwca(BaseDwca):
             multimedia_without_type = multimedia_df[multimedia_df['type'].isnull()]
 
         if len(multimedia_without_type) > 0:
-            multimedia_without_type['type'] = multimedia_without_type['format'].map(lambda x: get_media_type(x))
+            multimedia_without_type.loc[:, 'type'] = multimedia_without_type['format'].map(lambda x: get_media_type(x))
             multimedia_df.update(multimedia_without_type)
+
+        multimedia_content.df_content = multimedia_df
 
     def _extract_media(self, content, assoc_media_col: str):
         """Extract embedded associated media and place it in a media extension data frame
@@ -806,7 +811,7 @@ class Dwca(BaseDwca):
         def report_error(content, keys, message, condition, error_file=None):
             log.error("%s found in keys %s", message, keys)
             log.error("\n%s count\n%s", message, condition.sum())
-            log.error("\n%s",content.loc[condition.values, keys].index.tolist())
+            log.error("\n%s", content.loc[condition.values, keys].index.tolist())
             if error_file:
                 content.loc[condition.values, keys].to_csv(error_file, index=False)
 
@@ -939,8 +944,7 @@ class Dwca(BaseDwca):
         :return: The CSV content as a string
         """
         content = df.to_csv(
-            lineterminator='\r\n' if meta_info.csv_encoding.csv_eol == '\\r\\n'
-                            else meta_info.csv_encoding.csv_eol,
+            lineterminator='\r\n' if meta_info.csv_encoding.csv_eol == '\\r\\n' else meta_info.csv_encoding.csv_eol,
             sep=meta_info.csv_encoding.csv_delimiter,
             quotechar=meta_info.csv_encoding.csv_text_enclosure,
             escapechar=meta_info.csv_encoding.csv_escape_char,
@@ -1019,10 +1023,8 @@ class Dwca(BaseDwca):
         #       work properly passing in escapechar as double-quote into pandas does not
         #       work with csv that have double quotes around every field, only set escapechar,
         #       if it is other than double-quotes.
-        escape_char = csv_encoding_param.csv_escape_char \
-                        if csv_encoding_param.csv_escape_char != '"' else None
-        quote_char = csv_encoding_param.csv_text_enclosure \
-                        if csv_encoding_param.csv_text_enclosure != '' else '"'
+        escape_char = csv_encoding_param.csv_escape_char if csv_encoding_param.csv_escape_char != '"' else None
+        quote_char = csv_encoding_param.csv_text_enclosure if csv_encoding_param.csv_text_enclosure != '' else '"'
         line_terminator = csv_encoding_param.csv_eol \
             if (csv_encoding_param.csv_eol not in ['\r\n', '\n', '\\r\\n']) \
             else None
@@ -1050,5 +1052,5 @@ class Dwca(BaseDwca):
 
         except EmptyDataError:
             log.error(f"The expected columns: %s are not present in the {csv_file}. "
-                      f"The file may be empty",','.join(columns))
+                      f"The file may be empty", ','.join(columns))
             return pd.DataFrame()

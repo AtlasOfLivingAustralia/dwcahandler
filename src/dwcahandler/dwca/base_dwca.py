@@ -83,6 +83,7 @@ class BaseDwca(metaclass=ABCMeta):
     def merge_df_dwc_columns(self):
         pass
 
+    @abstractmethod
     def delete_records(self, records_to_delete: CsvFileType):
         pass
 
@@ -91,7 +92,7 @@ class BaseDwca(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def get_content (self, ext_type: str):
+    def get_content(self, ext_type: str):
         pass
 
     @abstractmethod
