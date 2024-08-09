@@ -4,25 +4,29 @@ Module contains the Darwin Core operations
 """
 
 from __future__ import annotations
+
 import csv
+import io
 import logging
+import mimetypes
 import re
 import uuid
 import zipfile
-from dataclasses import dataclass, field, MISSING, asdict
+from dataclasses import MISSING, asdict, dataclass, field
 from pathlib import Path
 from typing import Union
-import io
 from zipfile import ZipFile
-import mimetypes
+
 import pandas as pd
 import requests
+from numpy import nan
 from pandas.errors import EmptyDataError
 from pandas.io import parsers
-from numpy import nan
-from dwcahandler.dwca import (BaseDwca, CsvFileType, DataFrameType, CSVEncoding, CoreOrExtType,
-                              MetaElementTypes, MetaElementInfo, MetaDwCA, Eml, Stat,
-                              record_diff_stat, Defaults)
+
+from dwcahandler.dwca import (BaseDwca, CoreOrExtType, CSVEncoding,
+                              CsvFileType, DataFrameType, Defaults, Eml,
+                              MetaDwCA, MetaElementInfo, MetaElementTypes,
+                              Stat, record_diff_stat)
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.DEBUG)
@@ -650,10 +654,9 @@ class Dwca(BaseDwca):
         :param multimedia_content: Multimedia content type derived from the extension of this Dwca class object
         """
 
-        multimedia_df = multimedia_content.df_content
 
         def get_media_type(media_format: str):
-            media_type = ''
+            media_type = None
             if media_format and '/' in media_format:
                 m_type = media_format.split('/')[0]
                 if m_type == 'image':
@@ -662,14 +665,17 @@ class Dwca(BaseDwca):
                     media_type = 'Sound'
                 elif m_type == 'video':
                     media_type = 'MovingImage'
+            if media_type is None and media_format:
+                log.warning("Unknown media type for format %s", media_format)
+            
             return media_type
 
         def get_multimedia_format_type(row: dict):
             url = row['identifier']
             mime_type = mimetypes.guess_type(url)
             media_format = ''
-            if not mime_type and len(mime_type) > 0 and mimetypes.guess_type(url)[0]:
-                media_format = mimetypes.guess_type(url)[0]
+            if mime_type and len(mime_type) > 0 and mime_type[0]:
+                media_format = mime_type[0]
             else:
                 try:
                     # Just check header without downloading content
@@ -691,6 +697,8 @@ class Dwca(BaseDwca):
 
         def populate_format_type(row: dict):
             return get_multimedia_format_type(row)
+
+        multimedia_df = multimedia_content.df_content
 
         if 'format' in multimedia_df.columns:
             multimedia_without_format = multimedia_df[multimedia_df['format'].isnull()]
