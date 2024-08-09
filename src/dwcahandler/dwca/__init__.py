@@ -1,3 +1,4 @@
+# flake8: noqa
 """
 Tools to convert data frames into Darwin Core Archive (DwCA) files.
 
