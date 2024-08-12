@@ -135,7 +135,7 @@ class TestMultimediaExtension:
                                ["3", VIDEO_URL, "video/quicktime", "MovingImage"],
                                ["4", INVALID_URL, numpy.nan, numpy.nan],
                                ["5", INVALID_URL, 'invalidformat', numpy.nan],
-                               ["6", INVALID_URL,'image/jpeg', 'StillImage']]
+                               ["6", INVALID_URL, 'image/jpeg', 'StillImage']]
 
         expected_multimedia_df = pd.DataFrame(data=expected_image_data,
                                               columns=['occurrenceID', 'identifier', 'format', 'type'])

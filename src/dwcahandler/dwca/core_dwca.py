@@ -666,7 +666,7 @@ class Dwca(BaseDwca):
                     media_type = 'MovingImage'
             if media_type is None and media_format:
                 log.warning("Unknown media type for format %s", media_format)
-            
+
             return media_type
 
         def get_multimedia_format_type(row: dict):
