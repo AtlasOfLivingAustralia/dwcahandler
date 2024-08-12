@@ -4,24 +4,29 @@ Module contains the Darwin Core operations
 """
 
 from __future__ import annotations
+
 import csv
+import io
 import logging
+import mimetypes
 import re
 import uuid
 import zipfile
-from dataclasses import dataclass, field, MISSING, asdict
+from dataclasses import MISSING, asdict, dataclass, field
 from pathlib import Path
 from typing import Union
-import io
 from zipfile import ZipFile
-import mimetypes
+
 import pandas as pd
+import requests
+from numpy import nan
 from pandas.errors import EmptyDataError
 from pandas.io import parsers
-from numpy import nan
-from dwcahandler.dwca import (BaseDwca, CsvFileType, DataFrameType, CSVEncoding, CoreOrExtType,
-                              MetaElementTypes, MetaElementInfo, MetaDwCA, Eml, Stat,
-                              record_diff_stat, Defaults)
+
+from dwcahandler.dwca import (BaseDwca, CoreOrExtType, CSVEncoding,
+                              CsvFileType, DataFrameType, Defaults, Eml,
+                              MetaDwCA, MetaElementInfo, MetaElementTypes,
+                              Stat, record_diff_stat)
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.DEBUG)
@@ -302,7 +307,7 @@ class Dwca(BaseDwca):
         set_keys = {}
         if keys and len(keys) > 0:
             for k, v in keys.items():
-                dwca_content, _ = self._get_content(MetaElementTypes.get_element(k).row_type_ns)
+                dwca_content, _ = self.get_content(MetaElementTypes.get_element(k).row_type_ns)
                 # If found then set the key for the content
                 if dwca_content:
                     dwca_content.keys = [v] if isinstance(v, str) else v
@@ -521,7 +526,7 @@ class Dwca(BaseDwca):
         content = self._filter_content(delete_content, content.df_content)
         return content
 
-    def _delete_records(self, records_to_delete: CsvFileType):
+    def delete_records(self, records_to_delete: CsvFileType):
         """Delete records from either a core or extension content frame
 
         :param records_to_delete: A CSV file of records to delete, keyed to the DwCA file
@@ -536,7 +541,7 @@ class Dwca(BaseDwca):
             return
 
         self._build_index_for_content(delete_content, records_to_delete.keys)
-        dwca_content, core_or_ext = self._get_content(
+        dwca_content, core_or_ext = self.get_content(
                                 MetaElementTypes.get_element(records_to_delete.type).row_type_ns)
         log.info("Removing records from %s", core_or_ext)
         if core_or_ext == CoreOrExtType.CORE:
@@ -596,7 +601,7 @@ class Dwca(BaseDwca):
         delta_dwca.build_indexes()
 
         for _, delta_content in enumerate(delta_dwca.ext_content):
-            content, _ = self._get_content(delta_content.meta_info.type.row_type_ns)
+            content, _ = self.get_content(delta_content.meta_info.type.row_type_ns)
             if content:
                 if extension_sync:
                     self._delete_old_ext_records(content, self.core_content.df_content,
@@ -627,7 +632,7 @@ class Dwca(BaseDwca):
                 content.df_content = self._update_extension_ids(
                     content.df_content, self.core_content.df_content, self.core_content.keys)
 
-    def _get_content(self, name_space):
+    def get_content(self, name_space):
         """Get the content based on the row type namespace.
 
         :param name_space: The row type (a namespace URI)
@@ -643,12 +648,79 @@ class Dwca(BaseDwca):
 
         return None, None
 
-    def _init_content(self):
-        """Initialise a content frame
-
-        :return: An empty data frame
+    def add_multimedia_info_to_content(self, multimedia_content: DfContent):
         """
-        return pd.DataFrame()
+        Attempt to populate the format and type from the url provided in the multimedia ext if none is provided
+        :param multimedia_content: Multimedia content type derived from the extension of this Dwca class object
+        """
+
+        def get_media_type(media_format: str):
+            media_type = None
+            if media_format and '/' in media_format:
+                m_type = media_format.split('/')[0]
+                if m_type == 'image':
+                    media_type = 'StillImage'
+                elif m_type == 'audio':
+                    media_type = 'Sound'
+                elif m_type == 'video':
+                    media_type = 'MovingImage'
+            if media_type is None and media_format:
+                log.warning("Unknown media type for format %s", media_format)
+
+            return media_type
+
+        def get_multimedia_format_type(row: dict):
+            url = row['identifier']
+            mime_type = mimetypes.guess_type(url)
+            media_format = ''
+            if mime_type and len(mime_type) > 0 and mime_type[0]:
+                media_format = mime_type[0]
+            else:
+                try:
+                    # Just check header without downloading content
+                    response = requests.head(url, allow_redirects=True)
+                    if 'content-type' in response.headers:
+                        media_format = response.headers['content-type']
+                except Exception as error:
+                    log.error("Error getting header info from url %s: %s", url, error)
+
+            media_type = ''
+            if 'type' not in row or not row['type']:
+                media_type = get_media_type(media_format)
+            else:
+                media_type = row['type']
+
+            row['format'] = media_format if media_format else nan
+            row['type'] = media_type if media_type else nan
+            return row
+
+        def populate_format_type(row: dict):
+            return get_multimedia_format_type(row)
+
+        multimedia_df = multimedia_content.df_content
+
+        if 'format' in multimedia_df.columns:
+            multimedia_without_format = multimedia_df[multimedia_df['format'].isnull()]
+            if len(multimedia_without_format) > 0:
+                multimedia_without_format = multimedia_without_format.apply(
+                                                                lambda row: populate_format_type(row),
+                                                                axis=1)
+                multimedia_df.update(multimedia_without_format)
+        else:
+            multimedia_df = multimedia_df.apply(
+                lambda row: populate_format_type(row), axis=1)
+
+        multimedia_without_type = multimedia_df
+        # In case if the type was not populated from format
+        if 'type' in multimedia_df.columns:
+            multimedia_without_type = multimedia_df[multimedia_df['type'].isnull()]
+            multimedia_without_type = multimedia_without_type[multimedia_without_type['format'].notnull()]
+
+        if len(multimedia_without_type) > 0:
+            multimedia_without_type.loc[:, 'type'] = multimedia_without_type['format'].map(lambda x: get_media_type(x))
+            multimedia_df.update(multimedia_without_type)
+
+        multimedia_content.df_content = multimedia_df
 
     def _extract_media(self, content, assoc_media_col: str):
         """Extract embedded associated media and place it in a media extension data frame
@@ -669,12 +741,6 @@ class Dwca(BaseDwca):
                                        str.split(r'[\\|;]')).explode('identifier')
             image_df.drop(columns=[assoc_media_col], inplace=True)
             content.drop(columns=[assoc_media_col], inplace=True)
-            image_df['format'] = image_df['identifier'].map(
-                lambda x: mimetypes.guess_type(x)[0] if mimetypes.guess_type(x)[0] else '')
-            image_df['type'] = image_df['format'].map(
-                lambda x: 'StillImage' if x.split('/')[0] == 'image' else 'Sound'
-                if x.split('/')[0] == 'audio' else 'MovingImage' if x.split('/')[0] == 'video'
-                else '')
 
         return image_df
 
@@ -712,7 +778,7 @@ class Dwca(BaseDwca):
             if isinstance(contents[0], pd.DataFrame):
                 return contents[0]
 
-            df_content = self._init_content()
+            df_content = pd.DataFrame()
             for content in contents:
                 df_content = self._add_new_rows(df_content,
                                                 self._read_csv(content, ignore_header_lines=0,
@@ -753,7 +819,7 @@ class Dwca(BaseDwca):
         def report_error(content, keys, message, condition, error_file=None):
             log.error("%s found in keys %s", message, keys)
             log.error("\n%s count\n%s", message, condition.sum())
-            log.error("\n%s",content.loc[condition.values, keys].index.tolist())
+            log.error("\n%s", content.loc[condition.values, keys].index.tolist())
             if error_file:
                 content.loc[condition.values, keys].to_csv(error_file, index=False)
 
@@ -824,7 +890,7 @@ class Dwca(BaseDwca):
             content_type_to_validate = [self.core_content.meta_info.type.name]
 
         for content_type in content_type_to_validate:
-            content, _ = self._get_content(MetaElementTypes.get_element(content_type).row_type_ns)
+            content, _ = self.get_content(MetaElementTypes.get_element(content_type).row_type_ns)
             keys_df = self._extract_keys(content.df_content, content.keys)
 
             if not self.check_duplicates(keys_df, content.keys, error_file):
@@ -886,8 +952,7 @@ class Dwca(BaseDwca):
         :return: The CSV content as a string
         """
         content = df.to_csv(
-            lineterminator='\r\n' if meta_info.csv_encoding.csv_eol == '\\r\\n'
-                            else meta_info.csv_encoding.csv_eol,
+            lineterminator='\r\n' if meta_info.csv_encoding.csv_eol == '\\r\\n' else meta_info.csv_encoding.csv_eol,
             sep=meta_info.csv_encoding.csv_delimiter,
             quotechar=meta_info.csv_encoding.csv_text_enclosure,
             escapechar=meta_info.csv_encoding.csv_escape_char,
@@ -966,10 +1031,8 @@ class Dwca(BaseDwca):
         #       work properly passing in escapechar as double-quote into pandas does not
         #       work with csv that have double quotes around every field, only set escapechar,
         #       if it is other than double-quotes.
-        escape_char = csv_encoding_param.csv_escape_char \
-                        if csv_encoding_param.csv_escape_char != '"' else None
-        quote_char = csv_encoding_param.csv_text_enclosure \
-                        if csv_encoding_param.csv_text_enclosure != '' else '"'
+        escape_char = csv_encoding_param.csv_escape_char if csv_encoding_param.csv_escape_char != '"' else None
+        quote_char = csv_encoding_param.csv_text_enclosure if csv_encoding_param.csv_text_enclosure != '' else '"'
         line_terminator = csv_encoding_param.csv_eol \
             if (csv_encoding_param.csv_eol not in ['\r\n', '\n', '\\r\\n']) \
             else None
@@ -997,5 +1060,5 @@ class Dwca(BaseDwca):
 
         except EmptyDataError:
             log.error(f"The expected columns: %s are not present in the {csv_file}. "
-                      f"The file may be empty",','.join(columns))
+                      f"The file may be empty", ','.join(columns))
             return pd.DataFrame()

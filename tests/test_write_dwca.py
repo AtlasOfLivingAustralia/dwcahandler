@@ -30,7 +30,7 @@ sample_occ_df = pd.read_csv(occurrence_sample_file)
 sample_multimedia_df = pd.read_csv(multimedia_sample_file)
 
 
-class TestPublish:
+class TestWriteDwca:
     """
     Test for terms
     """
@@ -40,7 +40,7 @@ class TestPublish:
         Test that generated dwca is valid with core occ data
         """
         core_csv = CsvFileType(files=["./input_files/sample/occurrence.csv"], keys=['occurrenceID'],
-                               type=CoreOrExtType.CORE)
+                               type='occurrence')
         p = Path("temp")
         p.mkdir(parents=True, exist_ok=True)
         dwca_output_path = str(Path(p / "dwca.zip").absolute())
@@ -77,9 +77,9 @@ class TestPublish:
         Test that generated dwca is valid with core occ and multimedia data
         """
         core_csv = CsvFileType(files=["./input_files/sample/occurrence.csv"], keys=['occurrenceID'],
-                               type=CoreOrExtType.CORE)
+                               type='occurrence')
         ext_csv = CsvFileType(files=["./input_files/sample/multimedia.csv"], keys=['occurrenceID'],
-                              type=CoreOrExtType.EXTENSION)
+                              type='multimedia')
         p = Path("temp")
         p.mkdir(parents=True, exist_ok=True)
         dwca_output_path = str(Path(p / "dwca_with_ext.zip").absolute())
