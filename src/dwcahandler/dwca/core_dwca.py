@@ -654,7 +654,6 @@ class Dwca(BaseDwca):
         :param multimedia_content: Multimedia content type derived from the extension of this Dwca class object
         """
 
-
         def get_media_type(media_format: str):
             media_type = None
             if media_format and '/' in media_format:
@@ -691,8 +690,8 @@ class Dwca(BaseDwca):
             else:
                 media_type = row['type']
 
-            row['format'] = media_format
-            row['type'] = media_type
+            row['format'] = media_format if media_format else nan
+            row['type'] = media_type if media_type else nan
             return row
 
         def populate_format_type(row: dict):
@@ -715,6 +714,7 @@ class Dwca(BaseDwca):
         # In case if the type was not populated from format
         if 'type' in multimedia_df.columns:
             multimedia_without_type = multimedia_df[multimedia_df['type'].isnull()]
+            multimedia_without_type = multimedia_without_type[multimedia_without_type['format'].notnull()]
 
         if len(multimedia_without_type) > 0:
             multimedia_without_type.loc[:, 'type'] = multimedia_without_type['format'].map(lambda x: get_media_type(x))
