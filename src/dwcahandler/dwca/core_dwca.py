@@ -653,17 +653,24 @@ class Dwca(BaseDwca):
         Attempt to populate the format and type from the url provided in the multimedia ext if none is provided
         :param multimedia_content: Multimedia content type derived from the extension of this Dwca class object
         """
+        def get_media_format_prefix(media_format: str):
+            media_format_prefixes = ["image", "audio", "video"]
+            if media_format and isinstance(media_format, str) and '/' in media_format:
+                prefix = media_format.split('/')[0]
+                if prefix in media_format_prefixes:
+                    return prefix
+
+            return None
 
         def get_media_type(media_format: str):
             media_type = None
-            if media_format and '/' in media_format:
-                m_type = media_format.split('/')[0]
-                if m_type == 'image':
-                    media_type = 'StillImage'
-                elif m_type == 'audio':
-                    media_type = 'Sound'
-                elif m_type == 'video':
-                    media_type = 'MovingImage'
+            m_type = get_media_format_prefix(media_format)
+            if m_type == 'image':
+                media_type = 'StillImage'
+            elif m_type == 'audio':
+                media_type = 'Sound'
+            elif m_type == 'video':
+                media_type = 'MovingImage'
             if media_type is None and media_format:
                 log.warning("Unknown media type for format %s", media_format)
 
@@ -672,7 +679,7 @@ class Dwca(BaseDwca):
         def get_multimedia_format_type(row: dict):
             url = row['identifier']
             mime_type = mimetypes.guess_type(url)
-            media_format = ''
+            media_format = None
             if mime_type and len(mime_type) > 0 and mime_type[0]:
                 media_format = mime_type[0]
             else:
@@ -680,7 +687,10 @@ class Dwca(BaseDwca):
                     # Just check header without downloading content
                     response = requests.head(url, allow_redirects=True)
                     if 'content-type' in response.headers:
-                        media_format = response.headers['content-type']
+                        content_type = response.headers['content-type']
+                        if get_media_format_prefix(content_type):
+                            media_format = content_type
+
                 except Exception as error:
                     log.error("Error getting header info from url %s: %s", url, error)
 

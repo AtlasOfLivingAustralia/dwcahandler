@@ -9,6 +9,7 @@ IMAGE_URL = "https://images.ala.org.au/image/proxyImageThumbnailLarge?imageId=a3
 AUDIO_URL = "https://images.ala.org.au/image/proxyImage?imageId=480f5f5e-e96c-4ae3-8230-c53a37bc542e"
 VIDEO_URL = "https://images.ala.org.au/image/proxyImage?imageId=537799d7-f4d6-490c-a24c-6a94bfd5e857"
 INVALID_URL = "test"
+DELETED_MEDIA_URL = "https://images.ala.org.au/image/proxyImageThumbnailLarge?imageId=nonexistent"
 
 image_ext = CsvFileType(files=[pd.DataFrame(data=[["1", IMAGE_URL],
                                                   ["2", AUDIO_URL],
@@ -106,7 +107,8 @@ class TestMultimediaExtension:
                                                                                 ["3", "species3"],
                                                                                 ["4", "species4"],
                                                                                 ["5", "species5"],
-                                                                                ["6", "species6"]],
+                                                                                ["6", "species6"],
+                                                                                ["7", "species7"]],
                                                                           columns=['occurrenceID', 'scientificName'])],
                                                       type='occurrence',
                                                       keys=['occurrenceID']),
@@ -117,7 +119,8 @@ class TestMultimediaExtension:
                       ["3", VIDEO_URL, numpy.nan, "MovingImage"],
                       ["4", INVALID_URL, numpy.nan, numpy.nan],
                       ["5", INVALID_URL, 'invalidformat', numpy.nan],
-                      ["6", INVALID_URL, 'image/jpeg', numpy.nan]]
+                      ["6", INVALID_URL, 'image/jpeg', numpy.nan],
+                      ["7", DELETED_MEDIA_URL, numpy.nan, numpy.nan]]
 
         # Extract multimedia ext without format
         dwca.extract_csv_content(csv_info=CsvFileType(files=[pd.DataFrame(data=image_data,
@@ -135,7 +138,8 @@ class TestMultimediaExtension:
                                ["3", VIDEO_URL, "video/quicktime", "MovingImage"],
                                ["4", INVALID_URL, numpy.nan, numpy.nan],
                                ["5", INVALID_URL, 'invalidformat', numpy.nan],
-                               ["6", INVALID_URL, 'image/jpeg', 'StillImage']]
+                               ["6", INVALID_URL, 'image/jpeg', 'StillImage'],
+                               ["7", DELETED_MEDIA_URL, numpy.nan, numpy.nan]]
 
         expected_multimedia_df = pd.DataFrame(data=expected_image_data,
                                               columns=['occurrenceID', 'identifier', 'format', 'type'])
