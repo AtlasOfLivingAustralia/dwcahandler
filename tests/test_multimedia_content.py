@@ -2,7 +2,6 @@ import pandas as pd
 from dwcahandler.dwca import CsvFileType, CoreOrExtType
 from dwcahandler.dwca.core_dwca import Dwca
 from operator import attrgetter
-import numpy
 
 MIMETYPE_IMAGE_URL = 'https://www.gstatic.com/webp/gallery/1.webp'
 INVALID_MIMETYPE_URL = "https://invalid.url.jpeg"
@@ -83,16 +82,9 @@ class TestMultimediaExtension:
         # Fill multimedia info
         dwca.fill_additional_info()
 
-        """
-        expected_multimedia_df = pd.DataFrame(data=[["1", IMAGE_URL, "image/jpeg", "StillImage"],
-                                                    ["2", AUDIO_URL, "audio/mp4", "Sound"],
-                                                    ["3", VIDEO_URL, "video/quicktime", "MovingImage"],
-                                                    ["3", MIMETYPE_IMAGE_URL, 'image/webp', 'StillImage']],
-                                              columns=['occurrenceID', 'identifier', 'format', 'type'])
-        """
-        expected_multimedia_df = pd.DataFrame(data=[["1", IMAGE_URL, numpy.nan, numpy.nan],
-                                                    ["2", AUDIO_URL, numpy.nan, numpy.nan],
-                                                    ["3", VIDEO_URL, numpy.nan, numpy.nan],
+        expected_multimedia_df = pd.DataFrame(data=[["1", IMAGE_URL, None, None],
+                                                    ["2", AUDIO_URL, None, None],
+                                                    ["3", VIDEO_URL, None, None],
                                                     ["3", MIMETYPE_IMAGE_URL, 'image/webp', 'StillImage']],
                                               columns=['occurrenceID', 'identifier', 'format', 'type'])
 
@@ -126,14 +118,14 @@ class TestMultimediaExtension:
                                  core_ext_type=CoreOrExtType.CORE)
 
         image_data = [["1", IMAGE_URL, "image/webp", "StillImage"],
-                      ["2", AUDIO_URL, "audio/mp3", numpy.nan],
-                      ["3", VIDEO_URL, numpy.nan, "MovingImage"],
-                      ["4", INVALID_URL, numpy.nan, numpy.nan],
-                      ["5", INVALID_URL, 'invalidformat', numpy.nan],
-                      ["6", INVALID_URL, 'image/jpeg', numpy.nan],
-                      ["7", DELETED_MEDIA_URL, numpy.nan, numpy.nan],
-                      ["8", INVALID_MIMETYPE_URL, numpy.nan, numpy.nan],
-                      ["9", numpy.nan, numpy.nan, numpy.nan]]
+                      ["2", AUDIO_URL, "audio/mp3", None],
+                      ["3", VIDEO_URL, None, "MovingImage"],
+                      ["4", INVALID_URL, None, None],
+                      ["5", INVALID_URL, 'invalidformat', None],
+                      ["6", INVALID_URL, 'image/jpeg', None],
+                      ["7", DELETED_MEDIA_URL, None, None],
+                      ["8", INVALID_MIMETYPE_URL, None, None],
+                      ["9", None, None, None]]
 
         # Extract multimedia ext without format
         dwca.extract_csv_content(csv_info=CsvFileType(files=[pd.DataFrame(data=image_data,
@@ -148,13 +140,13 @@ class TestMultimediaExtension:
 
         expected_image_data = [["1", IMAGE_URL, "image/webp", "StillImage"],
                                ["2", AUDIO_URL, "audio/mp3", "Sound"],
-                               ["3", VIDEO_URL, numpy.nan, "MovingImage"],
-                               ["4", INVALID_URL, numpy.nan, numpy.nan],
-                               ["5", INVALID_URL, 'invalidformat', numpy.nan],
+                               ["3", VIDEO_URL, None, "MovingImage"],
+                               ["4", INVALID_URL, None, None],
+                               ["5", INVALID_URL, 'invalidformat', None],
                                ["6", INVALID_URL, 'image/jpeg', 'StillImage'],
-                               ["7", DELETED_MEDIA_URL, numpy.nan, numpy.nan],
+                               ["7", DELETED_MEDIA_URL, None, None],
                                ["8", INVALID_MIMETYPE_URL, 'image/jpeg', 'StillImage'],
-                               ["9", numpy.nan, numpy.nan, numpy.nan]]
+                               ["9", None, None, None]]
 
         expected_multimedia_df = pd.DataFrame(data=expected_image_data,
                                               columns=['occurrenceID', 'identifier', 'format', 'type'])
@@ -189,11 +181,11 @@ class TestMultimediaExtension:
         image_data = [["1", IMAGE_URL, "image/webp"],
                       ["2", AUDIO_URL, "audio/mp3"],
                       ["3", VIDEO_URL, "video/mp4"],
-                      ["4", INVALID_URL, numpy.nan],
+                      ["4", INVALID_URL, None],
                       ["5", INVALID_URL, 'invalidformat'],
-                      ["6", MIMETYPE_IMAGE_URL, numpy.nan],
-                      ["7", DELETED_MEDIA_URL, numpy.nan],
-                      ["8", INVALID_MIMETYPE_URL, numpy.nan]]
+                      ["6", MIMETYPE_IMAGE_URL, None],
+                      ["7", DELETED_MEDIA_URL, None],
+                      ["8", INVALID_MIMETYPE_URL, None]]
 
         # Extract multimedia ext without format
         dwca.extract_csv_content(csv_info=CsvFileType(files=[pd.DataFrame(data=image_data,
@@ -209,10 +201,10 @@ class TestMultimediaExtension:
         expected_image_data = [["1", IMAGE_URL, "image/webp", "StillImage"],
                                ["2", AUDIO_URL, "audio/mp3", "Sound"],
                                ["3", VIDEO_URL, "video/mp4", "MovingImage"],
-                               ["4", INVALID_URL, numpy.nan, numpy.nan],
-                               ["5", INVALID_URL, 'invalidformat', numpy.nan],
+                               ["4", INVALID_URL, None, None],
+                               ["5", INVALID_URL, 'invalidformat', None],
                                ["6", MIMETYPE_IMAGE_URL, 'image/webp', 'StillImage'],
-                               ["7", DELETED_MEDIA_URL, numpy.nan, numpy.nan],
+                               ["7", DELETED_MEDIA_URL, None, None],
                                ["8", INVALID_MIMETYPE_URL, 'image/jpeg', 'StillImage']]
 
         expected_multimedia_df = pd.DataFrame(data=expected_image_data,

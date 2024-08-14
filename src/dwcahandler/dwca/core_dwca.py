@@ -678,7 +678,7 @@ class Dwca(BaseDwca):
         def get_multimedia_format_type(row: dict):
             url = row['identifier']
             media_format = None
-            if url is not None and isinstance(url, str):
+            if url:
                 try:
                     mime_type = mimetypes.guess_type(url)
                     if mime_type and len(mime_type) > 0 and mime_type[0]:
@@ -687,13 +687,13 @@ class Dwca(BaseDwca):
                     log.error("Error getting mimetype from url %s: %s", url, error)
 
             media_type = ''
-            if 'type' not in row or not row['type'] or row['type'] is nan:
+            if 'type' not in row or not row['type']:
                 media_type = get_media_type(media_format)
             else:
                 media_type = row['type']
 
-            row['format'] = media_format if media_format else nan
-            row['type'] = media_type if media_type else nan
+            row['format'] = media_format if media_format else None
+            row['type'] = media_type if media_type else None
             return row
 
         multimedia_df = multimedia_content.df_content
