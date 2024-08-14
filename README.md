@@ -61,7 +61,7 @@ pip install -i https://test.pypi.org/simple/ dwcahandler
 ### Examples of dwcahandler usages:
 
 * Create Darwin Core Archive from csv file
-* In creating a dwca with multimedia extension, provide format and type values in the Simple Multimedia extension, otherwise, dwcahandler will attempt to fill these info by guessing the mimetype from url or extracting content type of the url which will slow down the creation of dwca depending on how large the dataset is.
+* In creating a dwca with multimedia extension, provide format and type values in the Simple Multimedia extension, otherwise, dwcahandler will attempt to fill these info by guessing the mimetype from url.
 
 ```python
 from dwcahandler import CsvFileType
