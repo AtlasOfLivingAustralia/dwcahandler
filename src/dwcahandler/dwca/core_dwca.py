@@ -688,8 +688,8 @@ class Dwca(BaseDwca):
             else:
                 media_type = row['type']
 
-            row['format'] = media_format if media_format else nan
-            row['type'] = media_type if media_type else nan
+            row['format'] = media_format
+            row['type'] = media_type
             return row
 
         multimedia_df = multimedia_content.df_content
