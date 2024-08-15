@@ -82,9 +82,9 @@ class TestMultimediaExtension:
         # Fill multimedia info
         dwca.fill_additional_info()
 
-        expected_multimedia_df = pd.DataFrame(data=[["1", IMAGE_URL, None, None],
-                                                    ["2", AUDIO_URL, None, None],
-                                                    ["3", VIDEO_URL, None, None],
+        expected_multimedia_df = pd.DataFrame(data=[["1", IMAGE_URL, numpy.nan, numpy.nan],
+                                                    ["2", AUDIO_URL, numpy.nan, numpy.nan],
+                                                    ["3", VIDEO_URL, numpy.nan, numpy.nan],
                                                     ["3", MIMETYPE_IMAGE_URL, 'image/webp', 'StillImage']],
                                               columns=['occurrenceID', 'identifier', 'format', 'type'])
 
