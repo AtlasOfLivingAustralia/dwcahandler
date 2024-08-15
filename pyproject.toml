@@ -26,3 +26,4 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 pythonpath = "src"
+addopts = "-p no:logging"
