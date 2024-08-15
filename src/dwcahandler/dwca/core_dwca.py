@@ -682,17 +682,6 @@ class Dwca(BaseDwca):
             media_format = None
             if mime_type and len(mime_type) > 0 and mime_type[0]:
                 media_format = mime_type[0]
-            else:
-                try:
-                    # Just check header without downloading content
-                    response = requests.head(url, allow_redirects=True)
-                    if 'content-type' in response.headers:
-                        content_type = response.headers['content-type']
-                        if get_media_format_prefix(content_type):
-                            media_format = content_type
-
-                except Exception as error:
-                    log.error("Error getting header info from url %s: %s", url, error)
 
             media_type = ''
             if 'type' not in row or not row['type']:
