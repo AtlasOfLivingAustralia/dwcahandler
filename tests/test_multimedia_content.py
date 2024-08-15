@@ -3,6 +3,8 @@ from dwcahandler.dwca import CsvFileType, CoreOrExtType
 from dwcahandler.dwca.core_dwca import Dwca
 from operator import attrgetter
 import numpy
+import logging
+logging.basicConfig(level=logging.DEBUG)
 
 MIMETYPE_IMAGE_URL = 'https://www.gstatic.com/webp/gallery/1.webp'
 IMAGE_URL = "https://images.ala.org.au/image/proxyImageThumbnailLarge?imageId=a36b5634-0277-47c7-b4e3-383e24ce8d1a"
