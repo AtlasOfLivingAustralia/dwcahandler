@@ -6,6 +6,8 @@ import numpy
 import logging
 logging.basicConfig(level=logging.DEBUG)
 
+log = logging.getLogger("test")
+
 MIMETYPE_IMAGE_URL = 'https://www.gstatic.com/webp/gallery/1.webp'
 IMAGE_URL = "https://images.ala.org.au/image/proxyImageThumbnailLarge?imageId=a36b5634-0277-47c7-b4e3-383e24ce8d1a"
 AUDIO_URL = "https://images.ala.org.au/image/proxyImage?imageId=480f5f5e-e96c-4ae3-8230-c53a37bc542e"

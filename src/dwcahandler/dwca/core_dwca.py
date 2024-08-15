@@ -18,6 +18,7 @@ from typing import Union
 from zipfile import ZipFile
 
 import pandas as pd
+import requests
 from numpy import nan
 from pandas.errors import EmptyDataError
 from pandas.io import parsers
@@ -681,8 +682,21 @@ class Dwca(BaseDwca):
             media_format = ''
             if mime_type and len(mime_type) > 0 and mime_type[0]:
                 media_format = mime_type[0]
+            else:
+                print(f"content type {url}")
+                try:
+                    # Just check header without downloading content
+                    response = requests.head(url, allow_redirects=True)
+                    if 'content-type' in response.headers:
+                        content_type = response.headers['content-type']
+                        if get_media_format_prefix(content_type):
+                            media_format = content_type
+
+                except Exception as error:
+                    log.error("Error getting header info from url %s: %s", url, error)
 
             log.debug("media_format is %s for url %s", media_format, url)
+            print(f"{media_format} url")
             media_type = ''
             if 'type' not in row or not row['type']:
                 media_type = get_media_type(media_format)
@@ -717,6 +731,7 @@ class Dwca(BaseDwca):
             multimedia_df.update(multimedia_without_type)
 
         multimedia_content.df_content = multimedia_df
+        print(multimedia_content.df_content)
 
     def _extract_media(self, content, assoc_media_col: str):
         """Extract embedded associated media and place it in a media extension data frame
