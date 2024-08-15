@@ -704,21 +704,18 @@ class Dwca(BaseDwca):
             row['type'] = media_type if media_type else nan
             return row
 
-        def populate_format_type(row: dict):
-            return get_multimedia_format_type(row)
-
         multimedia_df = multimedia_content.df_content
 
         if 'format' in multimedia_df.columns:
             multimedia_without_format = multimedia_df[multimedia_df['format'].isnull()]
             if len(multimedia_without_format) > 0:
                 multimedia_without_format = multimedia_without_format.apply(
-                                                                lambda row: populate_format_type(row),
+                                                                lambda row: get_multimedia_format_type(row),
                                                                 axis=1)
                 multimedia_df.update(multimedia_without_format)
         else:
             multimedia_df = multimedia_df.apply(
-                lambda row: populate_format_type(row), axis=1)
+                lambda row: get_multimedia_format_type(row), axis=1)
 
         multimedia_without_type = multimedia_df
         # In case if the type was not populated from format
