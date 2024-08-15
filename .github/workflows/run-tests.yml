@@ -48,5 +48,5 @@ jobs:
       run: |
         echo ${{ github.workspace }}
         cd ${{ github.workspace }}/tests
-        poetry run pytest
+        poetry run pytest -s
 

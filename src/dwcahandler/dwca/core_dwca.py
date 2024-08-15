@@ -682,6 +682,7 @@ class Dwca(BaseDwca):
             if mime_type and len(mime_type) > 0 and mime_type[0]:
                 media_format = mime_type[0]
 
+            log.debug("media_format is %s for url %s", media_format, url)
             media_type = ''
             if 'type' not in row or not row['type']:
                 media_type = get_media_type(media_format)
