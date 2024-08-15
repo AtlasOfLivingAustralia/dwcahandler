@@ -88,6 +88,9 @@ class TestMultimediaExtension:
                                                     ["3", MIMETYPE_IMAGE_URL, 'image/webp', 'StillImage']],
                                               columns=['occurrenceID', 'identifier', 'format', 'type'])
 
+        dwca.ext_content[0].df_content.fillna('', inplace=True)
+        expected_multimedia_df.fillna('', inplace=True)
+
         # Test that the multimedia extension will now contain the format and type
         pd.testing.assert_frame_equal(dwca.ext_content[0].df_content.drop(
                                       columns=['coreid']), expected_multimedia_df)
