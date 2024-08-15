@@ -18,7 +18,6 @@ from typing import Union
 from zipfile import ZipFile
 
 import pandas as pd
-import requests
 from numpy import nan
 from pandas.errors import EmptyDataError
 from pandas.io import parsers
@@ -679,7 +678,7 @@ class Dwca(BaseDwca):
         def get_multimedia_format_type(row: dict):
             url = row['identifier']
             mime_type = mimetypes.guess_type(url)
-            media_format = None
+            media_format = ''
             if mime_type and len(mime_type) > 0 and mime_type[0]:
                 media_format = mime_type[0]
 
