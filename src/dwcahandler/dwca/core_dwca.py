@@ -682,6 +682,8 @@ class Dwca(BaseDwca):
             media_format = ''
             if mime_type and len(mime_type) > 0 and mime_type[0]:
                 media_format = mime_type[0]
+                print(f"pbtained media format {media_format} from {url}")
+            """    
             else:
                 print(f"content type {url}")
                 try:
@@ -694,9 +696,9 @@ class Dwca(BaseDwca):
 
                 except Exception as error:
                     log.error("Error getting header info from url %s: %s", url, error)
-
+            """
             log.debug("media_format is %s for url %s", media_format, url)
-            print(f"{media_format} url")
+            print(f"{media_format} {url}")
             media_type = ''
             if 'type' not in row or not row['type']:
                 media_type = get_media_type(media_format)
@@ -731,7 +733,7 @@ class Dwca(BaseDwca):
             multimedia_df.update(multimedia_without_type)
 
         multimedia_content.df_content = multimedia_df
-        print(multimedia_content.df_content)
+        print(multimedia_content.df_content[['occurrenceID', 'format', 'type']])
 
     def _extract_media(self, content, assoc_media_col: str):
         """Extract embedded associated media and place it in a media extension data frame
