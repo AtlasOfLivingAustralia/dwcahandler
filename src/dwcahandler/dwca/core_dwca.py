@@ -679,10 +679,11 @@ class Dwca(BaseDwca):
         def get_multimedia_format_type(row: dict):
             url = row['identifier']
             mime_type = mimetypes.guess_type(url)
+            print(f"mime_type {mime_type} from {url}")
             media_format = ''
             if mime_type and len(mime_type) > 0 and mime_type[0]:
                 media_format = mime_type[0]
-                print(f"pbtained media format {media_format} from {url}")
+                print(f"obtained media format {media_format} from {url}")
             """    
             else:
                 print(f"content type {url}")
