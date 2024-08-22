@@ -57,7 +57,7 @@ class TestWriteDwca:
                 ns = _get_namespace(root)
                 assert ns == "{http://rs.tdwg.org/dwc/text/}"
                 core_node = root.find(f'{ns}{CoreOrExtType.CORE}')
-                assert core_node
+                assert core_node is not None
                 fields = core_node.findall(f'{ns}field')
                 term_fields = [f.attrib.get('term') for f in fields]
                 assert len(term_fields) == len(sample_occ_df.columns)
@@ -96,7 +96,7 @@ class TestWriteDwca:
                 ns = _get_namespace(root)
                 assert ns == "{http://rs.tdwg.org/dwc/text/}"
                 core_node = root.find(f'{ns}{CoreOrExtType.CORE}')
-                assert core_node
+                assert core_node is not None
                 fields = core_node.findall(f'{ns}field')
                 term_fields = [f.attrib.get('term') for f in fields]
                 assert len(term_fields) == len(sample_occ_df.columns)
@@ -105,7 +105,7 @@ class TestWriteDwca:
                 core_file = core_node.find(f'{ns}files').find(f'{ns}location').text
 
                 ext_node = root.find(f'{ns}{CoreOrExtType.EXTENSION}')
-                assert ext_node
+                assert ext_node is not None
                 fields = ext_node.findall(f'{ns}field')
                 term_fields = [f.attrib.get('term') for f in fields]
                 assert len(term_fields) == len(sample_multimedia_df.columns)
