@@ -35,7 +35,7 @@ jobs:
         run: |
           echo ${{ github.workspace }}
           cd ${{ github.workspace }}/tests
-          poetry run pytest
+          poetry run pytest --github-action-run=True
       - name: Build
         id: build-step
         run: |

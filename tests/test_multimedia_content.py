@@ -1,9 +1,15 @@
 import pandas as pd
+import dwcahandler
 from dwcahandler.dwca import CsvFileType, CoreOrExtType
 from dwcahandler.dwca.core_dwca import Dwca
 from operator import attrgetter
+import logging
+import pytest
 
-MIMETYPE_IMAGE_URL = 'https://www.gstatic.com/webp/gallery/1.webp'
+logging.basicConfig(level=logging.DEBUG)
+log = logging.getLogger("test_multimedia_content")
+
+MIMETYPE_IMAGE_URL = "https://www.gstatic.com/webp/gallery/1.webp"
 INVALID_MIMETYPE_URL = "https://invalid.url.jpeg"
 IMAGE_URL = "https://images.ala.org.au/image/proxyImageThumbnailLarge?imageId=a36b5634-0277-47c7-b4e3-383e24ce8d1a"
 AUDIO_URL = "https://images.ala.org.au/image/proxyImage?imageId=480f5f5e-e96c-4ae3-8230-c53a37bc542e"
@@ -20,13 +26,26 @@ image_ext = CsvFileType(files=[pd.DataFrame(data=[["1", IMAGE_URL],
                         keys=['occurrenceID'])
 
 
+def mock_guess_type(url):
+    if url == MIMETYPE_IMAGE_URL:
+        return ('image/webp', None)
+    elif url == INVALID_MIMETYPE_URL:
+        return ('image/jpeg', None)
+    return (None, None)
+
+
+@pytest.fixture
+def mock_mime_types(monkeypatch, request):
+    if request.config.getoption("--github-action-run"):
+        monkeypatch.setattr(dwcahandler.dwca.core_dwca.mimetypes, "guess_type", mock_guess_type)
+
+
 class TestMultimediaExtension:
 
     def test_extract_associate_media(self):
         """
         Test for associated media to be expanded into multimedia extension
         """
-
         occ_associated_media_df = pd.DataFrame(data=[["1", "species1", IMAGE_URL],
                                                      ["2", "species2", AUDIO_URL],
                                                      ["3", "species3", f"{VIDEO_URL}|{MIMETYPE_IMAGE_URL}"]],
@@ -60,7 +79,7 @@ class TestMultimediaExtension:
         assert sorted(list(map(attrgetter('field_name'), dwca.meta_content.meta_elements[1].fields))) == \
                sorted(['coreid', 'identifier'])
 
-    def test_fill_additional_multimedia_info(self):
+    def test_fill_additional_multimedia_info(self, mock_mime_types):
         """
         Test for fill additional multimedia info if format and type is not provided
         :return:
@@ -88,12 +107,14 @@ class TestMultimediaExtension:
                                                     ["3", MIMETYPE_IMAGE_URL, 'image/webp', 'StillImage']],
                                               columns=['occurrenceID', 'identifier', 'format', 'type'])
 
+        dwca.ext_content[0].df_content.fillna('', inplace=True)
+        expected_multimedia_df.fillna('', inplace=True)
+
         # Test that the multimedia extension will now contain the format and type
         pd.testing.assert_frame_equal(dwca.ext_content[0].df_content.drop(
                                       columns=['coreid']), expected_multimedia_df)
 
-
-    def test_fill_multimedia_info_with_format_type_partially_supplied(self):
+    def test_fill_multimedia_info_with_format_type_partially_supplied(self, mock_mime_types):
         """
         Test fill_additional_multimedia_info if format or type is already present.
         Calling fill_additional_multimedia_info should not change the existing values in the content
@@ -156,8 +177,7 @@ class TestMultimediaExtension:
         pd.testing.assert_frame_equal(dwca.ext_content[0].df_content.drop(
             columns=['coreid']), expected_multimedia_df)
 
-
-    def test_fill_multimedia_info_type_from_forrmat(self):
+    def test_fill_multimedia_info_type_from_forrmat(self, mock_mime_types):
         """
         Test fill_additional_multimedia_info if only format is already present.
         Calling fill_additional_multimedia_info should not change the existing values in the content
