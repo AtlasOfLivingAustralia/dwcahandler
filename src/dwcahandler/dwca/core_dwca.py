@@ -696,29 +696,31 @@ class Dwca(BaseDwca):
             row['type'] = media_type if media_type else None
             return row
 
-        multimedia_df = multimedia_content.df_content
+        if len(multimedia_content.df_content) > 0:
 
-        if 'format' in multimedia_df.columns:
-            multimedia_without_format = multimedia_df[multimedia_df['format'].isnull()]
-            if len(multimedia_without_format) > 0:
-                multimedia_without_format = multimedia_without_format.apply(
-                                                                lambda row: get_multimedia_format_type(row),
-                                                                axis=1)
-                multimedia_df.update(multimedia_without_format)
-        else:
-            multimedia_df = multimedia_df.apply(lambda row: get_multimedia_format_type(row), axis=1)
+            multimedia_df = multimedia_content.df_content
 
-        multimedia_without_type = multimedia_df
-        # In case if the type was not populated from format
-        if 'type' in multimedia_df.columns:
-            multimedia_without_type = multimedia_df[multimedia_df['type'].isnull()]
-            multimedia_without_type = multimedia_without_type[multimedia_without_type['format'].notnull()]
+            if 'format' in multimedia_df.columns:
+                multimedia_without_format = multimedia_df[multimedia_df['format'].isnull()]
+                if len(multimedia_without_format) > 0:
+                    multimedia_without_format = multimedia_without_format.apply(
+                                                                    lambda row: get_multimedia_format_type(row),
+                                                                    axis=1)
+                    multimedia_df.update(multimedia_without_format)
+            else:
+                multimedia_df = multimedia_df.apply(lambda row: get_multimedia_format_type(row), axis=1)
 
-        if len(multimedia_without_type) > 0:
-            multimedia_without_type.loc[:, 'type'] = multimedia_without_type['format'].map(lambda x: get_media_type(x))
-            multimedia_df.update(multimedia_without_type)
+            multimedia_without_type = multimedia_df
+            # In case if the type was not populated from format
+            if 'type' in multimedia_df.columns:
+                multimedia_without_type = multimedia_df[multimedia_df['type'].isnull()]
+                multimedia_without_type = multimedia_without_type[multimedia_without_type['format'].notnull()]
 
-        multimedia_content.df_content = multimedia_df
+            if len(multimedia_without_type) > 0:
+                multimedia_without_type.loc[:, 'type'] = multimedia_without_type['format'].map(lambda x: get_media_type(x))
+                multimedia_df.update(multimedia_without_type)
+
+            multimedia_content.df_content = multimedia_df
 
     def _extract_media(self, content, assoc_media_col: str):
         """Extract embedded associated media and place it in a media extension data frame
