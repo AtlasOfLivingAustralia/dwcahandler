@@ -36,8 +36,8 @@ class TestTerms:
         mocker.patch('pandas.DataFrame.to_csv')
         return_dwc_df = Terms.update_dwc_terms()
         pd.testing.assert_frame_equal(return_dwc_df,
-                      pd.DataFrame({"term": ["occurrenceID", "basisOfRecord",
-                                             "scientificName"],
-                                    "uri": ["http://rs.tdwg.org/dwc/terms/occurrenceID",
-                                            "http://rs.tdwg.org/dwc/terms/basisOfRecord",
-                                            "http://rs.tdwg.org/dwc/terms/scientificName"]}))
+                                      pd.DataFrame({"term": ["occurrenceID", "basisOfRecord",
+                                                    "scientificName"],
+                                                    "uri": ["http://rs.tdwg.org/dwc/terms/occurrenceID",
+                                                            "http://rs.tdwg.org/dwc/terms/basisOfRecord",
+                                                            "http://rs.tdwg.org/dwc/terms/scientificName"]}))

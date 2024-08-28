@@ -30,7 +30,7 @@ sample_occ_df = pd.read_csv(occurrence_sample_file)
 sample_multimedia_df = pd.read_csv(multimedia_sample_file)
 
 
-class TestPublish:
+class TestWriteDwca:
     """
     Test for terms
     """
@@ -40,7 +40,7 @@ class TestPublish:
         Test that generated dwca is valid with core occ data
         """
         core_csv = CsvFileType(files=["./input_files/sample/occurrence.csv"], keys=['occurrenceID'],
-                               type=CoreOrExtType.CORE)
+                               type='occurrence')
         p = Path("temp")
         p.mkdir(parents=True, exist_ok=True)
         dwca_output_path = str(Path(p / "dwca.zip").absolute())
@@ -57,7 +57,7 @@ class TestPublish:
                 ns = _get_namespace(root)
                 assert ns == "{http://rs.tdwg.org/dwc/text/}"
                 core_node = root.find(f'{ns}{CoreOrExtType.CORE}')
-                assert core_node
+                assert core_node is not None
                 fields = core_node.findall(f'{ns}field')
                 term_fields = [f.attrib.get('term') for f in fields]
                 assert len(term_fields) == len(sample_occ_df.columns)
@@ -77,9 +77,9 @@ class TestPublish:
         Test that generated dwca is valid with core occ and multimedia data
         """
         core_csv = CsvFileType(files=["./input_files/sample/occurrence.csv"], keys=['occurrenceID'],
-                               type=CoreOrExtType.CORE)
+                               type='occurrence')
         ext_csv = CsvFileType(files=["./input_files/sample/multimedia.csv"], keys=['occurrenceID'],
-                              type=CoreOrExtType.EXTENSION)
+                              type='multimedia')
         p = Path("temp")
         p.mkdir(parents=True, exist_ok=True)
         dwca_output_path = str(Path(p / "dwca_with_ext.zip").absolute())
@@ -96,7 +96,7 @@ class TestPublish:
                 ns = _get_namespace(root)
                 assert ns == "{http://rs.tdwg.org/dwc/text/}"
                 core_node = root.find(f'{ns}{CoreOrExtType.CORE}')
-                assert core_node
+                assert core_node is not None
                 fields = core_node.findall(f'{ns}field')
                 term_fields = [f.attrib.get('term') for f in fields]
                 assert len(term_fields) == len(sample_occ_df.columns)
@@ -105,7 +105,7 @@ class TestPublish:
                 core_file = core_node.find(f'{ns}files').find(f'{ns}location').text
 
                 ext_node = root.find(f'{ns}{CoreOrExtType.EXTENSION}')
-                assert ext_node
+                assert ext_node is not None
                 fields = ext_node.findall(f'{ns}field')
                 term_fields = [f.attrib.get('term') for f in fields]
                 assert len(term_fields) == len(sample_multimedia_df.columns)

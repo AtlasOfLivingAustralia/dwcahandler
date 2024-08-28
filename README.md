@@ -43,12 +43,17 @@ poetry build
 &nbsp;
 ### Installation
 
-To use locally built package in a virtual environment for eg in preingestion or galaxias:
+Install published package
+```bash
+pip install dwcahandler
+```
+
+To use locally built package in a virtual environment:
 ```bash
 pip install <folder>/dwcahandler/dist/dwcahandler-<version>.tar.gz
 ```
 
-However, to install published package from testpypi
+To install published package from testpypi
 ```bash
 pip install -i https://test.pypi.org/simple/ dwcahandler
 ```
@@ -56,13 +61,15 @@ pip install -i https://test.pypi.org/simple/ dwcahandler
 ### Examples of dwcahandler usages:
 
 * Create Darwin Core Archive from csv file
+* In creating a dwca with multimedia extension, provide format and type values in the Simple Multimedia extension, otherwise, dwcahandler will attempt to fill these info by guessing the mimetype from url.
+
 ```python
 from dwcahandler import CsvFileType
 from dwcahandler import DwcaHandler
 from dwcahandler import Eml
 
-core_csv = CsvFileType(files=['/tmp/occurrence.csv'], type='occurrence', keys='occurrenceID')
-ext_csvs = [CsvFileType(files=['/tmp/multimedia.csv'], type='multimedia')]
+core_csv = CsvFileType(files=['/tmp/occurrence.csv'], type='occurrence', keys=['occurrenceID'])
+ext_csvs = [CsvFileType(files=['/tmp/multimedia.csv'], type='multimedia', keys=['occurrenceID'])]
 
 eml = Eml(dataset_name='Test Dataset',
           description='Dataset description',
@@ -74,6 +81,8 @@ DwcaHandler.create_dwca(core_csv=core_csv, ext_csv_list=ext_csvs, eml_content=em
 ```
 &nbsp;
 * Create Darwin Core Archive from pandas dataframe
+* In creating a dwca with multimedia extension, provide format and type values in the Simple Multimedia extension, otherwise, dwcahandler will attempt to fill these info by guessing the mimetype from url.
+
 ```python
 from dwcahandler import DwcaHandler
 from dwcahandler.dwca import DataFrameType
@@ -84,7 +93,7 @@ core_df = pd.read_csv("/tmp/occurrence.csv")
 core_frame = DataFrameType(df=core_df, type='occurrence', keys=['occurrenceID'])
 
 ext_df = pd.read_csv("/tmp/multimedia.csv")
-ext_frame = [DataFrameType(df=ext_df, type='multimedia')]
+ext_frame = [DataFrameType(df=ext_df, type='multimedia', keys=['occurrenceID'])]
 
 eml = Eml(dataset_name='Test Dataset',
           description='Dataset description',
@@ -93,6 +102,7 @@ eml = Eml(dataset_name='Test Dataset',
           rights="test rights")
 
 DwcaHandler.create_dwca(core_csv=core_frame, ext_csv_list=ext_frame, eml_content=eml, output_dwca_path='/tmp/dwca.zip')
+
 ```
 &nbsp;
 * Merge Darwin Core Archive
@@ -109,7 +119,7 @@ DwcaHandler.merge_dwca(dwca_file='/tmp/dwca.zip', delta_dwca_file='/tmp/delta-dw
 from dwcahandler import CsvFileType
 from dwcahandler import DwcaHandler
 
-delete_csv = CsvFileType(files=['/tmp/old-records.csv'], type='occurrence', keys='occurrenceID')
+delete_csv = CsvFileType(files=['/tmp/old-records.csv'], type='occurrence', keys=['occurrenceID'])
 
 DwcaHandler.delete_records(dwca_file='/tmp/dwca.zip',
                            records_to_delete=delete_csv, 
@@ -118,7 +128,7 @@ DwcaHandler.delete_records(dwca_file='/tmp/dwca.zip',
 &nbsp;
 * List darwin core terms that is supported in dwcahandler package
 ```python
-from dwca import DwcaHandler
+from dwcahandler import DwcaHandler
 
 df = DwcaHandler.list_dwc_terms()
 print(df)
@@ -132,7 +142,7 @@ class DerivedDwca(Dwca):
     """
     Derived class to perform other custom operations that is not included as part of the core operations
     """
-    def _drop_columns(self):
+    def drop_columns(self):
         """
         Drop existing column in the core content
         """
@@ -141,10 +151,10 @@ class DerivedDwca(Dwca):
 
 
 dwca = DerivedDwca(dwca_file_loc='/tmp/dwca.zip')
-dwca._extract_dwca()
-dwca._drop_columns()
-dwca._generate_eml()
-dwca._generate_meta()
-dwca._write_dwca('/tmp/newdwca.zip')
+dwca.extract_dwca()
+dwca.drop_columns()
+dwca.generate_eml()
+dwca.generate_meta()
+dwca.write_dwca('/tmp/newdwca.zip')
 
 ```
