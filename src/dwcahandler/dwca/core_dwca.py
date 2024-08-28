@@ -18,7 +18,6 @@ from typing import Union
 from zipfile import ZipFile
 
 import pandas as pd
-import requests
 from numpy import nan
 from pandas.errors import EmptyDataError
 from pandas.io import parsers
@@ -651,7 +650,7 @@ class Dwca(BaseDwca):
     def add_multimedia_info_to_content(self, multimedia_content: DfContent):
         """
         Attempt to populate the format and type from the url provided in the multimedia ext if none is provided
-        :param multimedia_content: Multimedia content type derived from the extension of this Dwca class object
+        :param multimedia_content: Multimedia content derived from the extension of this Dwca class object
         """
         def get_media_format_prefix(media_format: str):
             media_format_prefixes = ["image", "audio", "video"]
@@ -678,59 +677,50 @@ class Dwca(BaseDwca):
 
         def get_multimedia_format_type(row: dict):
             url = row['identifier']
-            mime_type = mimetypes.guess_type(url)
             media_format = None
-            if mime_type and len(mime_type) > 0 and mime_type[0]:
-                media_format = mime_type[0]
-            else:
+            if url:
                 try:
-                    # Just check header without downloading content
-                    response = requests.head(url, allow_redirects=True)
-                    if 'content-type' in response.headers:
-                        content_type = response.headers['content-type']
-                        if get_media_format_prefix(content_type):
-                            media_format = content_type
-
+                    mime_type = mimetypes.guess_type(url)
+                    if mime_type and len(mime_type) > 0 and mime_type[0]:
+                        media_format = mime_type[0]
                 except Exception as error:
-                    log.error("Error getting header info from url %s: %s", url, error)
+                    log.error("Error getting mimetype from url %s: %s", url, error)
 
             media_type = ''
-            if 'type' not in row or not row['type']:
+            if 'type' not in row or not row['type'] or row['type'] is nan:
                 media_type = get_media_type(media_format)
             else:
                 media_type = row['type']
 
-            row['format'] = media_format if media_format else nan
-            row['type'] = media_type if media_type else nan
+            row['format'] = media_format if media_format else None
+            row['type'] = media_type if media_type else None
             return row
 
-        def populate_format_type(row: dict):
-            return get_multimedia_format_type(row)
+        if len(multimedia_content.df_content) > 0:
 
-        multimedia_df = multimedia_content.df_content
+            multimedia_df = multimedia_content.df_content
 
-        if 'format' in multimedia_df.columns:
-            multimedia_without_format = multimedia_df[multimedia_df['format'].isnull()]
-            if len(multimedia_without_format) > 0:
-                multimedia_without_format = multimedia_without_format.apply(
-                                                                lambda row: populate_format_type(row),
-                                                                axis=1)
-                multimedia_df.update(multimedia_without_format)
-        else:
-            multimedia_df = multimedia_df.apply(
-                lambda row: populate_format_type(row), axis=1)
+            if 'format' in multimedia_df.columns:
+                multimedia_without_format = multimedia_df[multimedia_df['format'].isnull()]
+                if len(multimedia_without_format) > 0:
+                    multimedia_without_format = multimedia_without_format.apply(
+                                                                    lambda row: get_multimedia_format_type(row),
+                                                                    axis=1)
+                    multimedia_df.update(multimedia_without_format)
+            else:
+                multimedia_df = multimedia_df.apply(lambda row: get_multimedia_format_type(row), axis=1)
 
-        multimedia_without_type = multimedia_df
-        # In case if the type was not populated from format
-        if 'type' in multimedia_df.columns:
-            multimedia_without_type = multimedia_df[multimedia_df['type'].isnull()]
-            multimedia_without_type = multimedia_without_type[multimedia_without_type['format'].notnull()]
+            multimedia_without_type = multimedia_df
+            # In case if the type was not populated from format
+            if 'type' in multimedia_df.columns:
+                multimedia_without_type = multimedia_df[multimedia_df['type'].isnull()]
+                multimedia_without_type = multimedia_without_type[multimedia_without_type['format'].notnull()]
 
-        if len(multimedia_without_type) > 0:
-            multimedia_without_type.loc[:, 'type'] = multimedia_without_type['format'].map(lambda x: get_media_type(x))
-            multimedia_df.update(multimedia_without_type)
+            if len(multimedia_without_type) > 0:
+                multimedia_without_type.loc[:, 'type'] = multimedia_without_type['format'].map(lambda x: get_media_type(x))
+                multimedia_df.update(multimedia_without_type)
 
-        multimedia_content.df_content = multimedia_df
+            multimedia_content.df_content = multimedia_df
 
     def _extract_media(self, content, assoc_media_col: str):
         """Extract embedded associated media and place it in a media extension data frame

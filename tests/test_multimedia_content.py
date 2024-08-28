@@ -1,10 +1,16 @@
 import pandas as pd
+import dwcahandler
 from dwcahandler.dwca import CsvFileType, CoreOrExtType
 from dwcahandler.dwca.core_dwca import Dwca
 from operator import attrgetter
-import numpy
+import logging
+import pytest
 
-MIMETYPE_IMAGE_URL = 'https://www.gstatic.com/webp/gallery/1.webp'
+logging.basicConfig(level=logging.DEBUG)
+log = logging.getLogger("test_multimedia_content")
+
+MIMETYPE_IMAGE_URL = "https://www.gstatic.com/webp/gallery/1.webp"
+INVALID_MIMETYPE_URL = "https://invalid.url.jpeg"
 IMAGE_URL = "https://images.ala.org.au/image/proxyImageThumbnailLarge?imageId=a36b5634-0277-47c7-b4e3-383e24ce8d1a"
 AUDIO_URL = "https://images.ala.org.au/image/proxyImage?imageId=480f5f5e-e96c-4ae3-8230-c53a37bc542e"
 VIDEO_URL = "https://images.ala.org.au/image/proxyImage?imageId=537799d7-f4d6-490c-a24c-6a94bfd5e857"
@@ -20,13 +26,26 @@ image_ext = CsvFileType(files=[pd.DataFrame(data=[["1", IMAGE_URL],
                         keys=['occurrenceID'])
 
 
+def mock_guess_type(url):
+    if url == MIMETYPE_IMAGE_URL:
+        return ('image/webp', None)
+    elif url == INVALID_MIMETYPE_URL:
+        return ('image/jpeg', None)
+    return (None, None)
+
+
+@pytest.fixture
+def mock_mime_types(monkeypatch, request):
+    if request.config.getoption("--github-action-run"):
+        monkeypatch.setattr(dwcahandler.dwca.core_dwca.mimetypes, "guess_type", mock_guess_type)
+
+
 class TestMultimediaExtension:
 
     def test_extract_associate_media(self):
         """
         Test for associated media to be expanded into multimedia extension
         """
-
         occ_associated_media_df = pd.DataFrame(data=[["1", "species1", IMAGE_URL],
                                                      ["2", "species2", AUDIO_URL],
                                                      ["3", "species3", f"{VIDEO_URL}|{MIMETYPE_IMAGE_URL}"]],
@@ -60,7 +79,7 @@ class TestMultimediaExtension:
         assert sorted(list(map(attrgetter('field_name'), dwca.meta_content.meta_elements[1].fields))) == \
                sorted(['coreid', 'identifier'])
 
-    def test_fill_additional_multimedia_info(self):
+    def test_fill_additional_multimedia_info(self, mock_mime_types):
         """
         Test for fill additional multimedia info if format and type is not provided
         :return:
@@ -82,17 +101,20 @@ class TestMultimediaExtension:
         # Fill multimedia info
         dwca.fill_additional_info()
 
-        expected_multimedia_df = pd.DataFrame(data=[["1", IMAGE_URL, "image/jpeg", "StillImage"],
-                                                    ["2", AUDIO_URL, "audio/mp4", "Sound"],
-                                                    ["3", VIDEO_URL, "video/quicktime", "MovingImage"],
+        expected_multimedia_df = pd.DataFrame(data=[["1", IMAGE_URL, None, None],
+                                                    ["2", AUDIO_URL, None, None],
+                                                    ["3", VIDEO_URL, None, None],
                                                     ["3", MIMETYPE_IMAGE_URL, 'image/webp', 'StillImage']],
                                               columns=['occurrenceID', 'identifier', 'format', 'type'])
+
+        dwca.ext_content[0].df_content.fillna('', inplace=True)
+        expected_multimedia_df.fillna('', inplace=True)
 
         # Test that the multimedia extension will now contain the format and type
         pd.testing.assert_frame_equal(dwca.ext_content[0].df_content.drop(
                                       columns=['coreid']), expected_multimedia_df)
 
-    def test_fill_multimedia_info_with_format_type_partially_supplied(self):
+    def test_fill_multimedia_info_with_format_type_partially_supplied(self, mock_mime_types):
         """
         Test fill_additional_multimedia_info if format or type is already present.
         Calling fill_additional_multimedia_info should not change the existing values in the content
@@ -108,19 +130,23 @@ class TestMultimediaExtension:
                                                                                 ["4", "species4"],
                                                                                 ["5", "species5"],
                                                                                 ["6", "species6"],
-                                                                                ["7", "species7"]],
+                                                                                ["7", "species7"],
+                                                                                ["8", "species8"],
+                                                                                ["9", "species9"]],
                                                                           columns=['occurrenceID', 'scientificName'])],
                                                       type='occurrence',
                                                       keys=['occurrenceID']),
                                  core_ext_type=CoreOrExtType.CORE)
 
         image_data = [["1", IMAGE_URL, "image/webp", "StillImage"],
-                      ["2", AUDIO_URL, "audio/mp3", numpy.nan],
-                      ["3", VIDEO_URL, numpy.nan, "MovingImage"],
-                      ["4", INVALID_URL, numpy.nan, numpy.nan],
-                      ["5", INVALID_URL, 'invalidformat', numpy.nan],
-                      ["6", INVALID_URL, 'image/jpeg', numpy.nan],
-                      ["7", DELETED_MEDIA_URL, numpy.nan, numpy.nan]]
+                      ["2", AUDIO_URL, "audio/mp3", None],
+                      ["3", VIDEO_URL, None, "MovingImage"],
+                      ["4", INVALID_URL, None, None],
+                      ["5", INVALID_URL, 'invalidformat', None],
+                      ["6", INVALID_URL, 'image/jpeg', None],
+                      ["7", DELETED_MEDIA_URL, None, None],
+                      ["8", INVALID_MIMETYPE_URL, None, None],
+                      ["9", None, None, None]]
 
         # Extract multimedia ext without format
         dwca.extract_csv_content(csv_info=CsvFileType(files=[pd.DataFrame(data=image_data,
@@ -135,11 +161,71 @@ class TestMultimediaExtension:
 
         expected_image_data = [["1", IMAGE_URL, "image/webp", "StillImage"],
                                ["2", AUDIO_URL, "audio/mp3", "Sound"],
-                               ["3", VIDEO_URL, "video/quicktime", "MovingImage"],
-                               ["4", INVALID_URL, numpy.nan, numpy.nan],
-                               ["5", INVALID_URL, 'invalidformat', numpy.nan],
+                               ["3", VIDEO_URL, None, "MovingImage"],
+                               ["4", INVALID_URL, None, None],
+                               ["5", INVALID_URL, 'invalidformat', None],
                                ["6", INVALID_URL, 'image/jpeg', 'StillImage'],
-                               ["7", DELETED_MEDIA_URL, numpy.nan, numpy.nan]]
+                               ["7", DELETED_MEDIA_URL, None, None],
+                               ["8", INVALID_MIMETYPE_URL, 'image/jpeg', 'StillImage'],
+                               ["9", None, None, None]]
+
+        expected_multimedia_df = pd.DataFrame(data=expected_image_data,
+                                              columns=['occurrenceID', 'identifier', 'format', 'type'])
+
+        # Test that the multimedia extension format and type is filled if none provided but
+        # if format and type is provided it remains as provided
+        pd.testing.assert_frame_equal(dwca.ext_content[0].df_content.drop(
+            columns=['coreid']), expected_multimedia_df)
+
+    def test_fill_multimedia_info_type_from_forrmat(self, mock_mime_types):
+        """
+        Test fill_additional_multimedia_info if only format is already present.
+        Calling fill_additional_multimedia_info should not change the existing values in the content
+        """
+        dwca = Dwca()
+
+        # Extract core occurrence
+        dwca.extract_csv_content(csv_info=CsvFileType(files=[pd.DataFrame(data=[["1", "species1"],
+                                                                                ["2", "species2"],
+                                                                                ["3", "species3"],
+                                                                                ["4", "species4"],
+                                                                                ["5", "species5"],
+                                                                                ["6", "species6"],
+                                                                                ["7", "species7"],
+                                                                                ["8", "species8"]],
+                                                                          columns=['occurrenceID', 'scientificName'])],
+                                                      type='occurrence',
+                                                      keys=['occurrenceID']),
+                                 core_ext_type=CoreOrExtType.CORE)
+
+        image_data = [["1", IMAGE_URL, "image/webp"],
+                      ["2", AUDIO_URL, "audio/mp3"],
+                      ["3", VIDEO_URL, "video/mp4"],
+                      ["4", INVALID_URL, None],
+                      ["5", INVALID_URL, 'invalidformat'],
+                      ["6", MIMETYPE_IMAGE_URL, None],
+                      ["7", DELETED_MEDIA_URL, None],
+                      ["8", INVALID_MIMETYPE_URL, None]]
+
+        # Extract multimedia ext without format
+        dwca.extract_csv_content(csv_info=CsvFileType(files=[pd.DataFrame(data=image_data,
+                                                                          columns=['occurrenceID', 'identifier',
+                                                                                   "format"])],
+                                                      type='multimedia',
+                                                      keys=['occurrenceID']),
+                                 core_ext_type=CoreOrExtType.EXTENSION)
+
+        # Fill multimedia extension info
+        dwca.fill_additional_info()
+
+        expected_image_data = [["1", IMAGE_URL, "image/webp", "StillImage"],
+                               ["2", AUDIO_URL, "audio/mp3", "Sound"],
+                               ["3", VIDEO_URL, "video/mp4", "MovingImage"],
+                               ["4", INVALID_URL, None, None],
+                               ["5", INVALID_URL, 'invalidformat', None],
+                               ["6", MIMETYPE_IMAGE_URL, 'image/webp', 'StillImage'],
+                               ["7", DELETED_MEDIA_URL, None, None],
+                               ["8", INVALID_MIMETYPE_URL, 'image/jpeg', 'StillImage']]
 
         expected_multimedia_df = pd.DataFrame(data=expected_image_data,
                                               columns=['occurrenceID', 'identifier', 'format', 'type'])

@@ -61,7 +61,7 @@ pip install -i https://test.pypi.org/simple/ dwcahandler
 ### Examples of dwcahandler usages:
 
 * Create Darwin Core Archive from csv file
-* In creating a dwca with multimedia extension, provide format and type values in the Simple Multimedia extension, otherwise, dwcahandler will attempt to fill these info by guessing the mimetype from url or extracting content type of the url which will slow down the creation of dwca depending on how large the dataset is.
+* In creating a dwca with multimedia extension, provide format and type values in the Simple Multimedia extension, otherwise, dwcahandler will attempt to fill these info by guessing the mimetype from url.
 
 ```python
 from dwcahandler import CsvFileType
@@ -69,7 +69,7 @@ from dwcahandler import DwcaHandler
 from dwcahandler import Eml
 
 core_csv = CsvFileType(files=['/tmp/occurrence.csv'], type='occurrence', keys=['occurrenceID'])
-ext_csvs = [CsvFileType(files=['/tmp/multimedia.csv'], type='multimedia')]
+ext_csvs = [CsvFileType(files=['/tmp/multimedia.csv'], type='multimedia', keys=['occurrenceID'])]
 
 eml = Eml(dataset_name='Test Dataset',
           description='Dataset description',
@@ -81,6 +81,7 @@ DwcaHandler.create_dwca(core_csv=core_csv, ext_csv_list=ext_csvs, eml_content=em
 ```
 &nbsp;
 * Create Darwin Core Archive from pandas dataframe
+* In creating a dwca with multimedia extension, provide format and type values in the Simple Multimedia extension, otherwise, dwcahandler will attempt to fill these info by guessing the mimetype from url.
 
 ```python
 from dwcahandler import DwcaHandler
@@ -92,7 +93,7 @@ core_df = pd.read_csv("/tmp/occurrence.csv")
 core_frame = DataFrameType(df=core_df, type='occurrence', keys=['occurrenceID'])
 
 ext_df = pd.read_csv("/tmp/multimedia.csv")
-ext_frame = [DataFrameType(df=ext_df, type='multimedia')]
+ext_frame = [DataFrameType(df=ext_df, type='multimedia', keys=['occurrenceID'])]
 
 eml = Eml(dataset_name='Test Dataset',
           description='Dataset description',
