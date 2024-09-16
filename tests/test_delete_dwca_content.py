@@ -24,7 +24,7 @@ class TestDeleteContent:
                                        ["3", "species3"]],
                                  columns=['occurrenceID', 'scientificName'])
 
-        delete_records = CsvFileType(files=[delete_df], type='occurrence', keys=['occurrenceID'])
+        delete_records = CsvFileType(files=delete_df, type='occurrence', keys=['occurrenceID'])
 
         output_obj = BytesIO()
 
