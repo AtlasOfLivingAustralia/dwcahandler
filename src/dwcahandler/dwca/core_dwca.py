@@ -531,8 +531,12 @@ class Dwca(BaseDwca):
 
         :param records_to_delete: A CSV file of records to delete, keyed to the DwCA file
          """
-        delete_content = self._combine_contents(
-            records_to_delete.files, records_to_delete.csv_encoding, use_chunking=False)
+        delete_content = pd.DataFrame()
+        if isinstance(records_to_delete.files, pd.DataFrame):
+            delete_content = records_to_delete.files.copy(deep=True)
+        else:
+            delete_content = self._combine_contents(records_to_delete.files, records_to_delete.csv_encoding,
+                                                    use_chunking=False)
         valid_delete_file = (all(col in delete_content.columns for col in records_to_delete.keys)
                              or len(delete_content) > 0)
         if not valid_delete_file:
