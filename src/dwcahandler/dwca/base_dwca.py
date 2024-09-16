@@ -6,7 +6,8 @@ Module contains the Darwin Core Base class
 from __future__ import annotations
 from abc import ABCMeta, abstractmethod
 from typing import Union
-from dwcahandler.dwca import CoreOrExtType, CsvFileType, DataFrameType, MetaElementTypes
+from io import BytesIO
+from dwcahandler.dwca import CoreOrExtType, CsvFileType, MetaElementTypes
 from dwcahandler.dwca.eml import Eml
 
 
@@ -116,14 +117,14 @@ class BaseDwca(metaclass=ABCMeta):
         self.generate_meta()
         self.write_dwca(output_dwca_path)
 
-    def delete_records_in_dwca(self, records_to_delete: CsvFileType, output_dwca_path: str):
+    def delete_records_in_dwca(self, records_to_delete: CsvFileType, output_dwca_path: Union[str, BytesIO]):
         self.extract_dwca()
         self.delete_records(records_to_delete)
         self.generate_eml()
         self.generate_meta()
         self.write_dwca(output_dwca_path)
 
-    def create_dwca(self, core_csv: Union[CsvFileType, DataFrameType], output_dwca_path: str,
+    def create_dwca(self, core_csv: CsvFileType, output_dwca_path: str,
                     ext_csv_list: list[CsvFileType] = None, validate_content: bool = True,
                     eml_content: Union[str, Eml] = ''):
 
@@ -154,8 +155,8 @@ class BaseDwca(metaclass=ABCMeta):
     # keys_lookup keys used for merging 2 dwcas
     # regen_ids will generate new uuids for core csv and link coreids extensions to core records.
     # https://peps.python.org/pep-0484/#forward-references
-    def merge_dwca(self, delta_dwca: BaseDwca, output_dwca_path: str, keys_lookup: dict = None, extension_sync=False,
-                   regen_ids: bool = False, validate_delta: bool = True):
+    def merge_dwca(self, delta_dwca: BaseDwca, output_dwca_path: Union[str, BytesIO], keys_lookup: dict = None,
+                   extension_sync=False, regen_ids: bool = False, validate_delta: bool = True):
         self.extract_dwca()
         delta_dwca.extract_dwca()
         self.set_keys(keys_lookup)

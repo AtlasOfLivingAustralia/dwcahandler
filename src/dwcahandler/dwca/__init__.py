@@ -18,7 +18,7 @@ the (usually Darwin Core) terms that each column contains.
 """
 from collections import namedtuple
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Optional, Union
 import logging
 import pandas as pd
 from functools import wraps
@@ -64,7 +64,7 @@ class CSVEncoding:
 class CsvFileType:
     """A description of a CSV file in a DwCA
     """
-    files: list  # can accept more than one file
+    files: Union[list[str], pd.DataFrame]  # can accept more than one file or a dataframe
     type: str  # 'occurrence', 'taxon', 'event', multimedia,...
     keys: Optional[list] = None  # must be supplied for csv extensions to link extension records to core record
     # when creating dwca. for core other than occurrence, this neeeds to be supplied as key.
@@ -75,16 +75,6 @@ class CsvFileType:
                                             csv_escape_char='"'))
     # delimiter: Optional[str] = None
     # file delimiter type when reading the csv. if not supplied, the collectory setting delimiter is read in for the dr
-
-
-@dataclass
-class DataFrameType:
-    df: pd.DataFrame
-    type: str  # 'occurrence', 'taxon', 'event', multimedia,...
-    keys: Optional[list] = None  # must be supplied for csv extensions to link extension records to core record
-    # when creating dwca. for core other than occurrence, this neeeds to be supplied as key.
-    # column keys lookup in core or extension for delete records
-    associated_files_loc: Optional[str] = None  # in case there are associated media that need to be packaged in dwca
 
 
 class Stat:
@@ -153,12 +143,18 @@ class Stat:
 def record_diff_stat(func):
     """Record stats for dataframe content"""
     @wraps(func)
-    def wrapper_function(self, record_content, content, *args, **kwargs):
-        ret_value = func(self, record_content, content, *args, **kwargs)
-        record_content.stat.set_stat(self.count_stat(ret_value))
-        logging.debug("%s %s %s stats shows %s",
-                      func.__name__, record_content.meta_info.core_or_ext_type,
-                      record_content.meta_info.type.name, str(record_content.stat))
+    def wrapper_function(self, *args, **kwargs):
+        params = list(kwargs.keys())
+        if len(params) >= 1:
+            record_content = kwargs[params[0]]
+            ret_value = func(self, *args, **kwargs)
+            record_content.stat.set_stat(self.count_stat(ret_value))
+            logging.debug("%s %s %s stats shows %s",
+                          func.__name__, record_content.meta_info.core_or_ext_type,
+                          record_content.meta_info.type.name, str(record_content.stat))
+            return ret_value
+
+        ret_value = func(self, *args, **kwargs)
         return ret_value
 
     return wrapper_function

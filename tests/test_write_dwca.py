@@ -1,9 +1,11 @@
-from dwcahandler import DwcaHandler, CsvFileType, CoreOrExtType, Eml
+import io
+from dwcahandler import DwcaHandler, CsvFileType, CoreOrExtType
 from zipfile import ZipFile
 from pathlib import Path
 import xml.etree.ElementTree as ET
 import re
 import pandas as pd
+from tests import get_eml_content
 
 
 def _get_namespace(element):
@@ -16,14 +18,6 @@ def _get_namespace(element):
     return m.group(0) if m else ''
 
 
-def _get_eml_content():
-    return Eml(dataset_name='Sample Dataset',
-               description='A dataset sample',
-               license='sample license',
-               citation='sample citation',
-               rights='sample rights')
-
-
 occurrence_sample_file = "./input_files/sample/occurrence.csv"
 multimedia_sample_file = "./input_files/sample/multimedia.csv"
 sample_occ_df = pd.read_csv(occurrence_sample_file)
@@ -32,7 +26,8 @@ sample_multimedia_df = pd.read_csv(multimedia_sample_file)
 
 class TestWriteDwca:
     """
-    Test for terms
+    This checks that the dwca file that is produced has the proper meta xml schema and format and
+    content is as expected
     """
 
     def test_generate_dwca_without_ext(self):
@@ -45,7 +40,7 @@ class TestWriteDwca:
         p.mkdir(parents=True, exist_ok=True)
         dwca_output_path = str(Path(p / "dwca.zip").absolute())
         DwcaHandler.create_dwca(core_csv=core_csv, output_dwca_path=dwca_output_path,
-                                eml_content=_get_eml_content())
+                                eml_content=get_eml_content())
         with ZipFile(dwca_output_path, 'r') as zf:
             files = zf.namelist()
             assert 'meta.xml' in files
@@ -84,7 +79,7 @@ class TestWriteDwca:
         p.mkdir(parents=True, exist_ok=True)
         dwca_output_path = str(Path(p / "dwca_with_ext.zip").absolute())
         DwcaHandler.create_dwca(core_csv=core_csv, ext_csv_list=[ext_csv], output_dwca_path=dwca_output_path,
-                                eml_content=_get_eml_content())
+                                eml_content=get_eml_content())
         with ZipFile(dwca_output_path, 'r') as zf:
             files = zf.namelist()
             assert 'meta.xml' in files
@@ -125,5 +120,50 @@ class TestWriteDwca:
                 df = pd.read_csv(image_file)
                 assert 'coreid' in df.columns
                 pd.testing.assert_frame_equal(df.drop(columns=['coreid']), sample_multimedia_df)
+
+            zf.close()
+
+    def test_generate_dwca_in_memory(self):
+        """
+        Test that generated dwca in memory is valid with core occ data
+        """
+
+        occ_df = pd.DataFrame(data=[["1", "species1"],
+                                    ["2", "species2"],
+                                    ["3", "species3"]],
+                              columns=['catalogNumber', 'scientificName'])
+
+        core_csv = CsvFileType(files=occ_df,
+                               type='occurrence',
+                               keys=['catalogNumber'])
+
+        dwca_output = io.BytesIO()
+
+        DwcaHandler.create_dwca(core_csv=core_csv, output_dwca_path=dwca_output,
+                                eml_content=get_eml_content())
+
+        with ZipFile(dwca_output, 'r') as zf:
+            files = zf.namelist()
+            assert 'meta.xml' in files
+            assert 'eml.xml' in files
+            core_file = ""
+            with zf.open('meta.xml') as meta_xml_file:
+                tree = ET.parse(meta_xml_file)
+                root = tree.getroot()
+                ns = _get_namespace(root)
+                assert ns == "{http://rs.tdwg.org/dwc/text/}"
+                core_node = root.find(f'{ns}{CoreOrExtType.CORE}')
+                assert core_node is not None
+                fields = core_node.findall(f'{ns}field')
+                term_fields = [f.attrib.get('term') for f in fields]
+                assert len(term_fields) == len(occ_df.columns)
+                for sample_col in occ_df.columns:
+                    assert any(sample_col in f for f in term_fields)
+                core_file = core_node.find(f'{ns}files').find(f'{ns}location').text
+
+            assert core_file
+            with zf.open(core_file) as occ_file:
+                df = pd.read_csv(occ_file, dtype='str')
+                pd.testing.assert_frame_equal(df.drop(columns=['id']), occ_df)
 
             zf.close()
