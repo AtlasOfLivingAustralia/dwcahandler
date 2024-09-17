@@ -99,4 +99,3 @@ class TestDeleteContent:
                 pd.testing.assert_frame_equal(multimedia_df_output.drop(columns="coreid"), expected_mult_df)
 
             zf.close()
-

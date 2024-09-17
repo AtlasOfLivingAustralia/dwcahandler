@@ -74,8 +74,8 @@ class TestMergeDwcaContent:
                               columns=['occurrenceID', 'scientificName', 'decimalLatitude', 'decimalLongitude'])
 
         multimedia_df = pd.DataFrame(data=[["1", "https://image1.jpg", "image/jpeg", "StillImage"],
-                                   ["2", "https://image2.jpg", "image/jpeg", "StillImage"],
-                                   ["3", "https://image3.jpg", "image/jpeg", "StillImage"]],
+                                           ["2", "https://image2.jpg", "image/jpeg", "StillImage"],
+                                           ["3", "https://image3.jpg", "image/jpeg", "StillImage"]],
                                      columns=["occurrenceID", "identifier", "format", "type"])
 
         dwca_ext_obj = make_dwca(occ_df, multimedia_df)

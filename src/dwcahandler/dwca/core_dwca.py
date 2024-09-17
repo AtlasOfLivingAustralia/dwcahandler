@@ -188,10 +188,10 @@ class Dwca(BaseDwca):
             files = zf.namelist()
 
             log.info("Reading from %s", self.dwca_file_loc)
-            #with zf.open(self.defaults_prop.meta_xml_filename) as meta_xml_file:
+
             with io.TextIOWrapper(zf.open(self.defaults_prop.meta_xml_filename)) as meta_xml:
-                    self.meta_content.read_meta_file(meta_xml)
-                    meta_xml.close()
+                self.meta_content.read_meta_file(meta_xml)
+                meta_xml.close()
 
             if self.meta_content.eml_xml_filename in files:
                 with io.TextIOWrapper(zf.open(self.meta_content.eml_xml_filename),

@@ -25,18 +25,18 @@ def make_fields(columns: list, term_uri: str):
     return fields
 
 
-def make_ext_str(ext_columns:list, term_uri: str):
+def make_ext_str(ext_columns: list, term_uri: str):
     ext_meta_str = ''
     fields = make_fields(ext_columns, term_uri)
     if fields:
-        ext_meta_str = f'''  
+        ext_meta_str = f'''
 <extension encoding="UTF-8" rowType="http://rs.gbif.org/terms/1.0/Multimedia" fieldsTerminatedBy="," linesTerminatedBy="\\r\\n" fieldsEnclosedBy="&quot;" ignoreHeaderLines="1">
     <files>
       <location>multimedia.csv</location>
     </files>
     <coreid index="0"/>
     {fields}
-  </extension>        
+  </extension>
 '''
     return ext_meta_str
 
