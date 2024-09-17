@@ -19,7 +19,8 @@ def get_eml_content():
 def make_fields(columns: list, term_uri: str):
     fields = ''
     for idx, col in enumerate(columns):
-        field = f'<field index="{idx + 1}" term="{term_uri}/{col}"/>'
+        dwc_term_uri = "http://rs.tdwg.org/dwc/terms" if col == 'occurrenceID' else term_uri
+        field = f'<field index="{idx + 1}" term="{dwc_term_uri}/{col}"/>'
         fields = field if idx == 0 else fields + '\n' + field
     return fields
 

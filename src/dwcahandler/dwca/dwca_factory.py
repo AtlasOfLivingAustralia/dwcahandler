@@ -63,7 +63,7 @@ class DwcaHandler:
                                                              output_dwca_path=output_dwca_path)
 
     @staticmethod
-    def merge_dwca(dwca_file: str, delta_dwca_file: str, output_dwca_path: Union[str, BytesIO],
+    def merge_dwca(dwca_file: Union[str, BytesIO], delta_dwca_file: Union[str, BytesIO], output_dwca_path: Union[str, BytesIO],
                    keys_lookup: dict = None, extension_sync: bool = False, regen_ids: bool = False,
                    validate_delta_content: bool = True):
         """Merge a DwCA with a delta DwCA of changes.

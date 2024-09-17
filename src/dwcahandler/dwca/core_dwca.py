@@ -567,7 +567,7 @@ class Dwca(BaseDwca):
         if core_or_ext == CoreOrExtType.CORE:
             for ext in self.ext_content:
                 log.info("Removing records from ext: %s", ext.meta_info.type.name)
-                ext.df_content = self._delete_content(content=ext.df_content,
+                ext.df_content = self._delete_content(content=ext,
                                                       delete_content=delete_content)
 
     def _add_ext_lookup_key(self, df_content, core_df_content, core_keys, keys):

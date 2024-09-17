@@ -65,7 +65,8 @@ class TestMergeDwcaContent:
 
     def test_merge_core_and_ext_records(self):
         """
-        Test for core record merging (update existing and add new rows)
+        Test for core and extension record merging (update existing and add new rows, columns)
+        Occurrence, multimedia and meta xml output is merged as expected
         """
         occ_df = pd.DataFrame(data=[["1", "species1", "-30.0000", "144.0000"],
                                     ["2", "species2", "-28.0000", "115.0000"],
@@ -79,17 +80,18 @@ class TestMergeDwcaContent:
 
         dwca_ext_obj = make_dwca(occ_df, multimedia_df)
 
-        delta_occ_df = pd.DataFrame(data=[["3", "species3", "-40.0000", "144.0000"],
-                                          ["4", "species4", "-10.0000", "144.0000"],
-                                          ["5", "species5", "-20.0000", "145.0000"],
-                                          ["6", "species6", "-30.0000", "146.3048"]],
-                                    columns=["occurrenceID", "scientificName", "decimalLatitude", "decimalLongitude"])
+        delta_occ_df = pd.DataFrame(data=[["3", "species3", "-40.0000", "144.0000", "Observation"],
+                                          ["4", "species4", "-10.0000", "144.0000", "Observation"],
+                                          ["5", "species5", "-20.0000", "145.0000", ""],
+                                          ["6", "species6", "-30.0000", "146.3048", ""]],
+                                    columns=["occurrenceID", "scientificName", "decimalLatitude", "decimalLongitude",
+                                             "basisOfRecord"])
 
-        delta_multimedia_df = pd.DataFrame(data=[["3", "https://new-image3.webp", "image/webp", "StillImage"],
-                                                 ["4", "https://image4.webp", "image/webp", "StillImage"],
-                                                 ["5", "https://image5.webp", "image/webp", "StillImage"],
-                                                 ["6", "https://image6.webp", "image/webp", "StillImage"]],
-                                           columns=["occurrenceID", "identifier", "format", "type"])
+        delta_multimedia_df = pd.DataFrame(data=[["3", "https://new-image3.webp", "image/webp", "StillImage", "RightsHolder3"],
+                                                 ["4", "https://image4.webp", "image/webp", "StillImage", None],
+                                                 ["5", "https://image5.webp", "image/webp", "StillImage", "RightsHolder5"],
+                                                 ["6", "https://image6.webp", "image/webp", "StillImage", "RightsHolder6"]],
+                                           columns=["occurrenceID", "identifier", "format", "type", "rightsHolder"])
 
         delta_dwca_ext_obj = make_dwca(delta_occ_df, delta_multimedia_df)
 
@@ -102,3 +104,42 @@ class TestMergeDwcaContent:
         DwcaHandler.merge_dwca(dwca_file=dwca_ext_obj, delta_dwca_file=delta_dwca_ext_obj,
                                output_dwca_path=output_obj,
                                keys_lookup=keys_lookup)
+
+        expected_occ_df = pd.DataFrame(data=[["1", "species1", "-30.0000", "144.0000", None],
+                                             ["2", "species2", "-28.0000", "115.0000", None],
+                                             ["3", "species3", "-40.0000", "144.0000", "Observation"],
+                                             ["4", "species4", "-10.0000", "144.0000", "Observation"],
+                                             ["5", "species5", "-20.0000", "145.0000", None],
+                                             ["6", "species6", "-30.0000", "146.3048", None]],
+                                       columns=['occurrenceID', 'scientificName', 'decimalLatitude', 'decimalLongitude', 'basisOfRecord'])
+
+        expected_multimedia_df = pd.DataFrame(data=[["1", "https://image1.jpg", "image/jpeg", "StillImage", None],
+                                                    ["2", "https://image2.jpg", "image/jpeg", "StillImage", None],
+                                                    ["3", "https://new-image3.webp", "image/webp", "StillImage", "RightsHolder3"],
+                                                    ["4", "https://image4.webp", "image/webp", "StillImage", None],
+                                                    ["5", "https://image5.webp", "image/webp", "StillImage", "RightsHolder5"],
+                                                    ["6", "https://image6.webp", "image/webp", "StillImage", "RightsHolder6"]],
+                                              columns=["occurrenceID", "identifier", "format", "type", "rightsHolder"])
+
+        expected_meta_xml = make_meta_xml_str(expected_occ_df, expected_multimedia_df)
+
+        with ZipFile(output_obj, 'r') as zf:
+            files = zf.namelist()
+            assert 'occurrence.csv' in files
+            assert 'multimedia.csv' in files
+            assert 'meta.xml' in files
+            assert 'eml.xml' in files
+
+            with zf.open('meta.xml') as meta_xml_file:
+                meta_str = meta_xml_file.read().decode("utf-8")
+                assert remove_pretty_print_xml(meta_str) == remove_pretty_print_xml(expected_meta_xml)
+
+            with zf.open('occurrence.csv') as occ_file:
+                df_output = pd.read_csv(occ_file, dtype='str')
+                pd.testing.assert_frame_equal(df_output.drop(columns='id'), expected_occ_df)
+
+            with zf.open('multimedia.csv') as multimedia_file:
+                multimedia_df_output = pd.read_csv(multimedia_file, dtype='str')
+                pd.testing.assert_frame_equal(multimedia_df_output.drop(columns='coreid'), expected_multimedia_df)
+
+            zf.close()
