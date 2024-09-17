@@ -40,12 +40,13 @@ def make_ext_str(ext_columns:list, term_uri: str):
     return ext_meta_str
 
 
-def make_meta_xml_str(core_df: pd.DataFrame, ext_df: pd.DataFrame = None):
+def make_meta_xml_str(core_df: pd.DataFrame, ext_df: pd.DataFrame = None) -> str:
     """
-    Create a meta xml string based on the columns
+    Create a meta xml string based on the core and extension dataframe
     This meta xml is based on occurrence core and optional multimedia ext
-    :param columns:
-    :return:
+    :param: core_df dataframe for occurrence core
+            ext_df dataframe for multimedia extension
+    :return: str
     """
     core_columns = core_df.columns.to_list()
     fields = make_fields(core_columns, "http://rs.tdwg.org/dwc/terms")
@@ -64,7 +65,13 @@ def make_meta_xml_str(core_df: pd.DataFrame, ext_df: pd.DataFrame = None):
     return meta_xml_str
 
 
-def make_dwca(core_content: pd.DataFrame, ext_mult_content: pd.DataFrame = None):
+def make_dwca(core_content: pd.DataFrame, ext_mult_content: pd.DataFrame = None) -> BytesIO:
+    """
+    Create a darwin core archive in memory for testing
+    :param: core_df dataframe for occurrence core
+            ext_df dataframe for multimedia extension
+    :return: BytesIO
+    """
     zip_buffer = BytesIO()
     meta_xml_str = make_meta_xml_str(core_content, ext_mult_content)
     content = core_content.copy(deep=True)
