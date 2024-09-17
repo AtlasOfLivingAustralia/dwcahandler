@@ -235,7 +235,9 @@ class Dwca(BaseDwca):
         delta_df_columns = delta_df_content.columns.to_list()
         new_columns = list(set(delta_df_columns) - set(df_columns))
         if len(new_columns) > 0:
-            df_content[new_columns] = nan
+            # Set to empty string instead of nan to resolve warning message
+            # see https://pandas.pydata.org/pdeps/0006-ban-upcasting.html
+            df_content[new_columns] = ""
 
         return new_columns
 
