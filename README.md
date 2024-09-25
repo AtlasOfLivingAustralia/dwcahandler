@@ -85,15 +85,15 @@ DwcaHandler.create_dwca(core_csv=core_csv, ext_csv_list=ext_csvs, eml_content=em
 
 ```python
 from dwcahandler import DwcaHandler
-from dwcahandler.dwca import DataFrameType
+from dwcahandler.dwca import CsvFileType
 from dwcahandler import Eml
 import pandas as pd
 
 core_df = pd.read_csv("/tmp/occurrence.csv")
-core_frame = DataFrameType(df=core_df, type='occurrence', keys=['occurrenceID'])
+core_frame = CsvFileType(files=core_df, type='occurrence', keys=['occurrenceID'])
 
 ext_df = pd.read_csv("/tmp/multimedia.csv")
-ext_frame = [DataFrameType(df=ext_df, type='multimedia', keys=['occurrenceID'])]
+ext_frame = [CsvFileType(files=ext_df, type='multimedia', keys=['occurrenceID'])]
 
 eml = Eml(dataset_name='Test Dataset',
           description='Dataset description',

@@ -6,8 +6,8 @@ Module contains factory class for Dwca. This is used to decide the type of darwi
 import logging
 from typing import Union
 import pandas as pd
-from dwcahandler.dwca import CsvFileType, DataFrameType, Dwca, Terms, Eml
-
+from dwcahandler.dwca import CsvFileType, Dwca, Terms, Eml
+from io import BytesIO
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 log = logging.getLogger("DwcaFactoryManager")
@@ -22,9 +22,9 @@ class DwcaHandler:
     """Perform various DwCA operations"""
 
     @staticmethod
-    def create_dwca(core_csv: Union[CsvFileType, DataFrameType],
-                    output_dwca_path: str,
-                    ext_csv_list: list[Union[CsvFileType, DataFrameType]] = None,
+    def create_dwca(core_csv: CsvFileType,
+                    output_dwca_path: Union[str, BytesIO],
+                    ext_csv_list: list[CsvFileType] = None,
                     validate_content: bool = True,
                     eml_content: Union[str, Eml] = ''):
         """Create a suitable DwCA from a list of CSV files
@@ -50,8 +50,8 @@ class DwcaHandler:
                                                         output_dwca_path=output_dwca_path)
 
     @staticmethod
-    def delete_records(dwca_file: str, records_to_delete: CsvFileType,
-                       output_dwca_path: str):
+    def delete_records(dwca_file: Union[str, BytesIO], records_to_delete: CsvFileType,
+                       output_dwca_path: Union[str, BytesIO]):
         """Delete core records listed in the records_to_delete file from DwCA.
         The specified keys listed in records_to_delete param must exist in the dwca core file
 
@@ -63,8 +63,9 @@ class DwcaHandler:
                                                              output_dwca_path=output_dwca_path)
 
     @staticmethod
-    def merge_dwca(dwca_file: str, delta_dwca_file: str, output_dwca_path: str, keys_lookup: dict = None,
-                   extension_sync: bool = False, regen_ids: bool = False, validate_delta_content: bool = True):
+    def merge_dwca(dwca_file: Union[str, BytesIO], delta_dwca_file: Union[str, BytesIO], output_dwca_path: Union[str, BytesIO],
+                   keys_lookup: dict = None, extension_sync: bool = False, regen_ids: bool = False,
+                   validate_delta_content: bool = True):
         """Merge a DwCA with a delta DwCA of changes.
 
         :param dwca_file: The path to the existing DwCA

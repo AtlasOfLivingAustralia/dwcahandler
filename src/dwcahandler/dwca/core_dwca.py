@@ -11,6 +11,7 @@ import logging
 import mimetypes
 import re
 import uuid
+from io import BytesIO
 import zipfile
 from dataclasses import MISSING, asdict, dataclass, field
 from pathlib import Path
@@ -21,9 +22,8 @@ import pandas as pd
 from numpy import nan
 from pandas.errors import EmptyDataError
 from pandas.io import parsers
-
 from dwcahandler.dwca import (BaseDwca, CoreOrExtType, CSVEncoding,
-                              CsvFileType, DataFrameType, Defaults, Eml,
+                              CsvFileType, Defaults, Eml,
                               MetaDwCA, MetaElementInfo, MetaElementTypes,
                               Stat, record_diff_stat)
 
@@ -46,7 +46,7 @@ class Dwca(BaseDwca):
     """
     A concrete implementation of a Darwin Core Archive.
     """
-    dwca_file_loc: str = field(default='./')
+    dwca_file_loc: Union[str, BytesIO] = field(default='./')
     core_content: DfContent = field(init=False)
     ext_content: list[DfContent] = field(init=False, default_factory=list)
     defaults_prop: Defaults = field(init=False, default_factory=Defaults)
@@ -188,9 +188,10 @@ class Dwca(BaseDwca):
             files = zf.namelist()
 
             log.info("Reading from %s", self.dwca_file_loc)
-            with zf.open(self.defaults_prop.meta_xml_filename) as meta_xml_file:
-                self.meta_content.read_meta_file(meta_xml_file)
-                meta_xml_file.close()
+
+            with io.TextIOWrapper(zf.open(self.defaults_prop.meta_xml_filename)) as meta_xml:
+                self.meta_content.read_meta_file(meta_xml)
+                meta_xml.close()
 
             if self.meta_content.eml_xml_filename in files:
                 with io.TextIOWrapper(zf.open(self.meta_content.eml_xml_filename),
@@ -234,7 +235,9 @@ class Dwca(BaseDwca):
         delta_df_columns = delta_df_content.columns.to_list()
         new_columns = list(set(delta_df_columns) - set(df_columns))
         if len(new_columns) > 0:
-            df_content[new_columns] = nan
+            # Set to empty string instead of nan to resolve warning message
+            # see https://pandas.pydata.org/pdeps/0006-ban-upcasting.html
+            df_content[new_columns] = ""
 
         return new_columns
 
@@ -530,8 +533,12 @@ class Dwca(BaseDwca):
 
         :param records_to_delete: A CSV file of records to delete, keyed to the DwCA file
          """
-        delete_content = self._combine_contents(
-            records_to_delete.files, records_to_delete.csv_encoding, use_chunking=False)
+        delete_content = pd.DataFrame()
+        if isinstance(records_to_delete.files, pd.DataFrame):
+            delete_content = records_to_delete.files.copy(deep=True)
+        else:
+            delete_content = self._combine_contents(records_to_delete.files, records_to_delete.csv_encoding,
+                                                    use_chunking=False)
         valid_delete_file = (all(col in delete_content.columns for col in records_to_delete.keys)
                              or len(delete_content) > 0)
         if not valid_delete_file:
@@ -562,7 +569,7 @@ class Dwca(BaseDwca):
         if core_or_ext == CoreOrExtType.CORE:
             for ext in self.ext_content:
                 log.info("Removing records from ext: %s", ext.meta_info.type.name)
-                ext.df_content = self._delete_content(content=ext.df_content,
+                ext.df_content = self._delete_content(content=ext,
                                                       delete_content=delete_content)
 
     def _add_ext_lookup_key(self, df_content, core_df_content, core_keys, keys):
@@ -622,8 +629,9 @@ class Dwca(BaseDwca):
                 self.ext_content.append(delta_content)
                 self._update_meta_fields(delta_content)
 
-        self.core_content.df_content = self._merge_df_content(self.core_content, delta_dwca.core_content,
-                                                              self.core_content.keys)
+        self.core_content.df_content = self._merge_df_content(content=self.core_content,
+                                                              delta_content=delta_dwca.core_content,
+                                                              keys=self.core_content.keys)
 
         if regen_ids:
             self._update_core_ids(self.core_content.df_content)
@@ -760,7 +768,7 @@ class Dwca(BaseDwca):
             if len(image_df) > 0:
                 self._update_meta_fields(self.core_content)
                 log.info("%s associated media extracted", str(len(image_df)))
-                return CsvFileType(files=[image_df], type='multimedia', keys=image_df.index.names)
+                return CsvFileType(files=image_df, type='multimedia', keys=image_df.index.names)
 
             log.info("Nothing to extract from associated media")
 
@@ -776,7 +784,7 @@ class Dwca(BaseDwca):
         """
         if len(contents) > 0:
             if isinstance(contents[0], pd.DataFrame):
-                return contents[0]
+                return contents[0].copy(deep=True)
 
             df_content = pd.DataFrame()
             for content in contents:
@@ -905,15 +913,15 @@ class Dwca(BaseDwca):
 
         return True
 
-    def extract_csv_content(self, csv_info: Union[CsvFileType, DataFrameType],
+    def extract_csv_content(self, csv_info: CsvFileType,
                             core_ext_type: CoreOrExtType):
         """Read the files from a CSV description into a content frame and include it in the Dwca.
 
         :param csv_info: The CSV file(s)
         :param core_ext_type: Whether this is a core or extension content frame
         """
-        if isinstance(csv_info, DataFrameType):
-            csv_content = csv_info.df
+        if isinstance(csv_info.files, pd.DataFrame):
+            csv_content = csv_info.files.copy(deep=True)
         else:
             csv_content = self._combine_contents(csv_info.files, csv_info.csv_encoding)
 
@@ -982,14 +990,12 @@ class Dwca(BaseDwca):
         for file in self.embedded_files:
             dwca_zip.write(file, file.name)
 
-    def write_dwca(self, output_dwca_path: str):
+    def write_dwca(self, output_dwca_path: Union[str | BytesIO]):
         """Write a full DwCA to a zip file
         Any parent directories needed are created during writing.
 
         :param output_dwca_path: The file path to write the .zip file to
         """
-        dwca_path = Path(output_dwca_path)
-        dwca_path.parent.mkdir(parents=True, exist_ok=True)
         with ZipFile(output_dwca_path, 'w', allowZip64=True,
                      compression=zipfile.ZIP_DEFLATED) as dwca_zip:
             self._write_df_content_to_zip_file(dwca_zip=dwca_zip, content=self.core_content)
