@@ -7,6 +7,7 @@ from dwcahandler import DwcaHandler
 from io import BytesIO
 from numpy import nan
 
+
 class TestMergeDwcaContent:
 
     def test_merge_core_records(self):
