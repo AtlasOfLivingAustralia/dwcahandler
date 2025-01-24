@@ -896,7 +896,6 @@ class Dwca(BaseDwca):
 
         - No duplicate record keys
         - Valid columns
-        - No duplicate columns
 
         :param error_file: A file to record errors
         :return: True if the DwCA is value, False otherwise
@@ -914,10 +913,6 @@ class Dwca(BaseDwca):
 
             if not self._validate_columns(content):
                 return False
-
-            #dup_cols = self._find_duplicate_columns(content)
-            #if len(dup_cols) > 0:
-            #    return False
 
         return True
 
