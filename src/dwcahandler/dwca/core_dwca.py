@@ -1065,6 +1065,9 @@ class Dwca(BaseDwca):
                 ret_val.dropna(how="all", inplace=True)
                 log.debug("Extracted %d rows from csv %s", len(ret_val), csv_file)
 
+                # Strip column header spaces
+                ret_val.rename(str.strip, axis = 'columns', inplace=True)
+
             return ret_val
 
         except EmptyDataError:
