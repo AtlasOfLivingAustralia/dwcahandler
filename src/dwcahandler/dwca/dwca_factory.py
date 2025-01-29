@@ -82,7 +82,7 @@ class DwcaHandler:
                                                  regen_ids=regen_ids, validate_delta=validate_delta_content)
 
     @staticmethod
-    def validate_dwca(dwca_file: str, keys_lookup: dict = None, error_file: str = None):
+    def validate_dwca(dwca_file: Union[str, BytesIO], keys_lookup: dict = None, error_file: str = None):
         """Test a dwca for consistency
 
         :param dwca_file: The path to the DwCA

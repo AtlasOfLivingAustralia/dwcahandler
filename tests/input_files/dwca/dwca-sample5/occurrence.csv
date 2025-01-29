@@ -1,0 +1,13 @@
+eventDate,basisOfRecord,scientificName,catalogNumber,decimalLatitude,decimalLongitude
+2015-07-18T12:58:00+00:00,Human Observation,Species A,014826,-30,144
+2015-07-18T12:58:31+00:00,Human Observation,Species A1,014825,-31.1111,145
+2015-07-18T18:16:52+00:00,Human Observation,Species A2,014824,-32.085431,100.828059
+2015-07-19T04:28:19+00:00,Human Observation,Species A3,014823,-33.097233,101.820888
+2015-07-19T18:29:25+00:00,Human Observation,Species B1,014822,-34.099936,102.821654
+2015-07-20T18:03:12+00:00,Human Observation,Species B2,014821,-35.893671,104.999974
+2015-07-21T18:06:58+00:00,Human Observation,Species C,014820,-34.113747,120.889354
+2015-07-22T04:42:47+00:00,Human Observation,Species C2,014810,-36,144.308848
+2015-07-22T17:54:18+00:00,Human Observation,Species C3,014800,-30.440251,146.240159
+2015-07-22T23:09:51+00:00,Human Observation,Species D,014799,-31.547195,150.783246
+2015-07-23T17:37:26+00:00,Human Observation,Species D1,-40.481117,150.823468
+2015-07-24T13:10:00+00:00,Human Observation,Species D2,014792,-28,115

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archive xmlns="http://rs.tdwg.org/dwc/text/">
+  <core rowType="http://rs.tdwg.org/dwc/terms/Occurrence" encoding="utf-8" fieldsTerminatedBy="," linesTerminatedBy="\n" fieldsEnclosedBy="" ignoreHeaderLines="1">
+    <files>
+      <location>occurrence.csv</location>
+    </files>
+    <field index="0" term="http://rs.tdwg.org/dwc/terms/eventDate"/>
+    <field index="1" term="http://rs.tdwg.org/dwc/terms/basisOfRecord"/>
+    <field index="2" term="http://rs.tdwg.org/dwc/terms/scientificName"/>
+    <field index="3" term="http://rs.tdwg.org/dwc/terms/catalogNumber"/>
+    <field index="4" term="http://rs.tdwg.org/dwc/terms/catalogNumber"/>
+    <field index="5" term="http://rs.tdwg.org/dwc/terms/decimalLongitude"/>
+  </core>
+</archive>

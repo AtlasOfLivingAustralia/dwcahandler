@@ -207,6 +207,10 @@ class Dwca(BaseDwca):
                 csv_file_name = meta_elm.meta_element_type.file_name
                 with io.TextIOWrapper(zf.open(csv_file_name), encoding="utf-8") as csv_file:
                     dwc_headers = [f.field_name for f in meta_elm.fields if f.index is not None]
+                    duplicates = [i for i in set(dwc_headers) if dwc_headers.count(i) > 1]
+                    if len(duplicates) > 0:
+                        raise ValueError(f"Duplicate columns {duplicates} specified in the "
+                                         f"metadata for {csv_file_name}")
                     csv_encoding = {key: convert_values(value) for key, value in
                                     asdict(meta_elm.meta_element_type.csv_encoding).items()}
                     csv_content = self._read_csv(
@@ -825,17 +829,18 @@ class Dwca(BaseDwca):
         """
 
         def report_error(content, keys, message, condition, error_file=None):
-            log.error("%s found in keys %s", message, keys)
-            log.error("\n%s count\n%s", message, condition.sum())
-            log.error("\n%s", content.loc[condition.values, keys].index.tolist())
-            if error_file:
-                content.loc[condition.values, keys].to_csv(error_file, index=False)
+            content.loc[condition.values, keys].to_csv(error_file, index=False)
 
         checks_status: bool = True
         if len(keys) > 0:
             empty_values_condition = content_keys_df.isnull()
             if empty_values_condition.values.any():
-                report_error(content_keys_df, keys, "Empty Values", empty_values_condition)
+                log.error("Empty values found in %s. Total rows affected: %s", keys,
+                          empty_values_condition.sum().sum())
+                log.error("Empty values found in dataframe row: %s",
+                          content_keys_df.index[empty_values_condition.all(axis=1)].tolist())
+                if error_file:
+                    report_error(content_keys_df, keys, "Empty Values", empty_values_condition)
                 checks_status = False
 
             # check incase-sensitive duplicates
@@ -846,8 +851,11 @@ class Dwca(BaseDwca):
             df_keys = to_lower(content_keys_df)
             duplicate_condition = df_keys.duplicated(keep='first')
             if duplicate_condition.values.any():
-                report_error(content_keys_df, keys, "Duplicate Values",
-                             duplicate_condition, error_file)
+                log.error(f"Duplicate %s found. Total rows affected: %s", keys, duplicate_condition.sum())
+                log.error("Duplicate values: %s", pd.unique(content_keys_df[duplicate_condition].stack()))
+                if error_file:
+                    report_error(content_keys_df, keys, "Duplicate Values",
+                                 duplicate_condition, error_file)
                 checks_status = False
 
         return checks_status
@@ -888,7 +896,6 @@ class Dwca(BaseDwca):
 
         - No duplicate record keys
         - Valid columns
-        - No duplicate columns
 
         :param error_file: A file to record errors
         :return: True if the DwCA is value, False otherwise
@@ -905,10 +912,6 @@ class Dwca(BaseDwca):
                 return False
 
             if not self._validate_columns(content):
-                return False
-
-            dup_cols = self._find_duplicate_columns(content)
-            if len(dup_cols) > 0:
                 return False
 
         return True
@@ -1062,9 +1065,16 @@ class Dwca(BaseDwca):
                 ret_val.dropna(how="all", inplace=True)
                 log.debug("Extracted %d rows from csv %s", len(ret_val), csv_file)
 
+                # Strip column header spaces
+                ret_val.rename(str.strip, axis = 'columns', inplace=True)
+
             return ret_val
 
         except EmptyDataError:
-            log.error(f"The expected columns: %s are not present in the {csv_file}. "
-                      f"The file may be empty", ','.join(columns))
+            if columns:
+                log.error(f"The file may be empty {csv_file}")
+            else:
+                log.error(f"The expected columns: %s are not present in the {csv_file}. "
+                          f"The file may be empty", ','.join(columns))
+
             return pd.DataFrame()

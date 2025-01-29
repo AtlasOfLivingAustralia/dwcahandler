@@ -1,0 +1,6 @@
+id,occurrenceID,scientificName,decimalLatitude,decimalLongitude,eventDate,recordedBy,geodeticDatum,basisOfRecord
+1,1001,SpeciesA,12.34,-56.78,2023-01-01,John Doe,WGS84,PreservedSpecimen
+2,1002,SpeciesB,-34.56,78.90,2023-02-15,Jane Smith,WGS84,HumanObservation
+3,1003,SpeciesC,0.123,45.678,2023-03-20,Bob Johnson,WGS84,FossilSpecimen
+4,1004,SpeciesD,-23.456,-12.345,2023-04-10,Alice Brown,WGS84,MachineObservation
+5,1005,SpeciesE,89.012,-67.890,2023-05-25,Charlie White,WGS84,PreservedSpecimen

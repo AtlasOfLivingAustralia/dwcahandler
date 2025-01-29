@@ -1,0 +1,3 @@
+ catalogNumber ,identifier, format ,type
+C4,https://images.ala.org.au/image/proxyImageThumbnailLarge?imageId=XXX,image/jpeg,StillImage
+C5,https://images.ala.org.au/image/proxyImageThumbnailLarge?imageId=XYZ,image/jpeg,StillImage
