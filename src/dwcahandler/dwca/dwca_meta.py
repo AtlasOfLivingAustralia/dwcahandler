@@ -143,7 +143,16 @@ class MetaDwCA:
         def extract_field_attr_value(field_elm, attrib):
             return field_elm.attrib.get(attrib) if field_elm.attrib.get(attrib) else None
 
+        def __find_id_in_fields(local_fields, id_field):
+            index_number = id_field[0].attrib["index"] if len(id_field) > 0 else "0"
+            return next((item for item in local_fields if "index" in item.attrib and item.attrib["index"]==index_number), None)
+
         fields = node_elm.findall(f'{ns}field')
+        id_field = []
+        if core_or_ext_type == 'core':
+            id_field = node_elm.findall(f'{ns}id')
+        else:
+            id_field = node_elm.findall(f'{ns}coreid')
         file_name = node_elm.find(f'{ns}files').find(f'{ns}location').text
         meta_element_info = MetaElementInfo(
             core_or_ext_type=core_or_ext_type,
@@ -157,7 +166,8 @@ class MetaDwCA:
             charset_encoding=node_elm.attrib['encoding'],
             file_name=file_name)
         # set first field with index 0 if it's not present in list of fields
-        if fields[0].attrib['index'] != '0':
+        field_elm = __find_id_in_fields(fields, id_field)
+        if field_elm is None and len(id_field) > 0:
             if CoreOrExtType.CORE == core_or_ext_type:
                 field_list = [Field(index=0, field_name="id")]
             else:
