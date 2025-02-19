@@ -2,7 +2,7 @@ from io import BytesIO
 from zipfile import ZipFile
 import zipfile
 from pathlib import Path
-from dwcahandler import DwcaHandler
+from dwcahandler import DwcaHandler, MetaElementTypes
 import logging
 import pytest
 
@@ -25,7 +25,7 @@ class TestValidateDwca:
         Test for read and extract dwca. Validate core content
         """
         simple_dwca = make_zip_from_folder_contents(f"{input_folder}/dwca-sample1")
-        keys_lookup = {'occurrence': 'occurrenceID'}
+        keys_lookup = {MetaElementTypes.OCCURRENCE: 'occurrenceID'}
         dwca_result = DwcaHandler.validate_dwca(dwca_file=simple_dwca, keys_lookup=keys_lookup)
         assert dwca_result
 
@@ -34,7 +34,7 @@ class TestValidateDwca:
         Test for read and extract dwca. Validate core content
         """
         simple_dwca = make_zip_from_folder_contents(f"{input_folder}/dwca-sample2")
-        keys_lookup = {'occurrence': 'occurrenceID'}
+        keys_lookup = {MetaElementTypes.OCCURRENCE: 'occurrenceID'}
         dwca_result = DwcaHandler.validate_dwca(dwca_file=simple_dwca, keys_lookup=keys_lookup)
         assert dwca_result
 
@@ -44,7 +44,7 @@ class TestValidateDwca:
         """
         caplog.set_level(logging.INFO)
         simple_dwca = make_zip_from_folder_contents(f"{input_folder}/dwca-sample3")
-        keys_lookup = {'occurrence': 'occurrenceID'}
+        keys_lookup = {MetaElementTypes.OCCURRENCE: 'occurrenceID'}
         dwca_result = DwcaHandler.validate_dwca(dwca_file=simple_dwca, keys_lookup=keys_lookup)
         assert not dwca_result
         assert "Empty values found in ['occurrenceID']. Total rows affected: 1" in caplog.messages
@@ -56,7 +56,7 @@ class TestValidateDwca:
         """
         caplog.set_level(logging.INFO)
         simple_dwca = make_zip_from_folder_contents(f"{input_folder}/dwca-sample4")
-        keys_lookup = {'occurrence': 'catalogNumber'}
+        keys_lookup = {MetaElementTypes.OCCURRENCE: 'catalogNumber'}
         dwca_result = DwcaHandler.validate_dwca(dwca_file=simple_dwca, keys_lookup=keys_lookup)
         assert not dwca_result
         assert "Duplicate ['catalogNumber'] found. Total rows affected: 3" in caplog.messages
@@ -67,7 +67,7 @@ class TestValidateDwca:
         Test for read and extract dwca. Validate duplicate columns specified in metadata of dwca
         """
         simple_dwca = make_zip_from_folder_contents(f"{input_folder}/dwca-sample5")
-        keys_lookup = {'occurrence': 'catalogNumber'}
+        keys_lookup = {MetaElementTypes.OCCURRENCE: 'catalogNumber'}
 
         with pytest.raises(ValueError) as exc_info:
             DwcaHandler.validate_dwca(dwca_file=simple_dwca, keys_lookup=keys_lookup)

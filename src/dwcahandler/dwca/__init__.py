@@ -60,23 +60,6 @@ class CSVEncoding:
         return translate_table[v] if v in translate_table.keys() else v
 
 
-@dataclass
-class CsvFileType:
-    """A description of a CSV file in a DwCA
-    """
-    files: Union[list[str], pd.DataFrame]  # can accept more than one file or a dataframe
-    type: str  # 'occurrence', 'taxon', 'event', multimedia,...
-    keys: Optional[list] = None  # must be supplied for csv extensions to link extension records to core record
-    # when creating dwca. for core other than occurrence, this neeeds to be supplied as key.
-    # column keys lookup in core or extension for delete records
-    associated_files_loc: Optional[str] = None  # in case there are associated media that need to be packaged in dwca
-    csv_encoding: CSVEncoding = field(
-        default_factory=lambda: CSVEncoding(csv_delimiter=",", csv_eol="\n", csv_text_enclosure='"',
-                                            csv_escape_char='"'))
-    # delimiter: Optional[str] = None
-    # file delimiter type when reading the csv. if not supplied, the collectory setting delimiter is read in for the dr
-
-
 class Stat:
     """Record statistics for a DwCA"""
     start_record_count: int = 0
@@ -176,8 +159,24 @@ class Defaults:
 
 
 # Imports at end of file to allow classes to be used
-from dwcahandler.dwca.terms import Terms
-from dwcahandler.dwca.dwca_meta import Element, MetaElementTypes, MetaElementInfo, MetaDwCA
+from dwcahandler.dwca.terms import Terms, NsPrefix
+from dwcahandler.dwca.dwca_meta import MetaElementTypes, MetaElementInfo, MetaDwCA, MetaElementAttributes
+@dataclass
+class CsvFileType:
+    """A description of a CSV file in a DwCA
+    """
+    files: Union[list[str], pd.DataFrame]  # can accept more than one file or a dataframe
+    type: MetaElementTypes  # 'occurrence', 'taxon', 'event', multimedia,...
+    keys: Optional[list] = None  # must be supplied for csv extensions to link extension records to core record
+    # when creating dwca. for core other than occurrence, this neeeds to be supplied as key.
+    # column keys lookup in core or extension for delete records
+    associated_files_loc: Optional[str] = None  # in case there are associated media that need to be packaged in dwca
+    csv_encoding: CSVEncoding = field(
+        default_factory=lambda: CSVEncoding(csv_delimiter=",", csv_eol="\n", csv_text_enclosure='"',
+                                            csv_escape_char='"'))
+    # delimiter: Optional[str] = None
+    # file delimiter type when reading the csv. if not supplied, the collectory setting delimiter is read in for the dr
+
 from dwcahandler.dwca.eml import Eml
 from dwcahandler.dwca.base_dwca import BaseDwca
 from dwcahandler.dwca.core_dwca import Dwca, DfContent

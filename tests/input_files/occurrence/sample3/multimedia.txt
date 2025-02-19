@@ -1,0 +1,12 @@
+institutionCode,collectionCode,catalogNumber,identifier,format,type
+IA,CA,CA-1,http://imageA,image/jpeg,StillImage
+IA,CA,CA-2,http://imageA-1,image/jpeg,StillImage
+IA,CA,CA-2,http://imageA-2,image/jpeg,StillImage
+IA,CA,CA-3,http://imageA-3,image/jpeg,StillImage
+IA,CB,CB-1,http://imageB-1,image/jpeg,StillImage
+IA,CB,CB-1,http://imageB-2,image/jpeg,StillImage
+IA,CB,CB-2,http://imageB-3,image/jpeg,StillImage
+IA,CC,CC-1,http://imageC2-1,image/jpeg,StillImage
+ERROR-IA,CC,CC-1,http://imageC2-1,image/jpeg,StillImage
+IA,ERROR-CC,CC-2,http://imageC2-1,image/jpeg,StillImage
+IA,CC,ERROR-CC-2,http://imageC2-1,image/jpeg,StillImage

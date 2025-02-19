@@ -1,5 +1,5 @@
 import io
-from dwcahandler import DwcaHandler, CsvFileType, CoreOrExtType
+from dwcahandler import DwcaHandler, CsvFileType, CoreOrExtType, MetaElementTypes
 from zipfile import ZipFile
 from pathlib import Path
 import xml.etree.ElementTree as ET
@@ -12,14 +12,14 @@ def _get_namespace(element):
     """Get the namespace from a `{namespace}tag` formatted URI
 
     param: element
-    "return: The namespace for the element
+    :return: The namespace for the element
     """
     m = re.match("\\{.*\\}", element.tag)
     return m.group(0) if m else ''
 
 
-occurrence_sample_file = "./input_files/sample/occurrence.csv"
-multimedia_sample_file = "./input_files/sample/multimedia.csv"
+occurrence_sample_file = "./input_files/occurrence/sample1/occurrence.txt"
+multimedia_sample_file = "./input_files/occurrence/sample1/multimedia.txt"
 sample_occ_df = pd.read_csv(occurrence_sample_file)
 sample_multimedia_df = pd.read_csv(multimedia_sample_file)
 
@@ -34,12 +34,12 @@ class TestWriteDwca:
         """
         Test that generated dwca is valid with core occ data
         """
-        core_csv = CsvFileType(files=["./input_files/sample/occurrence.csv"], keys=['occurrenceID'],
-                               type='occurrence')
+        core_csv = CsvFileType(files=[occurrence_sample_file], keys=['occurrenceID'],
+                               type=MetaElementTypes.OCCURRENCE)
         p = Path("temp")
         p.mkdir(parents=True, exist_ok=True)
         dwca_output_path = str(Path(p / "dwca.zip").absolute())
-        DwcaHandler.create_dwca(core_csv=core_csv, output_dwca_path=dwca_output_path,
+        DwcaHandler.create_dwca(core_csv=core_csv, output_dwca=dwca_output_path,
                                 eml_content=get_eml_content())
         with ZipFile(dwca_output_path, 'r') as zf:
             files = zf.namelist()
@@ -63,7 +63,7 @@ class TestWriteDwca:
             assert core_file
             with zf.open(core_file) as occ_file:
                 df = pd.read_csv(occ_file)
-                pd.testing.assert_frame_equal(df.drop(columns=['id']), sample_occ_df)
+                pd.testing.assert_frame_equal(df, sample_occ_df)
 
             zf.close()
 
@@ -71,14 +71,14 @@ class TestWriteDwca:
         """
         Test that generated dwca is valid with core occ and multimedia data
         """
-        core_csv = CsvFileType(files=["./input_files/sample/occurrence.csv"], keys=['occurrenceID'],
-                               type='occurrence')
-        ext_csv = CsvFileType(files=["./input_files/sample/multimedia.csv"], keys=['occurrenceID'],
-                              type='multimedia')
+        core_csv = CsvFileType(files=[occurrence_sample_file], keys=['occurrenceID'],
+                               type=MetaElementTypes.OCCURRENCE)
+        ext_csv = CsvFileType(files=[multimedia_sample_file], keys=['occurrenceID'],
+                              type=MetaElementTypes.MULTIMEDIA)
         p = Path("temp")
         p.mkdir(parents=True, exist_ok=True)
         dwca_output_path = str(Path(p / "dwca_with_ext.zip").absolute())
-        DwcaHandler.create_dwca(core_csv=core_csv, ext_csv_list=[ext_csv], output_dwca_path=dwca_output_path,
+        DwcaHandler.create_dwca(core_csv=core_csv, ext_csv_list=[ext_csv], output_dwca=dwca_output_path,
                                 eml_content=get_eml_content())
         with ZipFile(dwca_output_path, 'r') as zf:
             files = zf.namelist()
@@ -113,13 +113,11 @@ class TestWriteDwca:
 
             with zf.open(core_file) as occ_file:
                 df = pd.read_csv(occ_file)
-                assert 'id' in df.columns
-                pd.testing.assert_frame_equal(df.drop(columns=['id']), sample_occ_df)
+                pd.testing.assert_frame_equal(df, sample_occ_df)
 
             with zf.open(ext_file) as image_file:
                 df = pd.read_csv(image_file)
-                assert 'coreid' in df.columns
-                pd.testing.assert_frame_equal(df.drop(columns=['coreid']), sample_multimedia_df)
+                pd.testing.assert_frame_equal(df, sample_multimedia_df)
 
             zf.close()
 
@@ -134,12 +132,12 @@ class TestWriteDwca:
                               columns=['catalogNumber', 'scientificName'])
 
         core_csv = CsvFileType(files=occ_df,
-                               type='occurrence',
+                               type=MetaElementTypes.OCCURRENCE,
                                keys=['catalogNumber'])
 
         dwca_output = io.BytesIO()
 
-        DwcaHandler.create_dwca(core_csv=core_csv, output_dwca_path=dwca_output,
+        DwcaHandler.create_dwca(core_csv=core_csv, output_dwca=dwca_output,
                                 eml_content=get_eml_content())
 
         with ZipFile(dwca_output, 'r') as zf:
@@ -164,6 +162,6 @@ class TestWriteDwca:
             assert core_file
             with zf.open(core_file) as occ_file:
                 df = pd.read_csv(occ_file, dtype='str')
-                pd.testing.assert_frame_equal(df.drop(columns=['id']), occ_df)
+                pd.testing.assert_frame_equal(df, occ_df)
 
             zf.close()

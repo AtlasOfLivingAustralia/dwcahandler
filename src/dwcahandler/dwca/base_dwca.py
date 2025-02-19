@@ -15,11 +15,13 @@ class BaseDwca(metaclass=ABCMeta):
     """An abstract DwCA that provides basic operations"""
 
     @abstractmethod
-    def extract_csv_content(self, csv_info: CsvFileType, core_ext_type: CoreOrExtType):
+    def extract_csv_content(self, csv_info: CsvFileType, core_ext_type: CoreOrExtType,
+                            build_coreid_for_ext: bool = False):
         """Get the content from a single file in the DwCA
 
         :param csv_info: The CSV file to extract
         :param core_ext_type: Is this a core or extension CSV file
+        :param build_coreid_for_ext: indicator to add id and core id
         """
         pass
 
@@ -45,7 +47,7 @@ class BaseDwca(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def write_dwca(self, output_dwca_path: str):
+    def write_dwca(self, output_dwca_path: Union[str | BytesIO]):
         """Write the content of the DwCA to a directory.
 
         Writes all CSV files, as well as a meta-file and EML file for the archive.
@@ -80,20 +82,21 @@ class BaseDwca(metaclass=ABCMeta):
     def convert_associated_media_to_extension(self):
         pass
 
+    """
     @abstractmethod
     def merge_df_dwc_columns(self):
         pass
-
+    """
     @abstractmethod
     def delete_records(self, records_to_delete: CsvFileType):
         pass
 
     @abstractmethod
-    def validate_content(self, content_type_to_validate: list[str] = None, error_file: str = None):
+    def validate_content(self, content_to_validate: list[MetaElementTypes] = None, error_file: str = None):
         pass
 
     @abstractmethod
-    def get_content(self, ext_type: str):
+    def get_content(self, class_type: MetaElementTypes = None, name_space: str = None):
         pass
 
     @abstractmethod
@@ -107,15 +110,9 @@ class BaseDwca(metaclass=ABCMeta):
         """
         Adds extra info based on the information in the content, mainly used by ingestion process
         """
-        multimedia_content, _ = self.get_content(MetaElementTypes.get_element('multimedia').row_type_ns)
-        if multimedia_content:
+        contents = self.get_content(class_type=MetaElementTypes.MULTIMEDIA)
+        for multimedia_content, _ in contents:
             self.add_multimedia_info_to_content(multimedia_content)
-
-    def remove_extensions(self, exclude_ext_files: list, output_dwca_path: str):
-        self.extract_dwca(exclude_ext_files=exclude_ext_files)
-        self.generate_eml()
-        self.generate_meta()
-        self.write_dwca(output_dwca_path)
 
     def delete_records_in_dwca(self, records_to_delete: CsvFileType, output_dwca_path: Union[str, BytesIO]):
         self.extract_dwca()
@@ -124,32 +121,33 @@ class BaseDwca(metaclass=ABCMeta):
         self.generate_meta()
         self.write_dwca(output_dwca_path)
 
-    def create_dwca(self, core_csv: CsvFileType, output_dwca_path: str,
+    def create_dwca(self, core_csv: CsvFileType, output_dwca: Union[str | BytesIO],
                     ext_csv_list: list[CsvFileType] = None, validate_content: bool = True,
                     eml_content: Union[str, Eml] = ''):
 
         if ext_csv_list is None:
             ext_csv_list = []
 
-        self.extract_csv_content(core_csv, CoreOrExtType.CORE)
+        self.extract_csv_content(csv_info=core_csv, core_ext_type=CoreOrExtType.CORE,
+                                 build_coreid_for_ext=True if len(ext_csv_list) > 0 else False)
 
         # Only validate core content
         if validate_content and not self.validate_content():
             raise SystemExit(Exception("Some validations error found. Dwca is not created."))
 
         # if multimedia files is supplied, do not attempt to convert associated media to multimedia
-        if not any(ext.type == 'multimedia' for ext in ext_csv_list):
+        if not any(ext.type == MetaElementTypes.MULTIMEDIA for ext in ext_csv_list):
             image_ext = self.convert_associated_media_to_extension()
             if image_ext:
                 ext_csv_list.append(image_ext)
 
         for ext in ext_csv_list:
-            self.extract_csv_content(ext, CoreOrExtType.EXTENSION)
+            self.extract_csv_content(ext, CoreOrExtType.EXTENSION, True)
 
         self.fill_additional_info()
         self.generate_eml(eml_content)
         self.generate_meta()
-        self.write_dwca(output_dwca_path)
+        self.write_dwca(output_dwca)
 
     # Key lookup: For merging to update content and also used as lookup to link extensions to core records.
     # keys_lookup keys used for merging 2 dwcas
@@ -173,16 +171,9 @@ class BaseDwca(metaclass=ABCMeta):
     def validate_dwca(self, content_keys: dict, error_file: str):
         self.extract_dwca()
         set_keys = self.set_keys(content_keys)
-        content_type_to_validate = list(set_keys.keys())
-        return self.validate_content(content_type_to_validate=content_type_to_validate, error_file=error_file)
+        #content_type_to_validate = list(set_keys.keys())
+        return self.validate_content(content_to_validate=set_keys, error_file=error_file)
 
     def validate_file(self, csv: CsvFileType, error_file: str):
         self.extract_csv_content(csv, CoreOrExtType.CORE)
         return self.validate_content(error_file=error_file)
-
-    def sanitize_dwca(self, output_dwca_path: str):
-        self.extract_dwca()
-        self.merge_df_dwc_columns()
-        self.generate_eml()
-        self.generate_meta()
-        self.write_dwca(output_dwca_path)

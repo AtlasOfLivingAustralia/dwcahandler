@@ -16,14 +16,14 @@ log = logging.getLogger("DwcaFactoryManager")
 class DwcaHandler:
 
     @staticmethod
-    def list_dwc_terms() -> pd.DataFrame:
-        return Terms().dwc_terms_df
+    def list_dwc_terms() -> (pd.DataFrame, pd.DataFrame):
+        return Terms().terms_df, Terms().class_df
 
     """Perform various DwCA operations"""
 
     @staticmethod
     def create_dwca(core_csv: CsvFileType,
-                    output_dwca_path: Union[str, BytesIO],
+                    output_dwca: Union[str, BytesIO],
                     ext_csv_list: list[CsvFileType] = None,
                     validate_content: bool = True,
                     eml_content: Union[str, Eml] = ''):
@@ -31,11 +31,11 @@ class DwcaHandler:
 
         :param core_csv: The core source
         :param ext_csv_list: A list of extension sources
-        :param output_dwca_path: Where to place the resulting Dwca
+        :param output_dwca: Where to place the resulting Dwca
         :param validate_content: Validate the DwCA before processing
         :param eml_content: eml content in string or Eml class
         """
-        Dwca().create_dwca(core_csv=core_csv, ext_csv_list=ext_csv_list, output_dwca_path=output_dwca_path,
+        Dwca().create_dwca(core_csv=core_csv, ext_csv_list=ext_csv_list, output_dwca=output_dwca,
                            validate_content=validate_content, eml_content=eml_content)
 
     @staticmethod
