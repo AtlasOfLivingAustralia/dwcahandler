@@ -17,10 +17,8 @@ from dataclasses import MISSING, asdict, dataclass, field
 from pathlib import Path
 from typing import Union
 from zipfile import ZipFile
-
 import pandas as pd
 from numpy import nan
-from pandas import isnull
 from pandas.errors import EmptyDataError
 from pandas.io import parsers
 from dwcahandler.dwca import (BaseDwca, CoreOrExtType, CSVEncoding,
@@ -85,7 +83,7 @@ class Dwca(BaseDwca):
         """
         return len(content)
 
-    def _update_core_ids(self, core_df, keys: list) -> str:
+    def _update_core_ids(self, core_df) -> str:
         """Generate core identifiers for a core data frame.
 
         UUID identifiers are generated for each row in the core data frame.
@@ -93,7 +91,6 @@ class Dwca(BaseDwca):
         useful identifier is available in the source data.
 
         :param core_df: The data frame to generate identifiers for
-        :param keys: The keys to use for the id
         return id field
         """
         id_field = "id"
@@ -550,14 +547,14 @@ class Dwca(BaseDwca):
 
     # Extension Sync
     def merge_contents(self, delta_dwca: Dwca, extension_sync: bool = False,
-                       regen_ids: bool = False, match_by_filename: bool = False):
+                       match_by_filename: bool = False):
         """Merge the contents of this DwCA with a delta DwCA
 
         :param delta_dwca: The delta DwCA to apply
         :param extension_sync: refresh the extensions from delta dwca
                                 if the occurrences exist in both
-        :param regen_ids: Regenerate unique identifiers for the records
-        :param match_by_filename: Match by filename of contents too
+        :param match_by_filename: Match by filename of contents apart from the content types.
+        This is particularly useful if a dwca contains more than one content of same type
         """
         self.build_indexes()
         delta_dwca.build_indexes()
@@ -583,18 +580,15 @@ class Dwca(BaseDwca):
                                                               delta_content=delta_dwca.core_content,
                                                               keys=self.core_content.keys)
 
-        if regen_ids:
-            self._update_core_ids(self.core_content.df_content)
-            for content in self.ext_content:
-                content.df_content = self._update_extension_ids(
-                    content.df_content, self.core_content.df_content, self.core_content.keys)
 
-    def get_content(self, class_type: MetaElementTypes = None, name_space: str = None, file_name: str = None):
-        """Get the content based on the row type namespace.
+    def get_content(self, class_type: MetaElementTypes = None, name_space: str = None, file_name: str = None) -> list:
+        """Get the content based on the class type, row type namespace and optional file name
 
-        :param name_space: The row type (a namespace URI)
-        :return: A tuple of the content data frame and whether
-                 it is a core or extension (None, None) if not found
+        :param class_type: class_type MetaElementTypes class
+        :param name_space: The row type (a namespace URI) if it contains value
+        :param file_name: file_name to match if it contains value
+        :return: A list of tuples containing the content data frame and
+                 core or extension type
         """
         def check_content(content, class_type, name_space):
             if file_name and content.meta_info.file_name != file_name:
@@ -890,7 +884,7 @@ class Dwca(BaseDwca):
 
         :param csv_info: The CSV file(s)
         :param core_ext_type: Whether this is a core or extension content frame
-        :param build_id_for_ext: indicator to build id and core id to support dwca with extension
+        :param build_coreid_for_ext: indicator to build id and core id to support dwca with extension
         """
         if isinstance(csv_info.files, pd.DataFrame):
             csv_content = csv_info.files.copy(deep=True)
@@ -899,11 +893,11 @@ class Dwca(BaseDwca):
 
         # Use default occurrenceID if not provided
         keys = csv_info.keys if self.__check_csv_info_value(csv_info, 'keys') else 'occurrenceID'
-        core_id_field: str = None
+        core_id_field: str = ""
         if build_coreid_for_ext:
             if len (keys) > 1:
                 if core_ext_type == CoreOrExtType.CORE:
-                    core_id_field = self._update_core_ids(csv_content, keys)
+                    core_id_field = self._update_core_ids(csv_content)
                     self._build_index_for_content(csv_content, keys)
                 elif core_ext_type == CoreOrExtType.EXTENSION:
                     csv_content, core_id_field = self._update_extension_ids(

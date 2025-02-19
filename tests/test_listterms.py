@@ -12,7 +12,7 @@ class TestTerms:
         """
         Test that mandatory terms are present
         """
-        df, class_df = DwcaHandler.list_dwc_terms()
+        df, class_df = DwcaHandler.list_terms()
         assert df.query('term == "occurrenceID"').shape[0] == 1
         assert df.query('term == "basisOfRecord"').shape[0] == 1
         assert df.query('term == "scientificName"').shape[0] == 1

@@ -9,8 +9,7 @@ These classes model the schema information required by a DwCA.
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
 import re
-
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
 from typing import Optional
 from dwcahandler.dwca import CSVEncoding, CoreOrExtType, Terms
 from enum import Enum
@@ -19,20 +18,6 @@ from enum import Enum
 DwcClassRowTypes = Terms.get_class_row_types()
 
 MetaElementTypes = Enum ("MetaElementTypes", dict(DwcClassRowTypes))
-
-class MetaElementTypes1:
-    @staticmethod
-    def get_element_by_row_type(row_type: str):
-        """
-        Find a row type by URI
-
-        :param row_type: The row type URI
-        :return: The corresponding element
-        """
-        for name, member in MetaElementTypes.__members__.items():
-            if member.value == row_type:
-                return member
-        return None
 
 
 @dataclass
@@ -207,7 +192,8 @@ class MetaDwCA:
     def update_meta_element(self, meta_element_info: MetaElementInfo, fields: list[str], index_field: str = None):
         """Replace or append meta information (based on file name)
 
-        :param meta_element_info: The info
+        :param index_field: The field that is also form part of the id/coreid
+        :param meta_element_info: The meta element info
         :param fields: The field list
         """
         replace = False
@@ -252,7 +238,6 @@ class MetaDwCA:
         for _, f in enumerate(meta_elem_attrib.fields):
             if f.field_name not in ('id', 'coreid'):
                 field_elem = ET.SubElement(elem, "field")
-                # Note: f.index is int type
                 if f.index is not None:
                     field_elem.attrib['index'] = f.index
                 if f.term:

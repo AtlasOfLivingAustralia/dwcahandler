@@ -1,18 +1,18 @@
 eventID,parentEventID,eventType,eventDate,decimalLatitude,decimalLongitude,coordinateUncertaintyInMeters,samplingProtocol,samplingEffort,deploymentGroups,locality,eventRemarks,habitat
-Central_Fragments_Eacham_and_Curtin_Fig_NPs_2022,,Survey,,,,,,,,,,
-Danbulla_NP_2022,,Survey,,,,,,,,,,
-CFRAG_01_bush_20221215,Central_Fragments_Eacham_and_Curtin_Fig_NPs_2022,Deployment,,-17.2911425,145.6316175,1,,,Central_Fragments_Eacham_and_Curtin_Fig_NPs_2022,Eacham_Curtain_Fig_NPs,camera trap with FALSE bait | tags: bait:none | Swapped low NIMH batteries for alkaline. Access behind large tree fall gap after following water pipes. & SD card = 34A & physical ID on cam = 7 working cam & had these animal signs: Bird calls & animal signs are: Bird calls,tropical rainforest
-CFRAG_01_road_20221215,Central_Fragments_Eacham_and_Curtin_Fig_NPs_2022,Deployment,,-17.2911425,145.6316175,1,,,Central_Fragments_Eacham_and_Curtin_Fig_NPs_2022,Eacham_Curtain_Fig_NPs,camera trap with FALSE bait near hiking trail | tags: bait:none | & SD card = Oo2 & physical ID on cam = 31 working cam & had these animal signs: Bird calls & animal signs are: Bird calls,tropical rainforest
-DBNP_07_road_20221005,Danbulla_NP_2022,Deployment,,-17.0900405,145.625301,1,,,Danbulla_NP_2022,Danbulla_NP,"camera trap with FALSE bait near hiking trail | tags: bait:none | SD card reader didn't work, couldn't check test photos. To access site, turn left onto informal track when heading up main track and it turns right, then walk 60 m & animal signs are: Bird calls",tropical rainforest
-DBNP_08_bush_20221005,Danbulla_NP_2022,Deployment,,-17.0812305,145.616759,1,,,Danbulla_NP_2022,Danbulla_NP,"camera trap with FALSE bait | tags: bait:none | Access via ridge line from hiking track where road cam is, turn left before ridge declines. Couldn't check test images. & animal signs are: NA",tropical rainforest
-CFRAG_02_bush_20221215_Z_Amir_triggerEvent_55,CFRAG_02_bush_20221215,Trigger,2022-12-17,,,,camera trap,2022-12-17T08:25:51Z/2022-12-17T08:25:54Z,,,,
-CFRAG_02_bush_20221215_Z_Amir_triggerEvent_56,CFRAG_02_bush_20221215,Trigger,2022-12-18,,,,camera trap,2022-12-18T02:30:01Z/2022-12-18T02:30:05Z,,,,
-CFRAG_01_road_20221215_Z_Amir_triggerEvent_217,CFRAG_01_road_20221215,Trigger,2022-12-15,,,,camera trap,2022-12-15T04:10:45Z/2022-12-15T04:10:49Z,,,,
-CFRAG_01_road_20221215_Z_Amir_triggerEvent_521,CFRAG_01_road_20221215,Trigger,2022-12-15,,,,camera trap,2022-12-15T13:20:10Z/2022-12-15T13:20:15Z,,,,
-CFRAG_01_road_20221215_Z_Amir_triggerEvent_533,CFRAG_01_road_20221215,Trigger,2022-12-15,,,,camera trap,2022-12-15T20:09:48Z/2022-12-15T20:09:51Z,,,,
-DBNP_07_road_20221005_Z_Amir_triggerEvent_906,DBNP_07_road_20221005,Trigger,2022-12-10,,,,camera trap,2022-12-10T17:05:36Z/2022-12-10T17:05:36Z,,,,
-DBNP_07_road_20221005_Z_Amir_triggerEvent_860,DBNP_07_road_20221005,Trigger,2022-12-10,,,,camera trap,2022-12-10T20:14:11Z/2022-12-10T20:14:12Z,,,,
-DBNP_07_road_20221005_Z_Amir_triggerEvent_861,DBNP_07_road_20221005,Trigger,2022-12-10,,,,camera trap,2022-12-10T22:42:03Z/2022-12-10T22:42:04Z,,,,
-DBNP_08_bush_20221005_Z_Amir_triggerEvent_446,DBNP_08_bush_20221005,Trigger,2022-11-05,,,,camera trap,2022-11-05T01:10:49Z/2022-11-05T01:11:00Z,,,,
-DBNP_08_bush_20221005_Z_Amir_triggerEvent_447,DBNP_08_bush_20221005,Trigger,2022-11-05,,,,camera trap,2022-11-05T06:07:16Z/2022-11-05T06:08:49Z,,,,
-DBNP_08_bush_20221005_Z_Amir_triggerEvent_448,DBNP_08_bush_20221005,Trigger,2022-11-06,,,,camera trap,2022-11-06T05:07:16Z/2022-11-06T05:07:24Z,,,,
+PEVENT_A,,Survey,,,,,,,,,,
+PEVENT_B,,Survey,,,,,,,,,,
+DEPLOY1_PE_A,PEVENT_A,Deployment,,-17.1,145.2,1,,,PEVENT_A,Site 1,sample remarks test 1,tropical rainforest
+DEPLOY2_PE_A,PEVENT_A,Deployment,,-17.1,145.2,1,,,PEVENT_A,Site 1,sample remarks test 2,tropical rainforest
+DEPLOY1_PE_B,PEVENT_B,Deployment,,-17.3,145.3,1,,,PEVENT_B,Site 2,sample remarks test 3,tropical rainforest
+DEPLOY2_PE_B,PEVENT_B,Deployment,,-17.4,145.4,1,,,PEVENT_B,Site 2,sample remarks test 4,tropical rainforest
+TR_1,DEPLOY1_PE_A,Trigger,2022-12-17,,,,camera trap,2022-12-17T08:25:51Z/2022-12-17T08:25:54Z,,,,
+TR_2,DEPLOY1_PE_A,Trigger,2022-12-18,,,,camera trap,2022-12-18T02:30:01Z/2022-12-18T02:30:05Z,,,,
+TR_3,DEPLOY2_PE_A,Trigger,2022-12-15,,,,camera trap,2022-12-15T04:10:45Z/2022-12-15T04:10:49Z,,,,
+TR_4,DEPLOY2_PE_A,Trigger,2022-12-15,,,,camera trap,2022-12-15T13:20:10Z/2022-12-15T13:20:15Z,,,,
+TR_5,DEPLOY2_PE_A,Trigger,2022-12-15,,,,camera trap,2022-12-15T20:09:48Z/2022-12-15T20:09:51Z,,,,
+TR_6,DEPLOY1_PE_B,Trigger,2022-12-10,,,,camera trap,2022-12-10T17:05:36Z/2022-12-10T17:05:36Z,,,,
+TR_7,DEPLOY1_PE_B,Trigger,2022-12-10,,,,camera trap,2022-12-10T20:14:11Z/2022-12-10T20:14:12Z,,,,
+TR_8,DEPLOY1_PE_B,Trigger,2022-12-10,,,,camera trap,2022-12-10T22:42:03Z/2022-12-10T22:42:04Z,,,,
+TR_9,DEPLOY2_PE_B,Trigger,2022-11-05,,,,camera trap,2022-11-05T01:10:49Z/2022-11-05T01:11:00Z,,,,
+TR_10,DEPLOY2_PE_B,Trigger,2022-11-05,,,,camera trap,2022-11-05T06:07:16Z/2022-11-05T06:08:49Z,,,,
+TR_11,DEPLOY2_PE_B,Trigger,2022-11-06,,,,camera trap,2022-11-06T05:07:16Z/2022-11-06T05:07:24Z,,,,

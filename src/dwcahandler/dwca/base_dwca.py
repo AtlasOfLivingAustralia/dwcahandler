@@ -65,12 +65,14 @@ class BaseDwca(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def merge_contents(self, delta_dwca: BaseDwca, extension_sync: bool, regen_ids: bool):
+    def merge_contents(self, delta_dwca: BaseDwca, extension_sync: bool, match_by_filename: bool=False):
         """Construct a new DwCA by merging the contents of a delta DwCA with this archive.
 
         :param delta_dwca: The delta to merge
         :param extension_sync: Merge extensions
-        :param regen_ids: Regenerate link identifiers between the core and extension files.
+        :param match_by_filename: Match the dwca and delta content by also filenames if supplied,
+                this is extra condition in case if there are more than 1 content with same class type in a dwca
+                in a rare circumstances
         """
         pass
 
@@ -82,11 +84,6 @@ class BaseDwca(metaclass=ABCMeta):
     def convert_associated_media_to_extension(self):
         pass
 
-    """
-    @abstractmethod
-    def merge_df_dwc_columns(self):
-        pass
-    """
     @abstractmethod
     def delete_records(self, records_to_delete: CsvFileType):
         pass
@@ -114,17 +111,32 @@ class BaseDwca(metaclass=ABCMeta):
         for multimedia_content, _ in contents:
             self.add_multimedia_info_to_content(multimedia_content)
 
-    def delete_records_in_dwca(self, records_to_delete: CsvFileType, output_dwca_path: Union[str, BytesIO]):
+    def delete_records_in_dwca(self, records_to_delete: CsvFileType, output_dwca: Union[str, BytesIO]):
+        """Delete records in dwca if the key records are defined in CsvFileType
+
+        :param records_to_delete: A CsvFileType that containing the text file of the record keys,
+                                  the key names of the records and MetaElementType type class of the dwca
+                                  where the records need to be removed
+        :param output_dwca: output dwca path where the result of the dwca is writen to or the output dwca in memory
+        """
         self.extract_dwca()
         self.delete_records(records_to_delete)
         self.generate_eml()
         self.generate_meta()
-        self.write_dwca(output_dwca_path)
+        self.write_dwca(output_dwca)
 
-    def create_dwca(self, core_csv: CsvFileType, output_dwca: Union[str | BytesIO],
+    def create_dwca(self, core_csv: CsvFileType, output_dwca: Union[str, BytesIO],
                     ext_csv_list: list[CsvFileType] = None, validate_content: bool = True,
                     eml_content: Union[str, Eml] = ''):
+        """Create a dwca given the contents of core and extensions and eml content
 
+        :param core_csv: CsvFileType containing the files, class types and keys to form the core of the dwca
+        :param output_dwca: the resulting path of the dwca or the dwca in memory
+        :param ext_csv_list: list of CsvFileTypes containing the files, class types and keys to form the
+                              extensions of the dwca if supplied
+        :param validate_content: whether to validate the contents
+        :param eml_content: eml content in string or a filled Eml object
+        """
         if ext_csv_list is None:
             ext_csv_list = []
 
@@ -149,31 +161,46 @@ class BaseDwca(metaclass=ABCMeta):
         self.generate_meta()
         self.write_dwca(output_dwca)
 
-    # Key lookup: For merging to update content and also used as lookup to link extensions to core records.
-    # keys_lookup keys used for merging 2 dwcas
-    # regen_ids will generate new uuids for core csv and link coreids extensions to core records.
     # https://peps.python.org/pep-0484/#forward-references
-    def merge_dwca(self, delta_dwca: BaseDwca, output_dwca_path: Union[str, BytesIO], keys_lookup: dict = None,
-                   extension_sync=False, regen_ids: bool = False, validate_delta: bool = True):
+    def merge_dwca(self, delta_dwca: BaseDwca, output_dwca: Union[str, BytesIO], keys_lookup: dict = None,
+                   extension_sync=False, validate_delta: bool = True):
+        """Merging another dwca to bring in the new records and update the existing records
+
+        :param delta_dwca: delta dwca that contains the updated or new records
+        :param output_dwca: output dwca containing the path to the physical file and the output of dwca writen in memory
+        :param keys_lookup: keys to lookup merging with delta_dwca to update content
+        :param extension_sync:
+        :param validate_delta:
+        """
         self.extract_dwca()
         delta_dwca.extract_dwca()
         self.set_keys(keys_lookup)
         delta_dwca.set_keys(keys_lookup)
         if validate_delta and not delta_dwca.validate_content():
             raise SystemExit(Exception("Some validations error found in the delta dwca. Dwca is not merged."))
-
-        self.merge_contents(delta_dwca, extension_sync, regen_ids)
+        self.merge_contents(delta_dwca, extension_sync)
         self.fill_additional_info()
         self.generate_eml()
         self.generate_meta()
-        self.write_dwca(output_dwca_path)
+        self.write_dwca(output_dwca)
 
     def validate_dwca(self, content_keys: dict, error_file: str):
+        """Validate dwca to check if content has unique keys. By default, validates the core content.
+           If additional checks required in another content, supply it as content_keys
+
+        :param content_keys: a dictionary of class type and the key
+                             for eg. {MetaElementTypes.OCCURRENCE, "occurrenceId"}
+        :param error_file: optional error_file for the errored data
+        """
         self.extract_dwca()
         set_keys = self.set_keys(content_keys)
-        #content_type_to_validate = list(set_keys.keys())
         return self.validate_content(content_to_validate=set_keys, error_file=error_file)
 
     def validate_file(self, csv: CsvFileType, error_file: str):
+        """Validate the text file
+
+        :param csv: CsvFileType to pass the csv, key and type
+        :param error_file: optional error_file for the errored data
+        """
         self.extract_csv_content(csv, CoreOrExtType.CORE)
         return self.validate_content(error_file=error_file)

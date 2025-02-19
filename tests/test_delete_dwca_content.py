@@ -28,7 +28,7 @@ class TestDeleteContent:
 
         output_obj = BytesIO()
 
-        DwcaHandler.delete_records(dwca_file=dwca_obj, records_to_delete=delete_records, output_dwca_path=output_obj)
+        DwcaHandler.delete_records(dwca_file=dwca_obj, records_to_delete=delete_records, output_dwca=output_obj)
 
         expected_meta_xml = make_meta_xml_str(core_df=occ_df, use_col_idx_as_core_id=0)
 
@@ -73,7 +73,7 @@ class TestDeleteContent:
 
         output_obj = BytesIO()
 
-        DwcaHandler.delete_records(dwca_file=dwca_ext_obj, records_to_delete=delete_records, output_dwca_path=output_obj)
+        DwcaHandler.delete_records(dwca_file=dwca_ext_obj, records_to_delete=delete_records, output_dwca=output_obj)
 
         expected_meta_xml = make_meta_xml_str(core_df=occ_df, ext_df=multimedia_df, use_col_idx_as_core_id=0)
 

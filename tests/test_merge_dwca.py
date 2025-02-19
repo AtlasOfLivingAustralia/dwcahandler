@@ -35,7 +35,7 @@ class TestMergeDwcaContent:
         keys_lookup[MetaElementTypes.OCCURRENCE] = ['occurrenceID']
 
         DwcaHandler.merge_dwca(dwca_file=dwca_obj, delta_dwca_file=delta_dwca_obj,
-                               output_dwca_path=output_obj,
+                               output_dwca=output_obj,
                                keys_lookup=keys_lookup)
 
         expected_meta_xml = make_meta_xml_str(core_df=occ_df, use_col_idx_as_core_id=0)
@@ -89,7 +89,7 @@ class TestMergeDwcaContent:
         keys_lookup[MetaElementTypes.OCCURRENCE] = ['occurrenceID']
 
         DwcaHandler.merge_dwca(dwca_file=dwca_obj, delta_dwca_file=delta_dwca_obj,
-                               output_dwca_path=output_obj,
+                               output_dwca=output_obj,
                                keys_lookup=keys_lookup)
 
         expected_meta_xml = make_meta_xml_str(core_df=occ_df, use_col_idx_as_core_id=-1)
@@ -144,7 +144,7 @@ class TestMergeDwcaContent:
         keys_lookup[MetaElementTypes.OCCURRENCE] = ['occurrenceID']
 
         DwcaHandler.merge_dwca(dwca_file=dwca_obj, delta_dwca_file=delta_dwca_obj,
-                               output_dwca_path=output_obj,
+                               output_dwca=output_obj,
                                keys_lookup=keys_lookup)
 
         expected_meta_xml = make_meta_xml_str(core_df=occ_df, use_col_idx_as_core_id=-2)
@@ -213,7 +213,7 @@ class TestMergeDwcaContent:
         #keys_lookup[MetaElementTypes.OCCURRENCE] = ['occurrenceID']  # must be set for the multimedia extension to be updated
 
         DwcaHandler.merge_dwca(dwca_file=dwca_ext_obj, delta_dwca_file=delta_dwca_ext_obj,
-                               output_dwca_path=output_obj,
+                               output_dwca=output_obj,
                                keys_lookup=keys_lookup)
 
         expected_occ_df = pd.DataFrame(data=[["1", "species1", "-30.0000", "144.0000", nan],
@@ -295,7 +295,7 @@ class TestMergeDwcaContent:
         #keys_lookup[MetaElementTypes.OCCURRENCE] = ['occurrenceID']  # must be set for the multimedia extension to be updated
 
         DwcaHandler.merge_dwca(dwca_file=dwca_ext_obj, delta_dwca_file=delta_dwca_ext_obj,
-                               output_dwca_path=output_obj,
+                               output_dwca=output_obj,
                                keys_lookup=keys_lookup)
 
         expected_occ_df = pd.DataFrame(data=[["1", "occ1", "species1", "-30.0000", "144.0000", nan],

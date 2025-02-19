@@ -66,10 +66,11 @@ pip install -i https://test.pypi.org/simple/ dwcahandler
 ```python
 from dwcahandler import CsvFileType
 from dwcahandler import DwcaHandler
+from dwcahandler import MetaElementTypes
 from dwcahandler import Eml
 
-core_csv = CsvFileType(files=['/tmp/occurrence.csv'], type='occurrence', keys=['occurrenceID'])
-ext_csvs = [CsvFileType(files=['/tmp/multimedia.csv'], type='multimedia', keys=['occurrenceID'])]
+core_csv = CsvFileType(files=['/tmp/occurrence.csv'], type=MetaElementTypes.OCCURRENCE, keys=['occurrenceID'])
+ext_csvs = [CsvFileType(files=['/tmp/multimedia.csv'], type=MetaElementTypes.MULTIMEDIA, keys=['occurrenceID'])]
 
 eml = Eml(dataset_name='Test Dataset',
           description='Dataset description',
@@ -77,7 +78,7 @@ eml = Eml(dataset_name='Test Dataset',
           citation="test citation",
           rights="test rights")
 
-DwcaHandler.create_dwca(core_csv=core_csv, ext_csv_list=ext_csvs, eml_content=eml, output_dwca_path='/tmp/dwca.zip')
+DwcaHandler.create_dwca(core_csv=core_csv, ext_csv_list=ext_csvs, eml_content=eml, output_dwca='/tmp/dwca.zip')
 ```
 &nbsp;
 * Create Darwin Core Archive from pandas dataframe
@@ -86,14 +87,15 @@ DwcaHandler.create_dwca(core_csv=core_csv, ext_csv_list=ext_csvs, eml_content=em
 ```python
 from dwcahandler import DwcaHandler
 from dwcahandler.dwca import CsvFileType
+from dwcahandler import MetaElementTypes
 from dwcahandler import Eml
 import pandas as pd
 
 core_df = pd.read_csv("/tmp/occurrence.csv")
-core_frame = CsvFileType(files=core_df, type='occurrence', keys=['occurrenceID'])
+core_frame = CsvFileType(files=core_df, type=MetaElementTypes.OCCURRENCE, keys=['occurrenceID'])
 
 ext_df = pd.read_csv("/tmp/multimedia.csv")
-ext_frame = [CsvFileType(files=ext_df, type='multimedia', keys=['occurrenceID'])]
+ext_frame = [CsvFileType(files=ext_df, type=MetaElementTypes.MULTIMEDIA, keys=['occurrenceID'])]
 
 eml = Eml(dataset_name='Test Dataset',
           description='Dataset description',
@@ -101,60 +103,40 @@ eml = Eml(dataset_name='Test Dataset',
           citation="test citation",
           rights="test rights")
 
-DwcaHandler.create_dwca(core_csv=core_frame, ext_csv_list=ext_frame, eml_content=eml, output_dwca_path='/tmp/dwca.zip')
+DwcaHandler.create_dwca(core_csv=core_frame, ext_csv_list=ext_frame, eml_content=eml, output_dwca='/tmp/dwca.zip')
 
 ```
 &nbsp;
 * Merge Darwin Core Archive
 ```python
-from dwcahandler import DwcaHandler
+from dwcahandler import DwcaHandler, MetaElementTypes
 
 DwcaHandler.merge_dwca(dwca_file='/tmp/dwca.zip', delta_dwca_file='/tmp/delta-dwca.zip',
-                       output_dwca_path='/tmp/new-dwca.zip', 
-                       keys_lookup={'occurrence':'occurrenceID'})
+                       output_dwca='/tmp/new-dwca.zip', 
+                       keys_lookup={MetaElementTypes.OCCURRENCE:'occurrenceID'})
 ```
 &nbsp;
 * Delete Rows from core file in Darwin Core Archive
 ```python
 from dwcahandler import CsvFileType
-from dwcahandler import DwcaHandler
+from dwcahandler import DwcaHandler, MetaElementTypes
 
-delete_csv = CsvFileType(files=['/tmp/old-records.csv'], type='occurrence', keys=['occurrenceID'])
+delete_csv = CsvFileType(files=['/tmp/old-records.csv'], type=MetaElementTypes.OCCURRENCE, keys=['occurrenceID'])
 
 DwcaHandler.delete_records(dwca_file='/tmp/dwca.zip',
                            records_to_delete=delete_csv, 
-                           output_dwca_path='/tmp/new-dwca.zip')
+                           output_dwca='/tmp/new-dwca.zip')
 ```
 &nbsp;
-* List darwin core terms that is supported in dwcahandler package
+
 ```python
 from dwcahandler import DwcaHandler
 
-df = DwcaHandler.list_dwc_terms()
-print(df)
+df_terms, df_class = DwcaHandler.list_terms()
+print(df_terms, df_class)
 ```
 &nbsp;
-* Other usages may include subclassing the dwca class, modifying the core dataframe content and rebuilding the dwca.
-```python
-from dwcahandler import Dwca
-
-class DerivedDwca(Dwca):
-    """
-    Derived class to perform other custom operations that is not included as part of the core operations
-    """
-    def drop_columns(self):
-        """
-        Drop existing column in the core content
-        """
-        self.core_content.df_content.drop(columns=['column1', 'column2'], inplace=True)
-        self._update_meta_fields(self.core_content)
-
-
-dwca = DerivedDwca(dwca_file_loc='/tmp/dwca.zip')
-dwca.extract_dwca()
-dwca.drop_columns()
-dwca.generate_eml()
-dwca.generate_meta()
-dwca.write_dwca('/tmp/newdwca.zip')
-
-```
+* List terms that is supported in dwcahandler package in [terms.csv](src/dwcahandler/dwca/terms/terms.csv)   
+* Class RowTypes are defined in MetaElementTypes enum class MetaElementTypes. 
+The supported types are defined by the class column in [class-rowtype.csv](src/dwcahandler/dwca/terms/class-rowtype.csv)   
+For eg: MetaElementTypes.OCCURRENCE
