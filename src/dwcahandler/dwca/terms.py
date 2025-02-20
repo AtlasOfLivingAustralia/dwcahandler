@@ -35,6 +35,7 @@ class NsPrefix(Enum):
     GBIF = "gbif"
     OBIS = "obis"
 
+
 class ExtInfo(NamedTuple):
     """
     Extension info
@@ -42,6 +43,7 @@ class ExtInfo(NamedTuple):
     uri: str
     prefix: NsPrefix
     namespace: str
+
 
 class GbifRegisteredExt(ExtInfo, Enum):
     """
@@ -91,15 +93,15 @@ class Terms:
         """
         if len(updates) > 0 and "class_uri" in updates.columns.tolist():
             updates.insert(0, "class",
-                           updates["class_uri"].apply(lambda x:
-                                                        f"{Terms.extract_term(term_string = x, add_underscore = True).upper()}"))
+                           updates["class_uri"].apply(
+                               lambda x: f"{Terms.extract_term(term_string = x, add_underscore = True).upper()}"))
             updates["prefix"] = ns.value
 
             Terms._update_csv(ns, updates, True)
             return updates
 
     @staticmethod
-    def _update_csv(ns: NsPrefix, updates: pd.DataFrame, is_class: bool=True):
+    def _update_csv(ns: NsPrefix, updates: pd.DataFrame, is_class: bool = True):
         """
         Update class rowtype or terms by replacing all the rows by prefix.
 
@@ -120,8 +122,8 @@ class Terms:
                     df = pd.concat([df, updates[col_list]], ignore_index=False)
 
             df.to_csv(file, index=False)
-            log.info("Rows updated in %s: %s of %s", Path(Terms.CLASS_ROW_TYPE).name,
-                                                        len(updates), len(df))
+            log.info("Rows updated in %s: %s of %s",
+                     Path(Terms.CLASS_ROW_TYPE).name, len(updates), len(df))
         else:
             log.info("No updates to class csv %s", Path(Terms.CLASS_ROW_TYPE).name)
 
@@ -197,7 +199,7 @@ class Terms:
         def _get_latest(identifier: str):
             d = requests.get(Terms.GBIF_EXT).json()
             gbif_ext_df = pd.DataFrame.from_dict(d["extensions"])
-            ext_df = gbif_ext_df[(gbif_ext_df["identifier"]==identifier) & (gbif_ext_df["isLatest"]==True)]
+            ext_df = gbif_ext_df[(gbif_ext_df["identifier"] == identifier) & (gbif_ext_df["isLatest"])]
             url: str = ""
             if len(ext_df) > 0 and "url" in ext_df.columns.tolist():
                 url = ext_df["url"].values[0]
@@ -205,8 +207,8 @@ class Terms:
 
         def _extract_term_info(every_term: tuple) -> list:
             def _extract_value(text: str):
-                return text.replace('\\',"").\
-                            replace('"',"").replace("'","").split("=")[1]
+                return text.replace('\\', "").\
+                            replace('"', "").replace("'", "").split("=")[1]
 
             term_name = _extract_value(every_term[0])
             namespace = _extract_value(every_term[1])
@@ -235,18 +237,13 @@ class Terms:
                     std_ns = ["http://rs.tdwg.org/dwc/terms/", "http://purl.org/dc/terms/"]
                     existing_terms = Terms().terms_df
                     extra_terms_df = df[(df["namespace"].isin(std_ns)) & (~df["uri"].isin(existing_terms["uri"]))]
-                    log.info ("Additional standard terms found:\n%s", extra_terms_df)
+                    log.info("Additional standard terms found:\n%s", extra_terms_df)
                     new_terms = df[~df["uri"].isin(existing_terms["uri"])]
                     if len(new_terms) > 0:
                         new_terms["prefix"] = supported_ext.prefix.value
                         Terms._update_csv(supported_ext.prefix, new_terms, False)
 
-
     @staticmethod
     def update_terms():
-       Terms.update_dwc_terms()
-       Terms.update_gbif_ext()
-
-
-
-#Terms.update_terms()
+        Terms.update_dwc_terms()
+        Terms.update_gbif_ext()

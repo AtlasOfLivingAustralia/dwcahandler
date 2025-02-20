@@ -19,4 +19,4 @@ def update_terms():
     Call the update_dwc_terms to get the latest version of tdwg dwc terms
     Do we need to get a particular version of csv url to pass in??
     """
-    Terms.update_dwc_terms()
+    Terms.update_terms()

@@ -64,9 +64,9 @@ class TestMultimediaExtension:
         assert sorted(list(map(attrgetter('field_name'), dwca.meta_content.meta_elements[0].fields))) == \
                sorted(['occurrenceID', 'scientificName'])
 
-        #pd.testing.assert_frame_equal(associated_media_image_ext.files, image_ext.files)
+        pd.testing.assert_frame_equal(associated_media_image_ext.files.reset_index(drop=True), image_ext.files)
         assert associated_media_image_ext.type == image_ext.type
-        #assert associated_media_image_ext.keys[0] == image_ext.keys[0]
+        assert associated_media_image_ext.keys[0] == image_ext.keys[0]
 
         dwca.extract_csv_content(csv_info=associated_media_image_ext,
                                  core_ext_type=CoreOrExtType.EXTENSION,

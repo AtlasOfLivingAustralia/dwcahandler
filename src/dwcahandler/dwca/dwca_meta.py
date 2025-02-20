@@ -17,7 +17,7 @@ from enum import Enum
 
 DwcClassRowTypes = Terms.get_class_row_types()
 
-MetaElementTypes = Enum ("MetaElementTypes", dict(DwcClassRowTypes))
+MetaElementTypes = Enum("MetaElementTypes", dict(DwcClassRowTypes))
 
 
 @dataclass
@@ -164,7 +164,7 @@ class MetaDwCA:
         return col_name if len(self.terms_df[self.terms_df['term'].str.lower() == col_name.lower()]) <= 0 \
             else self.terms_df[self.terms_df['term'].str.lower() == col_name.lower()]['uri'].values[0]
 
-    def map_headers(self, headers: list[str], index_field: str=None) -> (list[Field], Field):
+    def map_headers(self, headers: list[str], index_field: str = None) -> (list[Field], Field):
         """Map header column names onto a list of fields.
 
         Column names are mapped onto fields based on name, URI or qualified name

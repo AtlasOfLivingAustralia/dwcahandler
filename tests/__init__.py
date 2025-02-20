@@ -5,6 +5,7 @@ from io import BytesIO
 import csv
 from dwcahandler import Eml
 from xml.dom.minidom import parseString
+from dwcahandler import MetaDwCA
 
 
 def get_eml_content():
@@ -20,9 +21,8 @@ def make_fields(columns: list, term_uri: str, field_start: int = 0, core_id: str
     fields = ""
     idx_start = 0
     if field_start != -1:
-       fields = core_id if core_id else ""
-       idx_start = field_start if field_start != -2 else 0
-
+        fields = core_id if core_id else ""
+        idx_start = field_start if field_start != -2 else 0
 
     for idx, col in enumerate(columns):
         if not (col in ["id", "coreid"]):
@@ -56,12 +56,11 @@ def make_meta_xml_str(core_df: pd.DataFrame, ext_df: pd.DataFrame = None, use_co
     :return: str
     """
     core_columns = core_df.columns.to_list()
-    field_start = use_col_idx_as_core_id #1 if any(x for x in core_columns if x in ["id", "coreid"]) else use_col_idx_as_core_id
     id_idx = use_col_idx_as_core_id if use_col_idx_as_core_id >= 0 else 0
-    fields = make_fields(core_columns, "http://rs.tdwg.org/dwc/terms", field_start,
+    fields = make_fields(core_columns, "http://rs.tdwg.org/dwc/terms", use_col_idx_as_core_id,
                          f'<id index="{id_idx}" />')
     ext_str = make_ext_str(ext_df.columns.to_list(), "http://purl.org/dc/terms",
-                           field_start, id_idx) \
+                           use_col_idx_as_core_id, id_idx) \
         if isinstance(ext_df, pd.DataFrame) else ''
     meta_xml_str = f'''<?xml version="1.0" ?>
 <archive xmlns="http://rs.tdwg.org/dwc/text/" metadata="eml.xml">
@@ -108,12 +107,9 @@ def remove_pretty_print_xml(input_xml):
     return output_xml
 
 
-from dwcahandler import MetaDwCA
-from io import BytesIO
-
 def get_xml_from_file(expected_file: str):
     dwca_meta = MetaDwCA()
-    dwca_meta.read_meta_file (meta_file=expected_file)
+    dwca_meta.read_meta_file(meta_file=expected_file)
     dwca_meta.create()
     expected_str = str(dwca_meta)
     return expected_str

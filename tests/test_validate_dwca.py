@@ -72,5 +72,5 @@ class TestValidateDwca:
         with pytest.raises(ValueError) as exc_info:
             DwcaHandler.validate_dwca(dwca_file=simple_dwca, keys_lookup=keys_lookup)
 
-        assert "Duplicate columns ['catalogNumber'] specified in the " \
-                   "metadata for occurrence.csv" in str(exc_info.value)
+        assert ("Duplicate columns ['catalogNumber'] specified in the metadata for occurrence.csv"
+                in str(exc_info.value))

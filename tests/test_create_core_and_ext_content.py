@@ -16,10 +16,12 @@ multiple_tsv_occ_test = {"file_paths": glob.glob(os.path.join("input_files/sampl
                          "delimiter": "\t"}
 duplicates_csv_occ_test = {"file_paths": single_csv_occ_test["file_paths"] + multiple_csv_occ_test["file_paths"],
                            "delimiter": ","}
-csv_occ_with_space = {"file_paths": ['./input_files/sample/occurrence/occ_file1.csv', './input_files/sample/occ_header_with_space.csv'],
-                       "delimiter": ","}
-multimedia_with_space = {"file_paths": ['./input_files/sample/multimedia/multimedia_file.csv', './input_files/sample/multimedia_header_with_space.csv'],
+csv_occ_with_space = {"file_paths": ['./input_files/sample/occurrence/occ_file1.csv',
+                                     './input_files/sample/occ_header_with_space.csv'],
                       "delimiter": ","}
+multimedia_with_space = {"file_paths": ['./input_files/sample/multimedia/multimedia_file.csv',
+                                        './input_files/sample/multimedia_header_with_space.csv'],
+                         "delimiter": ","}
 
 
 def get_expected_combined_occ_df(file_paths: list, keys: list, delimiter: str = ","):
@@ -28,8 +30,6 @@ def get_expected_combined_occ_df(file_paths: list, keys: list, delimiter: str = 
     for df in dfs:
         all_records_df = pd.concat([all_records_df, df], ignore_index=True)
     all_records_df.drop_duplicates(inplace=True)
-    #all_records_df.set_index(keys=keys, drop=False, inplace=True)
-    #all_records_df.reset_index(inplace=True)
     return all_records_df
 
 
@@ -168,12 +168,12 @@ class TestExtractData:
                                          core_ext_type=CoreOrExtType.CORE)
 
         expected_column_list = ["catalogNumber", "basisOfRecord", "scientificName",
-                                "license","decimalLatitude","decimalLongitude"]
+                                "license", "decimalLatitude", "decimalLongitude"]
         assert set(dwca_creator.core_content.df_content.columns) == set(expected_column_list)
         assert len(dwca_creator.core_content.df_content) == 5
         pdtest.assert_series_equal(dwca_creator.core_content.df_content["catalogNumber"],
-                               pd.Series(["C1", "C2", "C3", "C4", "C5"], dtype=str, name='catalogNumber'),
-                               check_index_type=False, check_index=False)
+                                   pd.Series(["C1", "C2", "C3", "C4", "C5"], dtype=str, name='catalogNumber'),
+                                   check_index_type=False, check_index=False)
 
     def test_extract_csv_ext_with_header_space(self):
         """
@@ -196,16 +196,18 @@ class TestExtractData:
                                          core_ext_type=CoreOrExtType.EXTENSION)
 
         expected_column_list = ["catalogNumber", "basisOfRecord", "scientificName",
-                                "license","decimalLatitude","decimalLongitude"]
+                                "license", "decimalLatitude", "decimalLongitude"]
         assert set(dwca_creator.core_content.df_content.columns) == set(expected_column_list)
         assert len(dwca_creator.core_content.df_content) == 5
-        pdtest.assert_series_equal(dwca_creator.core_content.df_content["catalogNumber"],
-                               pd.Series(["C1", "C2", "C3", "C4", "C5"], dtype=str, name="catalogNumber"),
-                               check_index_type=False, check_index=False)
+        pdtest.assert_series_equal(
+            dwca_creator.core_content.df_content["catalogNumber"],
+            pd.Series(["C1", "C2", "C3", "C4", "C5"], dtype=str, name="catalogNumber"),
+            check_index_type=False, check_index=False)
 
         expected_column_list = ["catalogNumber", "identifier", "format", "type"]
         assert set(dwca_creator.ext_content[0].df_content.columns) == set(expected_column_list)
         assert len(dwca_creator.ext_content[0].df_content) == 5
-        pdtest.assert_series_equal(dwca_creator.ext_content[0].df_content["catalogNumber"],
-                               pd.Series(["C1", "C2", "C3", "C4", "C5"], dtype=str, name="catalogNumber"),
-                               check_index_type=False, check_index=False)
+        pdtest.assert_series_equal(
+            dwca_creator.ext_content[0].df_content["catalogNumber"],
+            pd.Series(["C1", "C2", "C3", "C4", "C5"], dtype=str, name="catalogNumber"),
+            check_index_type=False, check_index=False)

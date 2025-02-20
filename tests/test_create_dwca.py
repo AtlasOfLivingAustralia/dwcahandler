@@ -38,7 +38,7 @@ def check_output(output_obj: BytesIO, test_files_folder: str, check_core_id: boo
                             pd.testing.assert_frame_equal(actual_df, expected_df)
                         else:
                             core_id_list = ["id", "coreid"]
-                            assert any(found :=[i for i in core_id_list if i in actual_df.columns.to_list()])
+                            assert any(found := [i for i in core_id_list if i in actual_df.columns.to_list()])
                             actual_df = actual_df.drop(columns=[found[0]])
                             for col in expected_df.columns:
                                 expected_df = expected_df[~expected_df[col].str.contains('ERROR')]
@@ -66,15 +66,14 @@ class TestCreateDwca:
 
         check_output(output_obj, test_files_folder)
 
-
     def test_create_occurrence_dwca_occurrence_multiple_keys(self):
         test_files_folder = "./input_files/occurrence/sample2"
 
         core_csv = CsvFileType(files=[f"{test_files_folder}/occurrence.txt"],
-                               keys=['institutionCode','collectionCode','catalogNumber'],
+                               keys=['institutionCode', 'collectionCode', 'catalogNumber'],
                                type=MetaElementTypes.OCCURRENCE)
         ext1_csv = CsvFileType(files=[f"{test_files_folder}/multimedia.txt"],
-                               keys=['institutionCode','collectionCode','catalogNumber'],
+                               keys=['institutionCode', 'collectionCode', 'catalogNumber'],
                                type=MetaElementTypes.MULTIMEDIA)
 
         output_obj = BytesIO()
@@ -86,15 +85,14 @@ class TestCreateDwca:
 
         check_output(output_obj, test_files_folder, check_core_id=True)
 
-
     def test_create_occurrence_dwca_occurrence_extra_multimedia_records(self):
         test_files_folder = "./input_files/occurrence/sample3"
 
         core_csv = CsvFileType(files=[f"{test_files_folder}/occurrence.txt"],
-                               keys=['institutionCode','collectionCode','catalogNumber'],
+                               keys=['institutionCode', 'collectionCode', 'catalogNumber'],
                                type=MetaElementTypes.OCCURRENCE)
         ext1_csv = CsvFileType(files=[f"{test_files_folder}/multimedia.txt"],
-                               keys=['institutionCode','collectionCode','catalogNumber'],
+                               keys=['institutionCode', 'collectionCode', 'catalogNumber'],
                                type=MetaElementTypes.MULTIMEDIA)
 
         output_obj = BytesIO()
@@ -113,9 +111,9 @@ class TestCreateDwca:
         core_csv = CsvFileType(files=[f"{test_files_folder}/event.txt"], keys=['eventID'],
                                type=MetaElementTypes.EVENT)
         ext1_csv = CsvFileType(files=[f"{test_files_folder}/occurrence.txt"], keys=['eventID'],
-                              type=MetaElementTypes.OCCURRENCE)
+                               type=MetaElementTypes.OCCURRENCE)
         ext2_csv = CsvFileType(files=[f"{test_files_folder}/measurement_or_fact.txt"], keys=['eventID'],
-                              type=MetaElementTypes.MEASUREMENT_OR_FACT)
+                               type=MetaElementTypes.MEASUREMENT_OR_FACT)
 
         output_obj = BytesIO()
 
@@ -145,4 +143,3 @@ class TestCreateDwca:
         assert output_obj
 
         check_output(output_obj, test_files_folder)
-

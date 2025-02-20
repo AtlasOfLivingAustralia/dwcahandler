@@ -118,7 +118,6 @@ class TestMergeDwcaContent:
 
             zf.close()
 
-
     def test_merge_core_records_with_separate_id(self):
         """
         Test for core record merging (update existing and add new rows)
@@ -173,7 +172,6 @@ class TestMergeDwcaContent:
 
             zf.close()
 
-
     def test_merge_core_and_ext_records_with_id(self):
         """
         Test for core and extension record merging (update existing and add new rows, columns)
@@ -210,7 +208,6 @@ class TestMergeDwcaContent:
 
         keys_lookup: dict = dict()
         keys_lookup[MetaElementTypes.OCCURRENCE] = ['occurrenceID']
-        #keys_lookup[MetaElementTypes.OCCURRENCE] = ['occurrenceID']  # must be set for the multimedia extension to be updated
 
         DwcaHandler.merge_dwca(dwca_file=dwca_ext_obj, delta_dwca_file=delta_dwca_ext_obj,
                                output_dwca=output_obj,
@@ -292,7 +289,6 @@ class TestMergeDwcaContent:
 
         keys_lookup: dict = dict()
         keys_lookup[MetaElementTypes.OCCURRENCE] = ['occurrenceID']
-        #keys_lookup[MetaElementTypes.OCCURRENCE] = ['occurrenceID']  # must be set for the multimedia extension to be updated
 
         DwcaHandler.merge_dwca(dwca_file=dwca_ext_obj, delta_dwca_file=delta_dwca_ext_obj,
                                output_dwca=output_obj,

@@ -201,9 +201,9 @@ class Dwca(BaseDwca):
             return self.defaults_prop.translate_table[v] if v in invalid_values else v
 
         def _find_fields_with_zero_idx(meta_element_fields: list):
-            for field in meta_element_fields:
-                if field.index == "0":
-                    return field
+            for elm_field in meta_element_fields:
+                if elm_field.index == "0":
+                    return elm_field
             return None
 
         def _add_first_id_field_if_exists(meta_element: MetaElementAttributes):
@@ -352,10 +352,11 @@ class Dwca(BaseDwca):
 
         return set_keys
 
-    def _update_meta_fields(self, content: DfContent, key_field: str=None):
+    def _update_meta_fields(self, content: DfContent, key_field: str = None):
         """Update meta content fields by reading the content frame"""
         fields = self._read_header(content.df_content)
-        self.meta_content.update_meta_element(meta_element_info=content.meta_info, fields=fields, index_field=key_field)
+        self.meta_content.update_meta_element(meta_element_info=content.meta_info, fields=fields,
+                                              index_field=key_field)
 
     def _filter_content(self, df_content, delta_df_content):
         """Filter delta content that is not already in the existing content
@@ -561,7 +562,7 @@ class Dwca(BaseDwca):
 
         for _, delta_content in enumerate(delta_dwca.ext_content):
             contents = self.get_content(class_type=delta_content.meta_info.type,
-                                          file_name=delta_content.meta_info.file_name if match_by_filename else "")
+                                        file_name=delta_content.meta_info.file_name if match_by_filename else "")
             for content, _ in contents:
                 if extension_sync:
                     self._delete_old_ext_records(content, self.core_content.df_content,
@@ -571,15 +572,14 @@ class Dwca(BaseDwca):
                 content.df_content = self._merge_df_content(content, delta_content,
                                                             self.core_content.keys)
 
-            if len (contents) == 0:
-               # Copy delta ext content into self ext content
+            if len(contents) == 0:
+                # Copy delta ext content into self ext content
                 self.ext_content.append(delta_content)
                 self._update_meta_fields(delta_content)
 
         self.core_content.df_content = self._merge_df_content(content=self.core_content,
                                                               delta_content=delta_dwca.core_content,
                                                               keys=self.core_content.keys)
-
 
     def get_content(self, class_type: MetaElementTypes = None, name_space: str = None, file_name: str = None) -> list:
         """Get the content based on the class type, row type namespace and optional file name
@@ -590,22 +590,22 @@ class Dwca(BaseDwca):
         :return: A list of tuples containing the content data frame and
                  core or extension type
         """
-        def check_content(content, class_type, name_space):
-            if file_name and content.meta_info.file_name != file_name:
+        def check_content(current_content, class_type_to_match, name_space_to_match):
+            if file_name and current_content.meta_info.file_name != file_name:
                 return False
 
-            if  ((class_type and content.meta_info.type == class_type) or
-                (name_space and content.meta_info.type.value == name_space)):
+            if ((class_type_to_match and current_content.meta_info.type == class_type_to_match) or
+                    (name_space_to_match and current_content.meta_info.type.value == name_space_to_match)):
                 return True
             return False
 
         contents = []
 
-        if check_content(self.core_content, class_type=class_type, name_space=name_space):
-             contents.append((self.core_content, CoreOrExtType.CORE))
+        if check_content(self.core_content, class_type_to_match=class_type, name_space_to_match=name_space):
+            contents.append((self.core_content, CoreOrExtType.CORE))
 
         for content in self.ext_content:
-            if check_content(content, class_type=class_type, name_space=name_space):
+            if check_content(content, class_type_to_match=class_type, name_space_to_match=name_space):
                 contents.append((content, CoreOrExtType.EXTENSION))
 
         return contents
@@ -729,7 +729,6 @@ class Dwca(BaseDwca):
                 log.info("%s associated media extracted", str(len(image_df)))
                 return CsvFileType(files=image_df, type=MetaElementTypes.MULTIMEDIA,
                                    keys=self.core_content.keys)
-                                   #keys=image_df.index.names)
 
             log.info("Nothing to extract from associated media")
 
@@ -808,7 +807,7 @@ class Dwca(BaseDwca):
             df_keys = to_lower(content_keys_df)
             duplicate_condition = df_keys.duplicated(keep='first')
             if duplicate_condition.values.any():
-                log.error(f"Duplicate %s found. Total rows affected: %s", keys, duplicate_condition.sum())
+                log.error("Duplicate %s found. Total rows affected: %s", keys, duplicate_condition.sum())
                 log.error("Duplicate values: %s", pd.unique(content_keys_df[duplicate_condition].stack()))
                 if error_file:
                     report_error(content_keys_df, keys, "Duplicate Values",
@@ -895,7 +894,7 @@ class Dwca(BaseDwca):
         keys = csv_info.keys if self.__check_csv_info_value(csv_info, 'keys') else 'occurrenceID'
         core_id_field: str = ""
         if build_coreid_for_ext:
-            if len (keys) > 1:
+            if len(keys) > 1:
                 if core_ext_type == CoreOrExtType.CORE:
                     core_id_field = self._update_core_ids(csv_content)
                     self._build_index_for_content(csv_content, keys)
@@ -960,13 +959,13 @@ class Dwca(BaseDwca):
         for file in self.embedded_files:
             dwca_zip.write(file, file.name)
 
-    def write_dwca(self, output_dwca_path: Union[str | BytesIO]):
+    def write_dwca(self, output_dwca: Union[str, BytesIO]):
         """Write a full DwCA to a zip file
         Any parent directories needed are created during writing.
 
-        :param output_dwca_path: The file path to write the .zip file to
+        :param output_dwca: The file path to write the .zip file to or dwca in memory
         """
-        with ZipFile(output_dwca_path, 'w', allowZip64=True,
+        with ZipFile(output_dwca, 'w', allowZip64=True,
                      compression=zipfile.ZIP_DEFLATED) as dwca_zip:
             self._write_df_content_to_zip_file(dwca_zip=dwca_zip, content=self.core_content)
             for ext in self.ext_content:
@@ -976,7 +975,7 @@ class Dwca(BaseDwca):
                 dwca_zip.writestr(self.defaults_prop.eml_xml_filename, self.eml_content)
             self._write_associated_files(dwca_zip=dwca_zip)
             dwca_zip.close()
-        log.info("Dwca written to: %s", output_dwca_path)
+        log.info("Dwca written to: %s", output_dwca)
 
     def _read_csv(self,
                   csv_file: str | io.TextIOWrapper,
@@ -1033,7 +1032,7 @@ class Dwca(BaseDwca):
                 log.debug("Extracted %d rows from csv %s", len(ret_val), csv_file)
 
                 # Strip column header spaces
-                ret_val.rename(str.strip, axis = 'columns', inplace=True)
+                ret_val.rename(str.strip, axis='columns', inplace=True)
 
             return ret_val
 

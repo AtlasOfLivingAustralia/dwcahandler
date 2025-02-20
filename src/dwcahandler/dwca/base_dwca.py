@@ -47,12 +47,12 @@ class BaseDwca(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def write_dwca(self, output_dwca_path: Union[str | BytesIO]):
+    def write_dwca(self, output_dwca: Union[str, BytesIO]):
         """Write the content of the DwCA to a directory.
 
         Writes all CSV files, as well as a meta-file and EML file for the archive.
 
-        :param output_dwca_path: The path to write to
+        :param output_dwca: The path to write to or dwca in memory
         """
         pass
 
@@ -65,10 +65,10 @@ class BaseDwca(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def merge_contents(self, delta_dwca: BaseDwca, extension_sync: bool, match_by_filename: bool=False):
+    def merge_contents(self, delta_dwca: BaseDwca, extension_sync: bool, match_by_filename: bool = False):
         """Construct a new DwCA by merging the contents of a delta DwCA with this archive.
 
-        :param delta_dwca: The delta to merge
+        :param delta_dwca: The delta dwca for merging
         :param extension_sync: Merge extensions
         :param match_by_filename: Match the dwca and delta content by also filenames if supplied,
                 this is extra condition in case if there are more than 1 content with same class type in a dwca
