@@ -16,6 +16,8 @@ A particular function of the meta-file is that it can link columns to URIs that 
 the (usually Darwin Core) terms that each column contains.
 
 """
+from __future__ import annotations
+
 from collections import namedtuple
 from dataclasses import dataclass, field
 from typing import Optional, Union
@@ -160,13 +162,14 @@ class Defaults:
 
 # Imports at end of file to allow classes to be used
 from dwcahandler.dwca.terms import Terms, NsPrefix
-from dwcahandler.dwca.dwca_meta import MetaElementTypes, MetaElementInfo, MetaDwCA, MetaElementAttributes
+from dwcahandler.dwca.dwca_meta import (MetaElementTypes, MetaElementInfo, MetaDwCA,
+                                        MetaElementAttributes, get_meta_class_row_type)
 @dataclass
 class CsvFileType:
     """A description of a CSV file in a DwCA
     """
     files: Union[list[str], pd.DataFrame]  # can accept more than one file or a dataframe
-    type: MetaElementTypes  # 'occurrence', 'taxon', 'event', multimedia,...
+    type: MetaElementTypes # 'occurrence', 'taxon', 'event', multimedia,...
     keys: Optional[list] = None  # must be supplied for csv extensions to link extension records to core record
     # when creating dwca. for core other than occurrence, this neeeds to be supplied as key.
     # column keys lookup in core or extension for delete records
@@ -174,8 +177,26 @@ class CsvFileType:
     csv_encoding: CSVEncoding = field(
         default_factory=lambda: CSVEncoding(csv_delimiter=",", csv_eol="\n", csv_text_enclosure='"',
                                             csv_escape_char='"'))
-    # delimiter: Optional[str] = None
-    # file delimiter type when reading the csv. if not supplied, the collectory setting delimiter is read in for the dr
+
+    def check_for_empty(self, include_keys = True):
+        if self.files and len(self.files) > 0 and \
+                self.type and isinstance(self.type, MetaElementTypes) and \
+                (not include_keys or include_keys and self.keys and len(self.keys) > 0):
+            return True
+        return False
+
+    def add_data(self, other_csv_file_type: CsvFileType):
+        if self.type and self.type == other_csv_file_type.type:
+            if isinstance(self.files, pd.DataFrame) and isinstance(other_csv_file_type.files, pd.DataFrame):
+                self.files = pd.concat([self.files, other_csv_file_type.files], ignore_index=False)
+                return True
+            elif isinstance(self.files, list) and isinstance(other_csv_file_type.files, list):
+                self.files.append(other_csv_file_type.files)
+                return True
+        elif not self.type:
+            self.files = other_csv_file_type.files
+            self.type = other_csv_file_type.type
+        return False
 
 from dwcahandler.dwca.eml import Eml
 from dwcahandler.dwca.base_dwca import BaseDwca

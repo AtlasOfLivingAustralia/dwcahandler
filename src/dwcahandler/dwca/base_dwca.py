@@ -89,7 +89,7 @@ class BaseDwca(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def validate_content(self, content_to_validate: list[MetaElementTypes] = None, error_file: str = None):
+    def validate_content(self, content_to_validate: dict = None, error_file: str = None):
         pass
 
     @abstractmethod
@@ -127,7 +127,7 @@ class BaseDwca(metaclass=ABCMeta):
 
     def create_dwca(self, core_csv: CsvFileType, output_dwca: Union[str, BytesIO],
                     ext_csv_list: list[CsvFileType] = None, validate_content: bool = True,
-                    eml_content: Union[str, Eml] = ''):
+                    eml_content: Union[str, Eml] = '', additional_validation_on_content: list[CsvFileType] = None):
         """Create a dwca given the contents of core and extensions and eml content
 
         :param core_csv: CsvFileType containing the files, class types and keys to form the core of the dwca
@@ -136,16 +136,13 @@ class BaseDwca(metaclass=ABCMeta):
                               extensions of the dwca if supplied
         :param validate_content: whether to validate the contents
         :param eml_content: eml content in string or a filled Eml object
+        :param additional_validation_on_content: additional validation to perform
         """
         if ext_csv_list is None:
             ext_csv_list = []
 
         self.extract_csv_content(csv_info=core_csv, core_ext_type=CoreOrExtType.CORE,
                                  build_coreid_for_ext=True if len(ext_csv_list) > 0 else False)
-
-        # Only validate core content
-        if validate_content and not self.validate_content():
-            raise SystemExit(Exception("Some validations error found. Dwca is not created."))
 
         # if multimedia files is supplied, do not attempt to convert associated media to multimedia
         if not any(ext.type == MetaElementTypes.MULTIMEDIA for ext in ext_csv_list):
@@ -154,9 +151,14 @@ class BaseDwca(metaclass=ABCMeta):
                 ext_csv_list.append(image_ext)
 
         for ext in ext_csv_list:
-            self.extract_csv_content(ext, CoreOrExtType.EXTENSION, True)
+            self.extract_csv_content(csv_info=ext, core_ext_type=CoreOrExtType.EXTENSION,
+                                     build_coreid_for_ext=True)
 
         self.fill_additional_info()
+
+        if validate_content and not self.validate_content(additional_validation_on_content):
+            raise SystemExit(Exception("Some validations error found. Dwca is not created."))
+
         self.generate_eml(eml_content)
         self.generate_meta()
         self.write_dwca(output_dwca)
@@ -202,5 +204,5 @@ class BaseDwca(metaclass=ABCMeta):
         :param csv: CsvFileType to pass the csv, key and type
         :param error_file: optional error_file for the errored data
         """
-        self.extract_csv_content(csv, CoreOrExtType.CORE)
+        self.extract_csv_content(csv_info=csv, core_ext_type=CoreOrExtType.CORE)
         return self.validate_content(error_file=error_file)

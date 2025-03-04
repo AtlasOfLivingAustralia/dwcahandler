@@ -19,6 +19,18 @@ DwcClassRowTypes = Terms.get_class_row_types()
 
 MetaElementTypes = Enum("MetaElementTypes", dict(DwcClassRowTypes))
 
+def get_meta_class_row_type(row_type_uri: str):
+    """
+    Find a row type by URI
+
+    :param row_type: The row type URI
+    :return: The corresponding element
+    """
+    for name, member in MetaElementTypes.__members__.items():
+        if member.value == row_type_uri:
+            return member
+    return None
+
 
 @dataclass
 class MetaElementInfo:
@@ -74,18 +86,6 @@ class MetaDwCA:
         def extract_field_attr_value(field_elm, attrib):
             return field_elm.attrib.get(attrib) if field_elm.attrib.get(attrib) else None
 
-        def __get_element_by_row_type(row_type: str):
-            """
-            Find a row type by URI
-
-            :param row_type: The row type URI
-            :return: The corresponding element
-            """
-            for name, member in MetaElementTypes.__members__.items():
-                if member.value == row_type:
-                    return member
-            return None
-
         fields = node_elm.findall(f'{ns}field')
         id_field = []
         if core_or_ext_type == 'core':
@@ -95,7 +95,7 @@ class MetaDwCA:
         file_name = node_elm.find(f'{ns}files').find(f'{ns}location').text
         meta_element_info = MetaElementInfo(
             core_or_ext_type=core_or_ext_type,
-            type=__get_element_by_row_type(node_elm.attrib['rowType']),
+            type=get_meta_class_row_type(node_elm.attrib['rowType']),
             csv_encoding=CSVEncoding(
                 csv_delimiter=node_elm.attrib['fieldsTerminatedBy'],
                 csv_eol=node_elm.attrib['linesTerminatedBy'],
@@ -182,12 +182,6 @@ class MetaDwCA:
                 id_index = field_elm
             field_list.append(field_elm)
         return field_list, id_index
-
-    def _extract_meta_element(self, file_name):
-        for _, elm in enumerate(self.meta_elements):
-            if elm.meta_element_type.file_name == file_name:
-                return elm
-        return None
 
     def update_meta_element(self, meta_element_info: MetaElementInfo, fields: list[str], index_field: str = None):
         """Replace or append meta information (based on file name)

@@ -858,13 +858,14 @@ class Dwca(BaseDwca):
         :return: True if the DwCA is value, False otherwise
         """
 
-        content_set_to_validate = {self.core_content.meta_info.type: self.core_content.keys}
+        set_to_validate = {self.core_content.meta_info.type: self.core_content.keys}
         if content_to_validate:
-            for class_type, content_key in content_to_validate.items():
-                if type != self.core_content.meta_info.type:
-                    content_set_to_validate[class_type] = content_key
+            for class_type, content_keys in content_to_validate.items():
+                if not (class_type == self.core_content.meta_info.type and
+                        set(content_keys) == set(self.core_content.keys)):
+                    set_to_validate[class_type] = content_keys
 
-        for class_type, key in content_set_to_validate.items():
+        for class_type, key in set_to_validate.items():
             contents = self.get_content(class_type=class_type)
             for content, _ in contents:
                 keys_df = self._extract_keys(content.df_content, content.keys)
