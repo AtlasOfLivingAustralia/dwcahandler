@@ -23,7 +23,7 @@ def get_meta_class_row_type(row_type_uri: str):
     """
     Find a row type by URI
 
-    :param row_type: The row type URI
+    :param row_type_uri: The row type URI
     :return: The corresponding element
     """
     for name, member in MetaElementTypes.__members__.items():
@@ -164,7 +164,7 @@ class MetaDwCA:
         return col_name if len(self.terms_df[self.terms_df['term'].str.lower() == col_name.lower()]) <= 0 \
             else self.terms_df[self.terms_df['term'].str.lower() == col_name.lower()]['uri'].values[0]
 
-    def map_headers(self, headers: list[str], index_field: str = None) -> (list[Field], Field):
+    def map_headers(self, headers: list[str], index_field: str = None) -> (list[Field], Optional[Field]):
         """Map header column names onto a list of fields.
 
         Column names are mapped onto fields based on name, URI or qualified name
@@ -174,7 +174,7 @@ class MetaDwCA:
         :return: The corresponding field list
         """
         field_list: list[Field] = []
-        id_index: Field = None
+        id_index = None
         for i, col in enumerate(headers):
             col_name = self.__remove_prefix(col)
             field_elm = Field(index=str(i), field_name=col_name, term=self.__get_terms(col_name))

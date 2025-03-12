@@ -54,9 +54,6 @@ dc,temporal,http://purl.org/dc/terms/temporal
 dc,title,http://purl.org/dc/terms/title
 dc,type,http://purl.org/dc/terms/type
 dc,valid,http://purl.org/dc/terms/valid
-obis,measurementTypeID,http://rs.iobis.org/obis/terms/measurementTypeID
-obis,measurementValueID,http://rs.iobis.org/obis/terms/measurementValueID
-obis,measurementUnitID,http://rs.iobis.org/obis/terms/measurementUnitID
 dwc,acceptedNameUsage,http://rs.tdwg.org/dwc/terms/acceptedNameUsage
 dwc,acceptedNameUsageID,http://rs.tdwg.org/dwc/terms/acceptedNameUsageID
 dwc,associatedMedia,http://rs.tdwg.org/dwc/terms/associatedMedia
@@ -271,3 +268,6 @@ dwc,verticalDatum,http://rs.tdwg.org/dwc/terms/verticalDatum
 dwc,vitality,http://rs.tdwg.org/dwc/terms/vitality
 dwc,waterBody,http://rs.tdwg.org/dwc/terms/waterBody
 dwc,year,http://rs.tdwg.org/dwc/terms/year
+obis,measurementTypeID,http://rs.iobis.org/obis/terms/measurementTypeID
+obis,measurementUnitID,http://rs.iobis.org/obis/terms/measurementUnitID
+obis,measurementValueID,http://rs.iobis.org/obis/terms/measurementValueID

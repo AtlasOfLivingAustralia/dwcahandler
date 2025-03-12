@@ -876,6 +876,9 @@ class Dwca(BaseDwca):
                 if not self._validate_columns(content):
                     return False
 
+                log.info("Validation successful for %s %s content for unique keys %s",
+                         content.meta_info.core_or_ext_type, content.meta_info.type, content.keys)
+
         return True
 
     def extract_csv_content(self, csv_info: CsvFileType,
@@ -892,7 +895,10 @@ class Dwca(BaseDwca):
             csv_content = self._combine_contents(csv_info.files, csv_info.csv_encoding)
 
         # Use default occurrenceID if not provided
-        keys = csv_info.keys if self.__check_csv_info_value(csv_info, 'keys') else 'occurrenceID'
+        if core_ext_type == CoreOrExtType.CORE:
+            keys = csv_info.keys if self.__check_csv_info_value(csv_info, 'keys') else ['occurrenceID']
+        else:
+            keys = self.core_content.keys
         core_id_field: str = ""
         if build_coreid_for_ext:
             if len(keys) > 1:
@@ -979,7 +985,7 @@ class Dwca(BaseDwca):
         log.info("Dwca written to: %s", output_dwca)
 
     def _read_csv(self,
-                  csv_file: str | io.TextIOWrapper,
+                  csv_file: Union[str, io.TextIOWrapper],
                   csv_encoding_param: CSVEncoding = MISSING,
                   columns: list = None,
                   ignore_header_lines: int = 0,

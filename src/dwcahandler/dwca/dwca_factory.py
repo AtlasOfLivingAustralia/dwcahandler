@@ -6,7 +6,7 @@ Module contains factory class for Dwca. This is used to decide the type of darwi
 import logging
 from typing import Union
 import pandas as pd
-from dwcahandler.dwca import CsvFileType, Dwca, Terms, Eml
+from dwcahandler.dwca import CsvFileType, Dwca, Terms, Eml, MetaElementTypes
 from io import BytesIO
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
@@ -18,6 +18,11 @@ class DwcaHandler:
     @staticmethod
     def list_terms() -> (pd.DataFrame, pd.DataFrame):
         return Terms().terms_df, Terms().class_df
+
+    @staticmethod
+    def list_class_rowtypes() :
+        for name, member in MetaElementTypes.__members__.items():
+            print(f"{name}: {member.value}")
 
     """Perform various DwCA operations"""
 

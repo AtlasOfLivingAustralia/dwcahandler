@@ -19,7 +19,7 @@ metapype = "^0.0.26"
 flake8 = "^7.1.1"
 
 [tool.poetry.scripts]
-update-dwc-terms = "dwcahandler.scripts.update_dwc_terms:update_terms"
+update-terms = "dwcahandler.scripts.update_terms:update_terms"
 
 [build-system]
 requires = ["poetry-core"]

@@ -39,17 +39,21 @@ class TestTerms:
                                                                "http://rs.tdwg.org/dwc/terms/Occurrence",
                                                                "http://rs.tdwg.org/dwc/terms/Occurrence"]}))
         mocker.patch('pandas.DataFrame.to_csv')
-        return_dwc_df, return_dwc_class_df = Terms.update_dwc_terms()
-        pd.testing.assert_frame_equal(left=return_dwc_df,
+        return_terms_df, return_class_df = Terms.update_terms()
+        return_dwc_terms_df = return_terms_df[return_terms_df.prefix.isin(['dwc'])].copy().reset_index(drop=True)
+        return_dwc_class_df = return_class_df[return_class_df.prefix.isin(['dwc'])].copy().reset_index(drop=True)
+        pd.testing.assert_frame_equal(left=return_dwc_terms_df,
                                       right=pd.DataFrame(
                                           {"prefix": [NsPrefix.DWC.value, NsPrefix.DWC.value, NsPrefix.DWC.value],
-                                           "term": ["occurrenceID", "basisOfRecord", "scientificName"],
-                                           "uri": ["http://rs.tdwg.org/dwc/terms/occurrenceID",
-                                                   "http://rs.tdwg.org/dwc/terms/basisOfRecord",
+                                           "term": ["basisOfRecord", "occurrenceID", "scientificName"],
+                                           "uri": ["http://rs.tdwg.org/dwc/terms/basisOfRecord",
+                                                   "http://rs.tdwg.org/dwc/terms/occurrenceID",
                                                    "http://rs.tdwg.org/dwc/terms/scientificName"]}),
-                                      check_like=True)
+                                      check_index_type=False,
+                                      check_dtype=False)
         pd.testing.assert_frame_equal(left=return_dwc_class_df,
                                       right=pd.DataFrame({"prefix": [NsPrefix.DWC.value],
                                                           "class": ["OCCURRENCE"],
                                                           "class_uri": ["http://rs.tdwg.org/dwc/terms/Occurrence"]}),
-                                      check_like=True)
+                                      check_index_type=False,
+                                      check_dtype=False)

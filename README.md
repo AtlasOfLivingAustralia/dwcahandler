@@ -58,6 +58,16 @@ To install published package from testpypi
 pip install -i https://test.pypi.org/simple/ dwcahandler
 ```
 &nbsp;
+* List terms that is supported in dwcahandler package in [terms.csv](src/dwcahandler/dwca/terms/terms.csv)
+* Class RowTypes are defined in MetaElementTypes enum class MetaElementTypes.
+  The supported types are defined by the class column in [class-rowtype.csv](src/dwcahandler/dwca/terms/class-rowtype.csv)   
+  For eg: MetaElementTypes.OCCURRENCE
+```python
+from dwcahandler import DwcaHandler
+
+DwcaHandler.list_class_rowtypes()
+```
+&nbsp;
 ### Examples of dwcahandler usages:
 
 * Create Darwin Core Archive from csv file
@@ -136,7 +146,3 @@ df_terms, df_class = DwcaHandler.list_terms()
 print(df_terms, df_class)
 ```
 &nbsp;
-* List terms that is supported in dwcahandler package in [terms.csv](src/dwcahandler/dwca/terms/terms.csv)   
-* Class RowTypes are defined in MetaElementTypes enum class MetaElementTypes. 
-The supported types are defined by the class column in [class-rowtype.csv](src/dwcahandler/dwca/terms/class-rowtype.csv)   
-For eg: MetaElementTypes.OCCURRENCE
