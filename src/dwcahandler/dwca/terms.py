@@ -12,6 +12,9 @@ import requests
 
 this_dir, this_filename = os.path.split(__file__)
 
+log.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    level=log.DEBUG)
+log = log.getLogger("DwcaTerms")
 
 def absolute_file_paths(directory):
     """Convert files in a directory into absolute paths and return
@@ -34,6 +37,7 @@ class NsPrefix(Enum):
     DC = "dc"
     GBIF = "gbif"
     OBIS = "obis"
+    AC = "ac"
 
 
 class ExtInfo(NamedTuple):
@@ -49,13 +53,15 @@ class GbifRegisteredExt(ExtInfo, Enum):
     """
     Supported Gbif extensions. Add more extensions to expand the class row type and terms
     """
-    EXTENDED_MEASUREMENT_OR_FACT = ExtInfo(uri="http://rs.iobis.org/obis/terms/ExtendedMeasurementOrFact",
-                                           prefix=NsPrefix.OBIS,
-                                           namespace="http://rs.iobis.org/obis/terms/")
     SIMPLE_MULTIMEDIA = ExtInfo(uri="http://rs.gbif.org/terms/1.0/Multimedia",
                                 prefix=NsPrefix.GBIF,
                                 namespace="http://rs.gbif.org/terms/1.0/")
-
+    EXTENDED_MEASUREMENT_OR_FACT = ExtInfo(uri="http://rs.iobis.org/obis/terms/ExtendedMeasurementOrFact",
+                                           prefix=NsPrefix.OBIS,
+                                           namespace="http://rs.iobis.org/obis/terms/")
+    #AC_MULTIMEDIA = ExtInfo(uri="http://rs.tdwg.org/ac/terms/Multimedia",
+    #                        prefix=NsPrefix.AC,
+    #                        namespace="http://rs.tdwg.org/ac/terms/")
 
 @dataclass
 class Terms:
@@ -83,56 +89,56 @@ class Terms:
         self.terms_df = pd.read_csv(Terms.TERMS_FILE_PATH, dtype='str')
         self.class_df = pd.read_csv(Terms.CLASS_ROW_TYPE_PATH, dtype='str')
 
-    @staticmethod
-    def _update_class_csv(ns: NsPrefix, updates: pd.DataFrame):
+    def _update_class_df(self, ns: NsPrefix, updates: pd.DataFrame):
         """
         Update class rowtype by replacing all the rows by prefix.
 
         :param ns: Name prefix
         :param updates: dataframe containing the class rows to update
         """
+        def __get_class_term(existing_class_df, class_uri, prefix):
+            class_term = Terms.extract_term(term_string=class_uri, add_underscore=True).upper()
+            if len(existing_class_df[existing_class_df['class'].str.contains(class_term)]) > 0:
+                return f"{prefix.upper()}_{class_term}"
+            return class_term
+
         if len(updates) > 0 and "class_uri" in updates.columns.tolist():
             updates.insert(0, "class",
                            updates["class_uri"].apply(
-                               lambda x: f"{Terms.extract_term(term_string = x, add_underscore = True).upper()}"))
+                               lambda x: f"{__get_class_term(self.class_df, x, ns.value)}"))
             updates["prefix"] = ns.value
+            return self._update_df(ns, updates, self.class_df)
 
-            Terms._update_csv(ns, updates, True)
-            return updates
+        return self.class_df
 
-    @staticmethod
-    def _update_csv(ns: NsPrefix, updates: pd.DataFrame, is_class: bool = True):
+    def _update_df(self, ns: NsPrefix, updates: pd.DataFrame, df: pd.DataFrame):
         """
-        Update class rowtype or terms by replacing all the rows by prefix.
+        Update class row type or terms by replacing all the rows by prefix.
 
         :param ns: Name prefix
         :param updates: dataframe containing the class rows or terms to update
-        :param is_class: True if it is a class rowtype. False if this is terms
+        :param df: dataframe to update
         """
+        def __get_update_info (update_df: pd.DataFrame):
+            update_type: str = "term"
+            count = len(update_df)
+            if 'class' in update_df.columns.tolist():
+                update_type = "class"
+            return count, update_type
 
-        col_list = ["prefix", "class", "class_uri"] if is_class else ["prefix", "term", "uri"]
-        file = Terms.CLASS_ROW_TYPE_PATH if is_class else Terms.TERMS_FILE_PATH
+        col_list = df.columns.tolist()
 
         if all(col in updates.columns.tolist() for col in col_list):
-            df = updates
-            if Path(file).is_file():
-                df = pd.read_csv(file)
-                if len(df) > 0:
-                    df = df[df["prefix"] != ns.value]
-                    df = pd.concat([df, updates[col_list]], ignore_index=False)
-
-            df.to_csv(file, index=False)
-            log.info("Rows updated in %s: %s of %s",
-                     Path(Terms.CLASS_ROW_TYPE).name, len(updates), len(df))
-        else:
-            log.info("No updates to class csv %s", Path(Terms.CLASS_ROW_TYPE).name)
+            df = pd.concat([df, updates[col_list]], ignore_index=True)
+            log.info("Refreshed %s %s prefix %s", *__get_update_info(updates), ns)
+        return df
 
     @staticmethod
     def get_dwc_source_data() -> pd.DataFrame:
         return pd.read_csv(Terms.DWC_SOURCE_URL, delimiter=",", encoding='utf-8', dtype='str')
 
-    @staticmethod
-    def update_dwc_terms():
+    #@staticmethod
+    def update_dwc_terms(self):
         """
         Pull the latest terms from gbif dwc csv url and update the darwin core vocab terms in the package
         For reference: dublin-core-terms is derived from
@@ -148,7 +154,7 @@ class Terms:
         dwc_df["prefix"] = NsPrefix.DWC.value
 
         if len(dwc_df) > 0:
-            Terms._update_csv(NsPrefix.DWC, dwc_df, False)
+            self.terms_df = self._update_df(NsPrefix.DWC, dwc_df, self.terms_df)
 
         dwc_class_df = pd.DataFrame()
         dwc_class_df["class_uri"] = df["tdwgutility_organizedInClass"].unique()
@@ -158,9 +164,7 @@ class Terms:
         log.info("Total class downloaded: %i", len(dwc_class_df))
 
         if len(dwc_class_df) > 0:
-            dwc_class_df = Terms._update_class_csv(NsPrefix.DWC, dwc_class_df)
-
-        return dwc_df, dwc_class_df
+            self.class_df = self._update_class_df(NsPrefix.DWC, dwc_class_df)
 
     @staticmethod
     def extract_term(term_string, add_underscore: bool = False):
@@ -191,8 +195,8 @@ class Terms:
         class_list = list(tuple(zip(class_df["class"], class_df["class_uri"])))
         return class_list
 
-    @staticmethod
-    def update_gbif_ext():
+    #@staticmethod
+    def update_gbif_ext(self):
         """
         Update the class row type and terms specified by GBIF_REGISTERED_EXTENSION and update by prefix
         """
@@ -220,7 +224,7 @@ class Terms:
             url = _get_latest(supported_ext.uri)
             if url:
                 update_class = pd.DataFrame([supported_ext.uri], columns=["class_uri"])
-                Terms._update_class_csv(supported_ext.prefix, update_class)
+                self.class_df = self._update_class_df(supported_ext.prefix, update_class)
 
                 with urlopen(url) as f:
 
@@ -235,15 +239,57 @@ class Terms:
 
                     df = pd.DataFrame(term_info, columns=["term", "namespace", 'uri'])
                     std_ns = ["http://rs.tdwg.org/dwc/terms/", "http://purl.org/dc/terms/"]
-                    existing_terms = Terms().terms_df
+                    existing_terms = self.terms_df #Terms().terms_df
                     extra_terms_df = df[(df["namespace"].isin(std_ns)) & (~df["uri"].isin(existing_terms["uri"]))]
-                    log.info("Additional standard terms found:\n%s", extra_terms_df)
-                    new_terms = df[~df["uri"].isin(existing_terms["uri"])]
+                    if len(extra_terms_df) > 0:
+                        log.info("Additional standard terms found:\n%s", extra_terms_df)
+                    new_terms = df[~df["uri"].isin(existing_terms["uri"])].copy()
                     if len(new_terms) > 0:
-                        new_terms["prefix"] = supported_ext.prefix.value
-                        Terms._update_csv(supported_ext.prefix, new_terms, False)
+                        new_terms.loc[:, "prefix"] = supported_ext.prefix.value
+                        self.terms_df = self._update_df(supported_ext.prefix, new_terms, self.terms_df)
 
     @staticmethod
     def update_terms():
-        Terms.update_dwc_terms()
-        Terms.update_gbif_ext()
+        """
+        Refresh all the terms except for dublin core terms with dc prefix. As these are not obtained dynamically
+        :return:
+        """
+        def __sort_values(df_to_sort: pd.DataFrame, sorting_column: str) -> pd.DataFrame:
+            """
+            Make sure dc and dwc prefixes stay on top
+            :param df: dataframe
+            :return: sorted dataFrame
+            """
+            df_to_sort = df_to_sort.sort_values(by=["prefix", sorting_column], key=lambda x: x.str.lower())
+            std_filter_df = df_to_sort.prefix.isin(["dc", "dwc"])
+            std_df = df_to_sort[std_filter_df].copy()
+            ext_df = df_to_sort[~std_filter_df].copy()
+            return pd.concat([std_df, ext_df], ignore_index=True)
+
+
+        log.info("Current class and terms")
+
+        exclude_update_prefixes = [NsPrefix.DC.value]
+        terms = Terms()
+        print(terms.class_df.groupby(["prefix"]).agg(
+            class_prefix_count=pd.NamedAgg(column="prefix", aggfunc="count")
+        ))
+        print(terms.terms_df.groupby(["prefix"]).agg(
+            term_prefix_count=pd.NamedAgg(column="prefix", aggfunc="count")
+        ))
+        terms.class_df = terms.class_df[terms.class_df.prefix.isin(exclude_update_prefixes)]
+        terms.terms_df = terms.terms_df[terms.terms_df.prefix.isin(exclude_update_prefixes)]
+        terms.update_dwc_terms()
+        terms.update_gbif_ext()
+        terms.class_df = __sort_values(terms.class_df,  "class")
+        terms.terms_df = __sort_values(terms.terms_df,  "term")
+        terms.class_df.to_csv(Terms.CLASS_ROW_TYPE_PATH, index=False)
+        terms.terms_df.to_csv(Terms.TERMS_FILE_PATH, index=False)
+
+        print(terms.class_df.groupby(["prefix"]).agg(
+            class_prefix_count=pd.NamedAgg(column="prefix", aggfunc="count")
+        ))
+        print(terms.terms_df.groupby(["prefix"]).agg(
+            term_prefix_count=pd.NamedAgg(column="prefix", aggfunc="count")
+        ))
+        return terms.terms_df, terms.class_df
