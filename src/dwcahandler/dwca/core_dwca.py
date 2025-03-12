@@ -22,7 +22,7 @@ from numpy import nan
 from pandas.errors import EmptyDataError
 from pandas.io import parsers
 from dwcahandler.dwca import (BaseDwca, CoreOrExtType, CSVEncoding,
-                              CsvFileType, Defaults, Eml,
+                              CsvFileType, Defaults, Eml, Terms,
                               MetaDwCA, MetaElementInfo, MetaElementTypes,
                               MetaElementAttributes, Stat, record_diff_stat)
 
@@ -347,8 +347,15 @@ class Dwca(BaseDwca):
                 contents = self.get_content(class_type=k)
                 # If found then set the key for the content
                 for dwca_content, _ in contents:
-                    dwca_content.keys = [v] if isinstance(v, str) else v
-                    set_keys[k] = v
+                    key_list = [v] if isinstance(v, str) else v
+                    col_term = []
+                    for a_key in key_list:
+                        if a_key not in dwca_content.df_content.columns.tolist():
+                           col_term.append(Terms.extract_term(a_key))
+                        else:
+                           col_term.append(a_key)
+                    dwca_content.keys = col_term
+                    set_keys[k] = col_term
 
         return set_keys
 
