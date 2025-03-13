@@ -141,3 +141,18 @@ class TestCreateDwca:
         assert output_obj
 
         check_output(output_obj, test_files_folder)
+
+    def test_create_occurrence_dwca_occurrence_without_ext(self):
+        test_files_folder = "./input_files/occurrence/sample4"
+
+        core_csv = CsvFileType(files=[f"{test_files_folder}/occurrence.txt"],
+                               type=MetaElementTypes.OCCURRENCE)
+
+        output_obj = BytesIO()
+
+        DwcaHandler.create_dwca(core_csv=core_csv, ext_csv_list=[], output_dwca=output_obj,
+                                eml_content=get_eml_content())
+
+        assert output_obj
+
+        check_output(output_obj, test_files_folder)

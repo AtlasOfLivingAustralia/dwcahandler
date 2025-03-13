@@ -58,10 +58,11 @@ To install published package from testpypi
 pip install -i https://test.pypi.org/simple/ dwcahandler
 ```
 &nbsp;
-### Extensions supported:
+### Extensions that are currently supported and have been tested in ALA ingestion:
 Standard Darwin Core Terms and Class  
 Simple Multimedia https://rs.gbif.org/extension/gbif/1.0/multimedia.xml
 Extended Measurement Or Fact http://rs.iobis.org/obis/terms/ExtendedMeasurementOrFact
+
 
 * List terms that is supported in dwcahandler package in [terms.csv](src/dwcahandler/dwca/terms/terms.csv)
 
@@ -78,7 +79,11 @@ DwcaHandler.list_class_rowtypes()
 &nbsp;
 ### Examples of dwcahandler usages:
 
-* Create Darwin Core Archive from csv file
+* Create Darwin Core Archive from csv file. 
+* Keys are used as id/core id for Dwca with extensions and must be supplied for the core and extensions in the data
+* Validation is performed to make sure that the keys are unique in the core of the Dwca
+* If Keys are not provided, the default keys is occurrenceID
+* If multiple Keys are supplied, resulting dwca would generate id/core id
 * In creating a dwca with multimedia extension, provide format and type values in the Simple Multimedia extension, otherwise, dwcahandler will attempt to fill these info by guessing the mimetype from url.
 
 ```python
@@ -88,7 +93,7 @@ from dwcahandler import MetaElementTypes
 from dwcahandler import Eml
 
 core_csv = CsvFileType(files=['/tmp/occurrence.csv'], type=MetaElementTypes.OCCURRENCE, keys=['occurrenceID'])
-ext_csvs = [CsvFileType(files=['/tmp/multimedia.csv'], type=MetaElementTypes.MULTIMEDIA, keys=['occurrenceID'])]
+ext_csvs = [CsvFileType(files=['/tmp/multimedia.csv'], type=MetaElementTypes.MULTIMEDIA)]
 
 eml = Eml(dataset_name='Test Dataset',
           description='Dataset description',
@@ -113,7 +118,7 @@ core_df = pd.read_csv("/tmp/occurrence.csv")
 core_frame = CsvFileType(files=core_df, type=MetaElementTypes.OCCURRENCE, keys=['occurrenceID'])
 
 ext_df = pd.read_csv("/tmp/multimedia.csv")
-ext_frame = [CsvFileType(files=ext_df, type=MetaElementTypes.MULTIMEDIA, keys=['occurrenceID'])]
+ext_frame = [CsvFileType(files=ext_df, type=MetaElementTypes.MULTIMEDIA)]
 
 eml = Eml(dataset_name='Test Dataset',
           description='Dataset description',

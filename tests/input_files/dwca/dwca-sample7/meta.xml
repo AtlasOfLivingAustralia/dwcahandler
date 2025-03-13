@@ -1,0 +1,36 @@
+<archive xmlns="http://rs.tdwg.org/dwc/text/" metadata="metadata.xml">
+    <core encoding="UTF-8" fieldsTerminatedBy="\t" linesTerminatedBy="\n" fieldsEnclosedBy="" ignoreHeaderLines="1" rowType="http://rs.tdwg.org/dwc/terms/Occurrence">
+        <files>
+            <location>occurrence.txt</location>
+        </files>
+        <id index="0" />
+        <field default="WGS84" term="http://rs.tdwg.org/dwc/terms/geodeticDatum"/>
+        <field index="0" term="http://rs.gbif.org/terms/1.0/gbifID"/>
+        <field index="1" term="http://purl.org/dc/terms/license"/>
+        <field index="2" term="http://purl.org/dc/terms/institutionCode"/>
+        <field index="3" term="http://purl.org/dc/terms/collectionCode"/>
+        <field index="4" term="http://purl.org/dc/terms/basisOfRecord"/>
+        <field index="5" term="http://purl.org/dc/terms/catalogNumber"/>
+        <field index="6" term="http://purl.org/dc/terms/occurrenceStatus"/>
+        <field index="7" term="http://purl.org/dc/terms/decimalLatitude"/>
+        <field index="8" term="http://purl.org/dc/terms/decimalLongitude"/>
+        <field index="9" term="http://purl.org/dc/terms/scientificName"/>
+        <field index="10" term="http://purl.org/dc/terms/kingdom"/>
+        <field index="11" term="http://purl.org/dc/terms/genus"/>
+    </core>
+    <extension encoding="UTF-8" fieldsTerminatedBy="\t" linesTerminatedBy="\n" fieldsEnclosedBy="" ignoreHeaderLines="1" rowType="http://rs.tdwg.org/dwc/terms/Occurrence">
+        <files>
+            <location>verbatim.txt</location>
+        </files>
+        <coreid index="0" />
+        <field index="0" term="http://rs.gbif.org/terms/1.0/gbifID"/>
+        <field index="1" term="http://purl.org/dc/terms/institutionCode"/>
+        <field index="2" term="http://purl.org/dc/terms/collectionCode"/>
+        <field index="3" term="http://purl.org/dc/terms/basisOfRecord"/>
+        <field index="4" term="http://purl.org/dc/terms/catalogNumber"/>
+        <field index="5" term="http://purl.org/dc/terms/occurrenceStatus"/>
+        <field index="6" term="http://purl.org/dc/terms/decimalLatitude"/>
+        <field index="7" term="http://purl.org/dc/terms/decimalLongitude"/>
+        <field index="8" term="http://purl.org/dc/terms/scientificName"/>
+    </extension>
+</archive>

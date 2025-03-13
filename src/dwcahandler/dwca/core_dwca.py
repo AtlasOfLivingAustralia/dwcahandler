@@ -872,21 +872,30 @@ class Dwca(BaseDwca):
                         set(content_keys) == set(self.core_content.keys)):
                     set_to_validate[class_type] = content_keys
 
+        validation_success = True
         for class_type, key in set_to_validate.items():
             contents = self.get_content(class_type=class_type)
             for content, _ in contents:
+                validation_content_success = True
                 keys_df = self._extract_keys(content.df_content, content.keys)
 
                 if not self.check_duplicates(keys_df, content.keys, error_file):
-                    return False
+                    log.error("Validation failed for %s %s content for duplicates keys %s",
+                             content.meta_info.core_or_ext_type, content.meta_info.type, content.keys)
+                    validation_content_success = False
 
                 if not self._validate_columns(content):
-                    return False
+                    log.error("Validation failed for %s %s content for duplicate columns",
+                              content.meta_info.core_or_ext_type, content.meta_info.type)
+                    validation_content_success = False
 
-                log.info("Validation successful for %s %s content for unique keys %s",
+                if validation_content_success:
+                    log.info("Validation successful for %s %s content for unique keys %s",
                          content.meta_info.core_or_ext_type, content.meta_info.type, content.keys)
+                else:
+                    validation_success = False
 
-        return True
+        return True if validation_success else False
 
     def extract_csv_content(self, csv_info: CsvFileType,
                             core_ext_type: CoreOrExtType, build_coreid_for_ext: bool = False):
