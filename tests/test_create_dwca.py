@@ -54,7 +54,7 @@ class TestCreateDwca:
 
         core_csv = CsvFileType(files=[f"{test_files_folder}/occurrence.txt"], keys=['occurrenceID'],
                                type=MetaElementTypes.OCCURRENCE)
-        ext1_csv = CsvFileType(files=[f"{test_files_folder}/multimedia.txt"], keys=['occurrenceID'],
+        ext1_csv = CsvFileType(files=[f"{test_files_folder}/multimedia.txt"],
                                type=MetaElementTypes.MULTIMEDIA)
 
         output_obj = BytesIO()
@@ -73,7 +73,6 @@ class TestCreateDwca:
                                keys=['institutionCode', 'collectionCode', 'catalogNumber'],
                                type=MetaElementTypes.OCCURRENCE)
         ext1_csv = CsvFileType(files=[f"{test_files_folder}/multimedia.txt"],
-                               keys=['institutionCode', 'collectionCode', 'catalogNumber'],
                                type=MetaElementTypes.MULTIMEDIA)
 
         output_obj = BytesIO()
@@ -92,7 +91,6 @@ class TestCreateDwca:
                                keys=['institutionCode', 'collectionCode', 'catalogNumber'],
                                type=MetaElementTypes.OCCURRENCE)
         ext1_csv = CsvFileType(files=[f"{test_files_folder}/multimedia.txt"],
-                               keys=['institutionCode', 'collectionCode', 'catalogNumber'],
                                type=MetaElementTypes.MULTIMEDIA)
 
         output_obj = BytesIO()
@@ -110,9 +108,9 @@ class TestCreateDwca:
 
         core_csv = CsvFileType(files=[f"{test_files_folder}/event.txt"], keys=['eventID'],
                                type=MetaElementTypes.EVENT)
-        ext1_csv = CsvFileType(files=[f"{test_files_folder}/occurrence.txt"], keys=['eventID'],
+        ext1_csv = CsvFileType(files=[f"{test_files_folder}/occurrence.txt"], keys=['occurrenceID'],
                                type=MetaElementTypes.OCCURRENCE)
-        ext2_csv = CsvFileType(files=[f"{test_files_folder}/measurement_or_fact.txt"], keys=['eventID'],
+        ext2_csv = CsvFileType(files=[f"{test_files_folder}/measurement_or_fact.txt"],
                                type=MetaElementTypes.MEASUREMENT_OR_FACT)
 
         output_obj = BytesIO()
@@ -130,9 +128,9 @@ class TestCreateDwca:
 
         core_csv = CsvFileType(files=[f"{test_files_folder}/event.txt"], keys=['eventID'],
                                type=MetaElementTypes.EVENT)
-        ext1_csv = CsvFileType(files=[f"{test_files_folder}/occurrence.txt"], keys=['eventID'],
+        ext1_csv = CsvFileType(files=[f"{test_files_folder}/occurrence.txt"], keys=['occurrenceID'],
                                type=MetaElementTypes.OCCURRENCE)
-        ext2_csv = CsvFileType(files=[f"{test_files_folder}/extended_measurement_or_fact.txt"], keys=['eventID'],
+        ext2_csv = CsvFileType(files=[f"{test_files_folder}/extended_measurement_or_fact.txt"],
                                type=MetaElementTypes.EXTENDED_MEASUREMENT_OR_FACT)
 
         output_obj = BytesIO()

@@ -134,7 +134,6 @@ class TestExtractData:
         multimedia_file_path = 'input_files/sample/multimedia/multimedia_file.tsv'
         dwca_creator.extract_csv_content(csv_info=CsvFileType(files=[multimedia_file_path],
                                                               type=MetaElementTypes.MULTIMEDIA,
-                                                              keys=['catalogNumber'],
                                                               csv_encoding=CSVEncoding(csv_delimiter='\t')),
                                          core_ext_type=CoreOrExtType.EXTENSION)
 
@@ -191,7 +190,6 @@ class TestExtractData:
 
         dwca_creator.extract_csv_content(csv_info=CsvFileType(files=multimedia_with_space['file_paths'],
                                                               type=MetaElementTypes.MULTIMEDIA,
-                                                              keys=['catalogNumber'],
                                                               csv_encoding=CSVEncoding(csv_delimiter=',')),
                                          core_ext_type=CoreOrExtType.EXTENSION)
 

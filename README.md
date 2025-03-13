@@ -58,10 +58,18 @@ To install published package from testpypi
 pip install -i https://test.pypi.org/simple/ dwcahandler
 ```
 &nbsp;
+### Extensions supported:
+Standard Darwin Core Terms and Class  
+Simple Multimedia https://rs.gbif.org/extension/gbif/1.0/multimedia.xml
+Extended Measurement Or Fact http://rs.iobis.org/obis/terms/ExtendedMeasurementOrFact
+
 * List terms that is supported in dwcahandler package in [terms.csv](src/dwcahandler/dwca/terms/terms.csv)
+
 * Class RowTypes are defined in MetaElementTypes enum class MetaElementTypes.
   The supported types are defined by the class column in [class-rowtype.csv](src/dwcahandler/dwca/terms/class-rowtype.csv)   
   For eg: MetaElementTypes.OCCURRENCE
+
+To list all the class rowtypes supported
 ```python
 from dwcahandler import DwcaHandler
 

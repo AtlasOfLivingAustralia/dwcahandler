@@ -151,8 +151,7 @@ class TestMultimediaExtension:
         dwca.extract_csv_content(csv_info=CsvFileType(files=pd.DataFrame(data=image_data,
                                                                          columns=["occurrenceID", "identifier",
                                                                                   "format", "type"]),
-                                                      type=MetaElementTypes.MULTIMEDIA,
-                                                      keys=['occurrenceID']),
+                                                      type=MetaElementTypes.MULTIMEDIA),
                                  core_ext_type=CoreOrExtType.EXTENSION)
 
         # Fill multimedia extension info
@@ -209,8 +208,7 @@ class TestMultimediaExtension:
         dwca.extract_csv_content(csv_info=CsvFileType(files=pd.DataFrame(data=image_data,
                                                                          columns=["occurrenceID", "identifier",
                                                                                   "format"]),
-                                                      type=MetaElementTypes.MULTIMEDIA,
-                                                      keys=['occurrenceID']),
+                                                      type=MetaElementTypes.MULTIMEDIA),
                                  core_ext_type=CoreOrExtType.EXTENSION)
 
         # Fill multimedia extension info
