@@ -119,4 +119,3 @@ class TestValidateDwca:
         assert "Duplicate ['gbifID'] found. Total rows affected: 3" in caplog.messages
         assert "Duplicate values: ['sample']" in caplog.messages
         assert "Validation failed for extension MetaElementTypes.OCCURRENCE content for duplicates keys ['gbifID']" in caplog.messages
-

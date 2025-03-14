@@ -58,19 +58,29 @@ To install published package from testpypi
 pip install -i https://test.pypi.org/simple/ dwcahandler
 ```
 &nbsp;
-### Extensions that are currently supported and have been tested in ALA ingestion:
-Standard Darwin Core Terms and Class  
-Simple Multimedia https://rs.gbif.org/extension/gbif/1.0/multimedia.xml
-Extended Measurement Or Fact http://rs.iobis.org/obis/terms/ExtendedMeasurementOrFact
+### Supported extensions that have been tested in ALA:
+* Standard Darwin Core Terms and Class
+* Simple Multimedia https://rs.gbif.org/extension/gbif/1.0/multimedia.xml
+* Extended Measurement Or Fact http://rs.iobis.org/obis/terms/ExtendedMeasurementOrFact
 
+#### Terms
+* Terms are listed in [terms.csv](src/dwcahandler/dwca/terms/terms.csv)
+```python
+from dwcahandler import DwcaHandler
 
-* List terms that is supported in dwcahandler package in [terms.csv](src/dwcahandler/dwca/terms/terms.csv)
+df_terms, df_class = DwcaHandler.list_terms()
+print(df_terms, df_class)
+```
 
-* Class RowTypes are defined in MetaElementTypes enum class MetaElementTypes.
-  The supported types are defined by the class column in [class-rowtype.csv](src/dwcahandler/dwca/terms/class-rowtype.csv)   
-  For eg: MetaElementTypes.OCCURRENCE
+#### Class
+* Listed in [class-rowtype.csv](src/dwcahandler/dwca/terms/class-rowtype.csv)
+* Used in MetaElementTypes class enum name:
+```python 
+MetaElementTypes.OCCURRENCE
+MetaElementTypes.MULTIMEDIA
+```
 
-To list all the class rowtypes supported
+To list all the class rowtypes
 ```python
 from dwcahandler import DwcaHandler
 
@@ -149,13 +159,5 @@ delete_csv = CsvFileType(files=['/tmp/old-records.csv'], type=MetaElementTypes.O
 DwcaHandler.delete_records(dwca_file='/tmp/dwca.zip',
                            records_to_delete=delete_csv, 
                            output_dwca='/tmp/new-dwca.zip')
-```
-&nbsp;
-
-```python
-from dwcahandler import DwcaHandler
-
-df_terms, df_class = DwcaHandler.list_terms()
-print(df_terms, df_class)
 ```
 &nbsp;

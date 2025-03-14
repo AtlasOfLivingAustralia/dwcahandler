@@ -351,9 +351,9 @@ class Dwca(BaseDwca):
                     col_term = []
                     for a_key in key_list:
                         if a_key not in dwca_content.df_content.columns.tolist():
-                           col_term.append(Terms.extract_term(a_key))
+                            col_term.append(Terms.extract_term(a_key))
                         else:
-                           col_term.append(a_key)
+                            col_term.append(a_key)
                     dwca_content.keys = col_term
                     set_keys[k] = col_term
 
@@ -881,7 +881,7 @@ class Dwca(BaseDwca):
 
                 if not self.check_duplicates(keys_df, content.keys, error_file):
                     log.error("Validation failed for %s %s content for duplicates keys %s",
-                             content.meta_info.core_or_ext_type, content.meta_info.type, content.keys)
+                              content.meta_info.core_or_ext_type, content.meta_info.type, content.keys)
                     validation_content_success = False
 
                 if not self._validate_columns(content):
@@ -891,7 +891,7 @@ class Dwca(BaseDwca):
 
                 if validation_content_success:
                     log.info("Validation successful for %s %s content for unique keys %s",
-                         content.meta_info.core_or_ext_type, content.meta_info.type, content.keys)
+                             content.meta_info.core_or_ext_type, content.meta_info.type, content.keys)
                 else:
                     validation_success = False
 

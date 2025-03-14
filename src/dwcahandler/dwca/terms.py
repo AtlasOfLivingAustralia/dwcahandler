@@ -1,5 +1,4 @@
 import os
-from pathlib import Path
 from dataclasses import dataclass, field
 import re
 import pandas as pd
@@ -12,9 +11,9 @@ import requests
 
 this_dir, this_filename = os.path.split(__file__)
 
-log.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    level=log.DEBUG)
+log.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=log.DEBUG)
 log = log.getLogger("DwcaTerms")
+
 
 def absolute_file_paths(directory):
     """Convert files in a directory into absolute paths and return
@@ -59,9 +58,10 @@ class GbifRegisteredExt(ExtInfo, Enum):
     EXTENDED_MEASUREMENT_OR_FACT = ExtInfo(uri="http://rs.iobis.org/obis/terms/ExtendedMeasurementOrFact",
                                            prefix=NsPrefix.OBIS,
                                            namespace="http://rs.iobis.org/obis/terms/")
-    #AC_MULTIMEDIA = ExtInfo(uri="http://rs.tdwg.org/ac/terms/Multimedia",
+    # AC_MULTIMEDIA = ExtInfo(uri="http://rs.tdwg.org/ac/terms/Multimedia",
     #                        prefix=NsPrefix.AC,
     #                        namespace="http://rs.tdwg.org/ac/terms/")
+
 
 @dataclass
 class Terms:
@@ -119,7 +119,7 @@ class Terms:
         :param updates: dataframe containing the class rows or terms to update
         :param df: dataframe to update
         """
-        def __get_update_info (update_df: pd.DataFrame):
+        def __get_update_info(update_df: pd.DataFrame):
             update_type: str = "term"
             count = len(update_df)
             if 'class' in update_df.columns.tolist():
@@ -137,7 +137,6 @@ class Terms:
     def get_dwc_source_data() -> pd.DataFrame:
         return pd.read_csv(Terms.DWC_SOURCE_URL, delimiter=",", encoding='utf-8', dtype='str')
 
-    #@staticmethod
     def update_dwc_terms(self):
         """
         Pull the latest terms from gbif dwc csv url and update the darwin core vocab terms in the package
@@ -195,7 +194,6 @@ class Terms:
         class_list = list(tuple(zip(class_df["class"], class_df["class_uri"])))
         return class_list
 
-    #@staticmethod
     def update_gbif_ext(self):
         """
         Update the class row type and terms specified by GBIF_REGISTERED_EXTENSION and update by prefix
@@ -239,7 +237,7 @@ class Terms:
 
                     df = pd.DataFrame(term_info, columns=["term", "namespace", 'uri'])
                     std_ns = ["http://rs.tdwg.org/dwc/terms/", "http://purl.org/dc/terms/"]
-                    existing_terms = self.terms_df #Terms().terms_df
+                    existing_terms = self.terms_df
                     extra_terms_df = df[(df["namespace"].isin(std_ns)) & (~df["uri"].isin(existing_terms["uri"]))]
                     if len(extra_terms_df) > 0:
                         log.info("Additional standard terms found:\n%s", extra_terms_df)
@@ -266,7 +264,6 @@ class Terms:
             ext_df = df_to_sort[~std_filter_df].copy()
             return pd.concat([std_df, ext_df], ignore_index=True)
 
-
         log.info("Current class and terms")
 
         exclude_update_prefixes = [NsPrefix.DC.value]
@@ -281,8 +278,8 @@ class Terms:
         terms.terms_df = terms.terms_df[terms.terms_df.prefix.isin(exclude_update_prefixes)]
         terms.update_dwc_terms()
         terms.update_gbif_ext()
-        terms.class_df = __sort_values(terms.class_df,  "class")
-        terms.terms_df = __sort_values(terms.terms_df,  "term")
+        terms.class_df = __sort_values(terms.class_df, "class")
+        terms.terms_df = __sort_values(terms.terms_df, "term")
         terms.class_df.to_csv(Terms.CLASS_ROW_TYPE_PATH, index=False)
         terms.terms_df.to_csv(Terms.TERMS_FILE_PATH, index=False)
 

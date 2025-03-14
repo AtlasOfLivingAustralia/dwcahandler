@@ -19,6 +19,7 @@ DwcClassRowTypes = Terms.get_class_row_types()
 
 MetaElementTypes = Enum("MetaElementTypes", dict(DwcClassRowTypes))
 
+
 def get_meta_class_row_type(row_type_uri: str):
     """
     Find a row type by URI
