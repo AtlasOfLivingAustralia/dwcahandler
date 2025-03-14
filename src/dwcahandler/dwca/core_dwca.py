@@ -896,9 +896,9 @@ class Dwca(BaseDwca):
         def __get_default_core_key(core_sv_info: CsvFileType):
             """Look for a column in a CSV file
 
-            :param csv_info: The CSV file
-            :param col: The column name
-            :return: Either column information or False for not found
+            :param core_sv_info: The CSV file
+            :return: default key if csv_info.keys not provided.
+                     Default key is eventID for EVENT type and occurrenceID for occurrence type
             """
             if not core_sv_info.keys or len(core_sv_info.keys) == 0:
                 if core_sv_info.type == MetaElementTypes.EVENT:
