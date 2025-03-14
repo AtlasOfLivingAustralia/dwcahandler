@@ -770,18 +770,6 @@ class Dwca(BaseDwca):
 
         raise ValueError('content is empty')
 
-    def __check_csv_info_value(self, csv_info: CsvFileType, col: str):
-        """Look for a column in a CSV file
-
-        :param csv_info: The CSV file
-        :param col: The column name
-        :return: Either column information or False for not found
-        """
-        csv_info_dict = asdict(csv_info)
-        if col in csv_info_dict:
-            return csv_info_dict[col]
-        return False
-
     def check_duplicates(self, content_keys_df, keys, error_file=None):
         """Check a content frame for duplicate keys
 
@@ -905,14 +893,31 @@ class Dwca(BaseDwca):
         :param core_ext_type: Whether this is a core or extension content frame
         :param build_coreid_for_ext: indicator to build id and core id to support dwca with extension
         """
+        def __get_default_core_key(core_sv_info: CsvFileType):
+            """Look for a column in a CSV file
+
+            :param csv_info: The CSV file
+            :param col: The column name
+            :return: Either column information or False for not found
+            """
+            if not core_sv_info.keys or len(core_sv_info.keys) == 0:
+                if core_sv_info.type == MetaElementTypes.EVENT:
+                    return ["eventID"]
+                elif core_sv_info.type == MetaElementTypes.OCCURRENCE:
+                    return ["occurrenceID"]
+                else:
+                    raise ValueError("Keys need to be set for core content")
+            elif len(core_sv_info.keys) > 0:
+                return core_sv_info.keys
+
         if isinstance(csv_info.files, pd.DataFrame):
-            csv_content = csv_info.files.copy(deep=True)
+            csv_content = csv_info.files
         else:
             csv_content = self._combine_contents(csv_info.files, csv_info.csv_encoding)
 
         # Use default occurrenceID if not provided
         if core_ext_type == CoreOrExtType.CORE:
-            keys = csv_info.keys if self.__check_csv_info_value(csv_info, 'keys') else ['occurrenceID']
+            keys = __get_default_core_key(csv_info)
         else:
             keys = self.core_content.keys
         core_id_field: str = ""
