@@ -175,10 +175,12 @@ class DwcaHandler:
 
     @staticmethod
     def validate_dwca(dwca_file: Union[str, BytesIO], content_keys: dict = None, error_file: str = None):
-        """Test a dwca for consistency
+        """Validate dwca for unique key and column for core content by default.
+            If content_keys is supplied, the content is also validated.
 
         :param dwca_file: The path to the DwCA
-        :param content_keys: a dictionary of class type and the key
+        :param content_keys: a dictionary of class type and the key.
+                When content_keys are provided, validation will be performed on the content as well.
                              for eg. {MetaElementTypes.OCCURRENCE, "occurrenceID"}
         :param error_file: The file to write errors to. If None, errors are logged
         """
