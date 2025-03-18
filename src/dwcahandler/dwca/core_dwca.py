@@ -22,7 +22,7 @@ from numpy import nan
 from pandas.errors import EmptyDataError
 from pandas.io import parsers
 from dwcahandler.dwca import (BaseDwca, CoreOrExtType, CSVEncoding,
-                              CsvFileType, Defaults, Eml, Terms,
+                              CsvFileType, Defaults, Eml, Terms, get_keys,
                               MetaDwCA, MetaElementInfo, MetaElementTypes,
                               MetaElementAttributes, Stat, record_diff_stat)
 
@@ -350,6 +350,7 @@ class Dwca(BaseDwca):
                     key_list = [v] if isinstance(v, str) else v
                     col_term = []
                     for a_key in key_list:
+                        # this is in case a_key is url form for eg: http://rs.gbif.org/terms/1.0/gbifID
                         if a_key not in dwca_content.df_content.columns.tolist():
                             col_term.append(Terms.extract_term(a_key))
                         else:
@@ -893,31 +894,17 @@ class Dwca(BaseDwca):
         :param core_ext_type: Whether this is a core or extension content frame
         :param build_coreid_for_ext: indicator to build id and core id to support dwca with extension
         """
-        def __get_default_core_key(core_sv_info: CsvFileType):
-            """Look for a column in a CSV file
-
-            :param core_sv_info: The CSV file
-            :return: default key if csv_info.keys not provided.
-                     Default key is eventID for EVENT type and occurrenceID for occurrence type
-            """
-            if not core_sv_info.keys or len(core_sv_info.keys) == 0:
-                if core_sv_info.type == MetaElementTypes.EVENT:
-                    return ["eventID"]
-                elif core_sv_info.type == MetaElementTypes.OCCURRENCE:
-                    return ["occurrenceID"]
-                else:
-                    raise ValueError("Keys need to be set for core content")
-            elif len(core_sv_info.keys) > 0:
-                return core_sv_info.keys
-
-        if isinstance(csv_info.files, pd.DataFrame):
+        if isinstance(csv_info.files, pd.DataFrame) :
             csv_content = csv_info.files
+        elif isinstance(csv_info.files, io.TextIOWrapper):
+            csv_content = self._read_csv(csv_info.files)
         else:
             csv_content = self._combine_contents(csv_info.files, csv_info.csv_encoding)
 
-        # Use default occurrenceID if not provided
+        # Use default keys if not provided
         if core_ext_type == CoreOrExtType.CORE:
-            keys = __get_default_core_key(csv_info)
+            override_keys = {csv_info.type: csv_info.keys} if csv_info.keys and len(csv_info.keys) > 0 else None
+            keys = get_keys(type=csv_info.type, override_content_keys=override_keys)
         else:
             keys = self.core_content.keys
         core_id_field: str = ""
@@ -945,6 +932,7 @@ class Dwca(BaseDwca):
             content.keys = keys
             self.core_content = content
         else:
+            content.keys = csv_info.keys
             self.ext_content.append(content)
 
     def _to_csv(self, df: pd.DataFrame, meta_info: MetaElementInfo,

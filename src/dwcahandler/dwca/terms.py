@@ -255,7 +255,8 @@ class Terms:
         def __sort_values(df_to_sort: pd.DataFrame, sorting_column: str) -> pd.DataFrame:
             """
             Make sure dc and dwc prefixes stay on top
-            :param df: dataframe
+            :param df_to_sort: dataframe to be sorted
+            :param sorting_column: other column to sort
             :return: sorted dataFrame
             """
             df_to_sort = df_to_sort.sort_values(by=["prefix", sorting_column], key=lambda x: x.str.lower())

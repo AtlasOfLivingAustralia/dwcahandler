@@ -18,6 +18,7 @@ the (usually Darwin Core) terms that each column contains.
 """
 from __future__ import annotations
 
+import io
 from collections import namedtuple
 from dataclasses import dataclass, field
 from typing import Optional, Union
@@ -30,6 +31,25 @@ CoreOrExtType = namedtuple("CoreOrExtType", ["CORE", "EXTENSION"])(
     EXTENSION="extension"
 )
 
+# Default keys for content when creating dwca
+DefaultKeys = namedtuple("DefaultKeys", ["EVENT", "OCCURRENCE"])(
+    EVENT = "eventID",
+    OCCURRENCE = "occurrenceID"
+)
+
+def get_keys(type: MetaElementTypes, override_content_keys: dict[[MetaElementTypes, list]] = None):
+    """
+    # If override_content_keys not supplied, return the default keys based on content type
+    :param type:  type of content
+    :param override_content_keys: given content keys
+    :return: the list of keys for the content
+    """
+    if override_content_keys:
+        for content_type, keys in override_content_keys.items():
+            if type == content_type and keys and len(keys) > 0:
+                return keys
+    defaults = DefaultKeys._asdict()
+    return [defaults[type.name]] if type.name in defaults.keys() else []
 
 @dataclass
 class CSVEncoding:
@@ -168,7 +188,7 @@ from dwcahandler.dwca.dwca_meta import (MetaElementTypes, MetaElementInfo, MetaD
 class CsvFileType:
     """A description of a CSV file in a DwCA
     """
-    files: Union[list[str], pd.DataFrame]  # can accept more than one file or a dataframe
+    files: Union[list[str], pd.DataFrame, io.TextIOWrapper]  # can accept more than one file or a dataframe
     type: MetaElementTypes # 'occurrence', 'taxon', 'event', multimedia,...
     keys: Optional[list] = None  # must be supplied for csv extensions to link extension records to core record
     # when creating dwca. for core other than occurrence, this neeeds to be supplied as key.

@@ -127,7 +127,7 @@ class BaseDwca(metaclass=ABCMeta):
 
     def create_dwca(self, core_csv: CsvFileType, output_dwca: Union[str, BytesIO],
                     ext_csv_list: list[CsvFileType] = None, validate_content: bool = True,
-                    eml_content: Union[str, Eml] = '', additional_validation_on_content: list[CsvFileType] = None):
+                    eml_content: Union[str, Eml] = ''):
         """Create a dwca given the contents of core and extensions and eml content
 
         :param core_csv: CsvFileType containing the files, class types and keys to form the core of the dwca
@@ -136,7 +136,6 @@ class BaseDwca(metaclass=ABCMeta):
                               extensions of the dwca if supplied
         :param validate_content: whether to validate the contents
         :param eml_content: eml content in string or a filled Eml object
-        :param additional_validation_on_content: additional validation to perform
         """
         if ext_csv_list is None:
             ext_csv_list = []
@@ -150,13 +149,16 @@ class BaseDwca(metaclass=ABCMeta):
             if image_ext:
                 ext_csv_list.append(image_ext)
 
+        content_to_validate = {}
         for ext in ext_csv_list:
+            if ext.keys and len(ext.keys) > 0:
+                content_to_validate[ext.type] = ext.keys
             self.extract_csv_content(csv_info=ext, core_ext_type=CoreOrExtType.EXTENSION,
                                      build_coreid_for_ext=True)
 
         self.fill_additional_info()
 
-        if validate_content and not self.validate_content(additional_validation_on_content):
+        if validate_content and not self.validate_content(content_to_validate):
             raise SystemExit(Exception("Some validations error found. Dwca is not created."))
 
         self.generate_eml(eml_content)
@@ -191,7 +193,7 @@ class BaseDwca(metaclass=ABCMeta):
            If additional checks required in another content, supply it as content_keys
 
         :param content_keys: a dictionary of class type and the key
-                             for eg. {MetaElementTypes.OCCURRENCE, "occurrenceId"}
+                             for eg. {MetaElementTypes.OCCURRENCE, "occurrenceID"}
         :param error_file: optional error_file for the errored data
         """
         self.extract_dwca()

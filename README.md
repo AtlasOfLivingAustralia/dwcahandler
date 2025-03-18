@@ -9,9 +9,6 @@ ALA receive different forms of data from various data providers in the form of C
 
 The operations provided by dwcahandler includes creating a dwca from csv/text file, merge 2 dwcas, delete records in dwca and perform core key validations like testing duplicates of one or more keys, empty and duplicate keys.  
 
-The module uses and maintain the standard dwc terms from a point in time versioned copy of https://dwc.tdwg.org/terms/ and extensions like https://rs.gbif.org/extension/gbif/1.0/multimedia.xml. 
-
-
 ### Technologies
 
 This package is developed in Python. Tested with Python 3.12, 3.11, 3.10 and 3.9
@@ -76,6 +73,8 @@ print(df_terms, df_class)
 * Listed in [class-rowtype.csv](src/dwcahandler/dwca/terms/class-rowtype.csv)
 * Used in MetaElementTypes class enum name:
 ```python 
+from dwcahandler import MetaElementTypes
+
 MetaElementTypes.OCCURRENCE
 MetaElementTypes.MULTIMEDIA
 ```
@@ -137,7 +136,58 @@ eml = Eml(dataset_name='Test Dataset',
           rights="test rights")
 
 DwcaHandler.create_dwca(core_csv=core_frame, ext_csv_list=ext_frame, eml_content=eml, output_dwca='/tmp/dwca.zip')
+```
+&nbsp;
+* Create Darwin Core Archive from csv files in a zip files.
+* Class row types are determined by file names of the csvs.
+* If no content keys provided, the default keys are eventID for event content and occurrenceID for occurrence content
+* Delimiter for txt files are comma delimiter by default. For tab delimiter, supply CsvEncoding
+```python
+from dwcahandler import DwcaHandler
+from dwcahandler import Eml
 
+eml = Eml(dataset_name='Test Dataset',
+          description='Dataset description',
+          license='Creative Commons Attribution (International) (CC-BY 4.0 (Int) 4.0)',
+          citation="test citation",
+          rights="test rights")
+
+DwcaHandler.create_dwca_from_zip_content(zip_file="/tmp/txt_files.zip",  eml_content=eml, output_dwca='/tmp/dwca.zip')
+```
+&nbsp;
+* Convenient helper function to create Darwin Core Archive from csv files in a zip files.
+* Class row types are determined by file names of the csvs.
+* If no content keys provided, the default keys are eventID for event content and occurrenceID for occurrence content
+* Delimiter for txt files are comma delimiter by default. For tab delimiter, supply CsvEncoding
+```python
+from dwcahandler import DwcaHandler
+from dwcahandler import Eml
+
+eml = Eml(dataset_name='Test Dataset',
+          description='Dataset description',
+          license='Creative Commons Attribution (International) (CC-BY 4.0 (Int) 4.0)',
+          citation="test citation",
+          rights="test rights")
+
+DwcaHandler.create_dwca_from_zip_content(zip_file="/tmp/txt_files.zip",  eml_content=eml, output_dwca='/tmp/dwca.zip')
+```
+&nbsp;
+* Convenient helper function to create Darwin Core Archive from list of csv files.
+* Class row types are determined by file names of the csvs.
+* If no content keys provided, the default keys are eventID for event content and occurrenceID for occurrence content
+* Delimiter for txt files are comma delimiter by default. For tab delimiter, supply CsvEncoding
+```python
+from dwcahandler import DwcaHandler
+from dwcahandler import Eml
+
+eml = Eml(dataset_name='Test Dataset',
+          description='Dataset description',
+          license='Creative Commons Attribution (International) (CC-BY 4.0 (Int) 4.0)',
+          citation="test citation",
+          rights="test rights")
+
+DwcaHandler.create_dwca_from_file_list(files=["/tmp/event.txt", "/tmp/occurrence.txt", "/tmp/measurement_or_fact.txt"], 
+                                       eml_content=eml, output_dwca='/tmp/dwca.zip')
 ```
 &nbsp;
 * Merge Darwin Core Archive
