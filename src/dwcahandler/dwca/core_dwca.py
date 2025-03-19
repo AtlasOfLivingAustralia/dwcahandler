@@ -22,7 +22,7 @@ from numpy import nan
 from pandas.errors import EmptyDataError
 from pandas.io import parsers
 from dwcahandler.dwca import (BaseDwca, CoreOrExtType, CSVEncoding,
-                              CsvFileType, Defaults, Eml, Terms, get_keys,
+                              ContentData, Defaults, Eml, Terms, get_keys,
                               MetaDwCA, MetaElementInfo, MetaElementTypes,
                               MetaElementAttributes, Stat, record_diff_stat)
 
@@ -488,16 +488,16 @@ class Dwca(BaseDwca):
         content = self._filter_content(delete_content, content.df_content)
         return content
 
-    def delete_records(self, records_to_delete: CsvFileType):
+    def delete_records(self, records_to_delete: ContentData):
         """Delete records from either a core or extension content frame
 
         :param records_to_delete: A CSV file of records to delete, keyed to the DwCA file
          """
         delete_content = pd.DataFrame()
-        if isinstance(records_to_delete.files, pd.DataFrame):
-            delete_content = records_to_delete.files.copy(deep=True)
+        if isinstance(records_to_delete.data, pd.DataFrame):
+            delete_content = records_to_delete.data.copy(deep=True)
         else:
-            delete_content = self._combine_contents(records_to_delete.files, records_to_delete.csv_encoding,
+            delete_content = self._combine_contents(records_to_delete.data, records_to_delete.csv_encoding,
                                                     use_chunking=False)
         valid_delete_file = (all(col in delete_content.columns for col in records_to_delete.keys)
                              or len(delete_content) > 0)
@@ -735,7 +735,7 @@ class Dwca(BaseDwca):
             if len(image_df) > 0:
                 self._update_meta_fields(content=self.core_content, key_field=self.core_content.keys[0])
                 log.info("%s associated media extracted", str(len(image_df)))
-                return CsvFileType(files=image_df, type=MetaElementTypes.MULTIMEDIA,
+                return ContentData(data=image_df, type=MetaElementTypes.MULTIMEDIA,
                                    keys=self.core_content.keys)
 
             log.info("Nothing to extract from associated media")
@@ -886,20 +886,20 @@ class Dwca(BaseDwca):
 
         return True if validation_success else False
 
-    def extract_csv_content(self, csv_info: CsvFileType,
+    def extract_csv_content(self, csv_info: ContentData,
                             core_ext_type: CoreOrExtType, build_coreid_for_ext: bool = False):
-        """Read the files from a CSV description into a content frame and include it in the Dwca.
+        """Read the data from a CSV description into a content frame and include it in the Dwca.
 
         :param csv_info: The CSV file(s)
         :param core_ext_type: Whether this is a core or extension content frame
         :param build_coreid_for_ext: indicator to build id and core id to support dwca with extension
         """
-        if isinstance(csv_info.files, pd.DataFrame) :
-            csv_content = csv_info.files
-        elif isinstance(csv_info.files, io.TextIOWrapper):
-            csv_content = self._read_csv(csv_info.files)
+        if isinstance(csv_info.data, pd.DataFrame) :
+            csv_content = csv_info.data
+        elif isinstance(csv_info.data, io.TextIOWrapper):
+            csv_content = self._read_csv(csv_info.data)
         else:
-            csv_content = self._combine_contents(csv_info.files, csv_info.csv_encoding)
+            csv_content = self._combine_contents(csv_info.data, csv_info.csv_encoding)
 
         # Use default keys if not provided
         if core_ext_type == CoreOrExtType.CORE:

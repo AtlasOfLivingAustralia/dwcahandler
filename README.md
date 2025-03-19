@@ -96,13 +96,13 @@ DwcaHandler.list_class_rowtypes()
 * In creating a dwca with multimedia extension, provide format and type values in the Simple Multimedia extension, otherwise, dwcahandler will attempt to fill these info by guessing the mimetype from url.
 
 ```python
-from dwcahandler import CsvFileType
+from dwcahandler import ContentData
 from dwcahandler import DwcaHandler
 from dwcahandler import MetaElementTypes
 from dwcahandler import Eml
 
-core_csv = CsvFileType(files=['/tmp/occurrence.csv'], type=MetaElementTypes.OCCURRENCE, keys=['occurrenceID'])
-ext_csvs = [CsvFileType(files=['/tmp/multimedia.csv'], type=MetaElementTypes.MULTIMEDIA)]
+core_csv = ContentData(data=['/tmp/occurrence.csv'], type=MetaElementTypes.OCCURRENCE, keys=['occurrenceID'])
+ext_csvs = [ContentData(data=['/tmp/multimedia.csv'], type=MetaElementTypes.MULTIMEDIA)]
 
 eml = Eml(dataset_name='Test Dataset',
           description='Dataset description',
@@ -118,16 +118,16 @@ DwcaHandler.create_dwca(core_csv=core_csv, ext_csv_list=ext_csvs, eml_content=em
 
 ```python
 from dwcahandler import DwcaHandler
-from dwcahandler.dwca import CsvFileType
+from dwcahandler.dwca import ContentData
 from dwcahandler import MetaElementTypes
 from dwcahandler import Eml
 import pandas as pd
 
 core_df = pd.read_csv("/tmp/occurrence.csv")
-core_frame = CsvFileType(files=core_df, type=MetaElementTypes.OCCURRENCE, keys=['occurrenceID'])
+core_frame = ContentData(data=core_df, type=MetaElementTypes.OCCURRENCE, keys=['occurrenceID'])
 
 ext_df = pd.read_csv("/tmp/multimedia.csv")
-ext_frame = [CsvFileType(files=ext_df, type=MetaElementTypes.MULTIMEDIA)]
+ext_frame = [ContentData(data=ext_df, type=MetaElementTypes.MULTIMEDIA)]
 
 eml = Eml(dataset_name='Test Dataset',
           description='Dataset description',
@@ -138,7 +138,9 @@ eml = Eml(dataset_name='Test Dataset',
 DwcaHandler.create_dwca(core_csv=core_frame, ext_csv_list=ext_frame, eml_content=eml, output_dwca='/tmp/dwca.zip')
 ```
 &nbsp;
-* Create Darwin Core Archive from csv files in a zip files.
+* Convenient helper function to build Darwin Core Archive from a list of csv files.
+* Build event core DwCA if event.txt file is supplied, otherwise, occurrence DwCA if occurrence.txt is supplied. 
+* Raises error if neither event.txt not occurrence.txt is in the list
 * Class row types are determined by file names of the csvs.
 * If no content keys provided, the default keys are eventID for event content and occurrenceID for occurrence content
 * Delimiter for txt files are comma delimiter by default. For tab delimiter, supply CsvEncoding
@@ -152,10 +154,12 @@ eml = Eml(dataset_name='Test Dataset',
           citation="test citation",
           rights="test rights")
 
-DwcaHandler.create_dwca_from_zip_content(zip_file="/tmp/txt_files.zip",  eml_content=eml, output_dwca='/tmp/dwca.zip')
+DwcaHandler.create_dwca_from_file_list(files=["/tmp/event.csv", "/tmp/occurrence.csv"],  eml_content=eml, output_dwca='/tmp/dwca.zip')
 ```
 &nbsp;
 * Convenient helper function to create Darwin Core Archive from csv files in a zip files.
+* Build event core DwCA if event.txt file is supplied, otherwise, occurrence DwCA if occurrence.txt is supplied in the zip file
+* Raises error if neither event.txt not occurrence.txt is in the list
 * Class row types are determined by file names of the csvs.
 * If no content keys provided, the default keys are eventID for event content and occurrenceID for occurrence content
 * Delimiter for txt files are comma delimiter by default. For tab delimiter, supply CsvEncoding
@@ -201,13 +205,13 @@ DwcaHandler.merge_dwca(dwca_file='/tmp/dwca.zip', delta_dwca_file='/tmp/delta-dw
 &nbsp;
 * Delete Rows from core file in Darwin Core Archive
 ```python
-from dwcahandler import CsvFileType
+from dwcahandler import ContentData
 from dwcahandler import DwcaHandler, MetaElementTypes
 
-delete_csv = CsvFileType(files=['/tmp/old-records.csv'], type=MetaElementTypes.OCCURRENCE, keys=['occurrenceID'])
+delete_csv = ContentData(data=['/tmp/old-records.csv'], type=MetaElementTypes.OCCURRENCE, keys=['occurrenceID'])
 
 DwcaHandler.delete_records(dwca_file='/tmp/dwca.zip',
-                           records_to_delete=delete_csv, 
+                           records_to_delete=delete_csv,
                            output_dwca='/tmp/new-dwca.zip')
 ```
 &nbsp;

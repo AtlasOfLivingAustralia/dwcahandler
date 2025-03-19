@@ -6,7 +6,7 @@ import io
 import logging
 from typing import Union
 import pandas as pd
-from dwcahandler.dwca import CsvFileType, Dwca, Terms, Eml, MetaElementTypes, CSVEncoding, get_keys
+from dwcahandler.dwca import ContentData, Dwca, Terms, Eml, MetaElementTypes, CSVEncoding, get_keys
 from io import BytesIO
 from pathlib import Path
 from zipfile import ZipFile
@@ -32,11 +32,7 @@ class DwcaHandler:
         Core content will always be event if present, otherwise, occurrence content
 
         :param files: list of files
-        :param output_dwca: Where to place the resulting Dwca
-        :param eml_content: eml content in string or Eml class
-        :param csv_encoding: delimiter for txt file. Default is comma delimiter txt files if not supplied
-        :param content_keys: optional dictionary of MetaElementTypes and key list
-                                      for eg. {MetaElementTypes.OCCURRENCE, ["occurrenceID"]}
+        :return dict of core content type and file name and dict containing ext content type and file name
         """
         def derive_type(file_list: list) -> dict[str, MetaElementTypes]:
             file_types = {}
@@ -64,9 +60,11 @@ class DwcaHandler:
     def create_dwca_from_file_list(files: list, output_dwca: Union[str, BytesIO],
                                    eml_content: Union[str, Eml] = '', csv_encoding: CSVEncoding = CSVEncoding(),
                                    content_keys: dict[MetaElementTypes, list] = None):
-        """Create a suitable DwCA from a list of CSV files
+        """Helper function to create a dwca based on a list of txt files. The file names will determine the class type
+           Builds event core dwca if event.txt is supplied,
+           otherwise build an occurrence core dwca if occurrence.txt is supplied.
 
-        :param files: Zip file containing txt files
+        :param files: List of txt files
         :param output_dwca: Where to place the resulting Dwca
         :param eml_content: eml content in string or Eml class
         :param csv_encoding: delimiter for txt file. Default is comma delimiter txt files if not supplied
@@ -78,11 +76,11 @@ class DwcaHandler:
             core_filename = next(iter(core_content))
             core_type = core_content[core_filename]
 
-            core_content = CsvFileType(files=[core_filename], type=core_type, csv_encoding=csv_encoding,
+            core_content = ContentData(data=[core_filename], type=core_type, csv_encoding=csv_encoding,
                                        keys=get_keys(type=core_type, override_content_keys=content_keys))
             ext_content = []
             for ext_file, ext_type in ext_content_list.items():
-                ext_content.append(CsvFileType(files=[ext_file],
+                ext_content.append(ContentData(data=[ext_file],
                                                type=ext_type, csv_encoding=csv_encoding,
                                                keys=get_keys(type=ext_type,
                                                              override_content_keys=content_keys)))
@@ -95,7 +93,10 @@ class DwcaHandler:
     def create_dwca_from_zip_content(zip_file: str, output_dwca: Union[str, BytesIO],
                                      eml_content: Union[str, Eml] = '', csv_encoding: CSVEncoding = CSVEncoding(),
                                      content_keys: dict[MetaElementTypes, list] = None):
-        """Create a suitable DwCA from a list of CSV files
+        """Helper function to create a dwca based on a list of txt files in a zip file.
+           The file names will determine the class type
+           Builds event core dwca if event.txt is supplied,
+           otherwise build an occurrence core dwca if occurrence.txt is supplied.
 
         :param zip_file: Zip file containing txt files
         :param output_dwca: Where to place the resulting Dwca
@@ -110,13 +111,13 @@ class DwcaHandler:
             if core_content:
                 core_filename = next(iter(core_content))
                 core_type = core_content[core_filename]
-                core_content = CsvFileType(files=io.TextIOWrapper(zf.open(core_filename), encoding="utf-8"),
+                core_content = ContentData(data=io.TextIOWrapper(zf.open(core_filename), encoding="utf-8"),
                                            type=core_type, csv_encoding=csv_encoding,
                                            keys=get_keys(type=core_type,
                                                          override_content_keys=content_keys))
                 ext_content = []
                 for ext_file, ext_type in ext_content_list.items():
-                    ext_content.append(CsvFileType(files=io.TextIOWrapper(zf.open(ext_file), encoding="utf-8"),
+                    ext_content.append(ContentData(data=io.TextIOWrapper(zf.open(ext_file), encoding="utf-8"),
                                                    type=ext_type, csv_encoding=csv_encoding,
                                                    keys=get_keys(type=ext_type,
                                                                  override_content_keys=content_keys)))
@@ -126,12 +127,12 @@ class DwcaHandler:
                 raise ValueError("The core content cannot be determined. Please check filename in zip file")
 
     @staticmethod
-    def create_dwca(core_csv: CsvFileType,
+    def create_dwca(core_csv: ContentData,
                     output_dwca: Union[str, BytesIO],
-                    ext_csv_list: list[CsvFileType] = None,
+                    ext_csv_list: list[ContentData] = None,
                     validate_content: bool = True,
                     eml_content: Union[str, Eml] = ''):
-        """Create a suitable DwCA from a list of CSV files
+        """Create a suitable DwCA from a list of CSV data
 
         :param core_csv: The core source
         :param ext_csv_list: A list of extension sources
@@ -143,13 +144,13 @@ class DwcaHandler:
                            validate_content=validate_content, eml_content=eml_content)
 
     @staticmethod
-    def delete_records(dwca_file: Union[str, BytesIO], records_to_delete: CsvFileType,
+    def delete_records(dwca_file: Union[str, BytesIO], records_to_delete: ContentData,
                        output_dwca: Union[str, BytesIO]):
         """Delete core records listed in the records_to_delete file from DwCA.
         The specified keys listed in records_to_delete param must exist in the dwca core file
 
-        :param dwca_file: The path to the DwCA
-        :param records_to_delete: File containing the records to delete and the column key for mapping
+        :param dwca_file: The path to the DwCA or ByteIO of the DwCA
+        :param records_to_delete: content containing the records to delete and the column key for mapping
         :param output_dwca: Where to place the resulting DwCA or the dwca output in memory
         """
         Dwca(dwca_file_loc=dwca_file).delete_records_in_dwca(records_to_delete=records_to_delete,
@@ -187,7 +188,7 @@ class DwcaHandler:
         return Dwca(dwca_file_loc=dwca_file).validate_dwca(content_keys, error_file)
 
     @staticmethod
-    def validate_file(csv_file: CsvFileType, error_file: str = None):
+    def validate_file(csv_file: ContentData, error_file: str = None):
         """Test a CSV file for consistency
 
         :param csv_file: The path to the CSV

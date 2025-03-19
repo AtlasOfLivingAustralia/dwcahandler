@@ -3,7 +3,7 @@ import pandas as pd
 from zipfile import ZipFile
 from tests import make_meta_xml_str, remove_pretty_print_xml
 from tests import make_dwca
-from dwcahandler import DwcaHandler, CsvFileType, MetaElementTypes
+from dwcahandler import DwcaHandler, ContentData, MetaElementTypes
 from io import BytesIO
 
 
@@ -24,7 +24,7 @@ class TestDeleteContent:
                                        ["occ3", "species3"]],
                                  columns=['occurrenceID', 'scientificName'])
 
-        delete_records = CsvFileType(files=delete_df, type=MetaElementTypes.OCCURRENCE, keys=['occurrenceID'])
+        delete_records = ContentData(data=delete_df, type=MetaElementTypes.OCCURRENCE, keys=['occurrenceID'])
 
         output_obj = BytesIO()
 
@@ -69,7 +69,7 @@ class TestDeleteContent:
                                        ["occ3", "species3"]],
                                  columns=["occurrenceID", "scientificName"])
 
-        delete_records = CsvFileType(files=delete_df, type=MetaElementTypes.OCCURRENCE, keys=['occurrenceID'])
+        delete_records = ContentData(data=delete_df, type=MetaElementTypes.OCCURRENCE, keys=['occurrenceID'])
 
         output_obj = BytesIO()
 

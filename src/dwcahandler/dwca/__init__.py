@@ -1,6 +1,6 @@
 # flake8: noqa
 """
-Tools to convert data frames into Darwin Core Archive (DwCA) files.
+Tools to convert data frame or text files into Darwin Core Archive (DwCA) file.
 
 See https://ipt.gbif.org/manual/en/ipt/2.6/dwca-guide for a guide to DwCAs.
 
@@ -185,36 +185,36 @@ from dwcahandler.dwca.terms import Terms, NsPrefix
 from dwcahandler.dwca.dwca_meta import (MetaElementTypes, MetaElementInfo, MetaDwCA,
                                         MetaElementAttributes, get_meta_class_row_type)
 @dataclass
-class CsvFileType:
-    """A description of a CSV file in a DwCA
+class ContentData:
+    """A class describing the content data used for core and extension.
+       Use this class to define the core content and extension content to build a DwCA (see README on usage)
     """
-    files: Union[list[str], pd.DataFrame, io.TextIOWrapper]  # can accept more than one file or a dataframe
-    type: MetaElementTypes # 'occurrence', 'taxon', 'event', multimedia,...
-    keys: Optional[list] = None  # must be supplied for csv extensions to link extension records to core record
-    # when creating dwca. for core other than occurrence, this neeeds to be supplied as key.
-    # column keys lookup in core or extension for delete records
-    associated_files_loc: Optional[str] = None  # in case there are associated media that need to be packaged in dwca
+    data: Union[list[str], pd.DataFrame, io.TextIOWrapper]  # can accept more than one files, dataframe or file pointer
+    type: MetaElementTypes # Enumerated types from the class row type.
+    keys: Optional[list] = None # keys that uniquely identify a record in the content
+    associated_files_loc: Optional[str] = None  # provide a folder path containing the embedded images.
+                                # Embedded images file name must be supplied as associatedMedia in the content
     csv_encoding: CSVEncoding = field(
         default_factory=lambda: CSVEncoding(csv_delimiter=",", csv_eol="\n", csv_text_enclosure='"',
                                             csv_escape_char='"'))
 
     def check_for_empty(self, include_keys = True):
-        if self.files and len(self.files) > 0 and \
+        if self.data and len(self.data) > 0 and \
                 self.type and isinstance(self.type, MetaElementTypes) and \
                 (not include_keys or include_keys and self.keys and len(self.keys) > 0):
             return True
         return False
 
-    def add_data(self, other_csv_file_type: CsvFileType):
+    def add_data(self, other_csv_file_type: ContentData):
         if self.type and self.type == other_csv_file_type.type:
-            if isinstance(self.files, pd.DataFrame) and isinstance(other_csv_file_type.files, pd.DataFrame):
-                self.files = pd.concat([self.files, other_csv_file_type.files], ignore_index=False)
+            if isinstance(self.data, pd.DataFrame) and isinstance(other_csv_file_type.data, pd.DataFrame):
+                self.data = pd.concat([self.data, other_csv_file_type.data], ignore_index=False)
                 return True
-            elif isinstance(self.files, list) and isinstance(other_csv_file_type.files, list):
-                self.files.append(other_csv_file_type.files)
+            elif isinstance(self.data, list) and isinstance(other_csv_file_type.data, list):
+                self.data.append(other_csv_file_type.data)
                 return True
         elif not self.type:
-            self.files = other_csv_file_type.files
+            self.data = other_csv_file_type.data
             self.type = other_csv_file_type.type
         return False
 

@@ -4,7 +4,7 @@ from operator import attrgetter
 import pytest
 import pandas as pd
 from pandas import testing as pdtest
-from dwcahandler.dwca import CSVEncoding, CsvFileType, CoreOrExtType, MetaElementTypes
+from dwcahandler.dwca import CSVEncoding, ContentData, CoreOrExtType, MetaElementTypes
 from dwcahandler.dwca.core_dwca import Dwca
 
 
@@ -35,7 +35,7 @@ def get_expected_combined_occ_df(file_paths: list, keys: list, delimiter: str = 
 
 @pytest.fixture
 def test_case(request):
-    yield {"file_type": CsvFileType(files=request.param["file_paths"],
+    yield {"file_type": ContentData(data=request.param["file_paths"],
                                     type=MetaElementTypes.OCCURRENCE,
                                     keys=['catalogNumber'],
                                     csv_encoding=CSVEncoding(csv_delimiter=request.param["delimiter"])),
@@ -87,7 +87,7 @@ class TestExtractData:
 
         dwca_creator = Dwca()
 
-        dwca_creator.extract_csv_content(csv_info=CsvFileType(files=multiple_csv_occ_test['file_paths'],
+        dwca_creator.extract_csv_content(csv_info=ContentData(data=multiple_csv_occ_test['file_paths'],
                                                               type=MetaElementTypes.OCCURRENCE,
                                                               keys=['catalogNumber'],
                                                               csv_encoding=CSVEncoding(
@@ -95,7 +95,7 @@ class TestExtractData:
                                          core_ext_type=CoreOrExtType.CORE)
 
         multimedia_file_path = 'input_files/sample/multimedia/multimedia_file.csv'
-        dwca_creator.extract_csv_content(csv_info=CsvFileType(files=[multimedia_file_path],
+        dwca_creator.extract_csv_content(csv_info=ContentData(data=[multimedia_file_path],
                                                               type=MetaElementTypes.MULTIMEDIA,
                                                               keys=['catalogNumber'],
                                                               csv_encoding=CSVEncoding(csv_delimiter=',')),
@@ -124,7 +124,7 @@ class TestExtractData:
 
         dwca_creator = Dwca()
 
-        dwca_creator.extract_csv_content(csv_info=CsvFileType(files=multiple_tsv_occ_test['file_paths'],
+        dwca_creator.extract_csv_content(csv_info=ContentData(data=multiple_tsv_occ_test['file_paths'],
                                                               type=MetaElementTypes.OCCURRENCE,
                                                               keys=['catalogNumber'],
                                                               csv_encoding=CSVEncoding(
@@ -132,7 +132,7 @@ class TestExtractData:
                                          core_ext_type=CoreOrExtType.CORE)
 
         multimedia_file_path = 'input_files/sample/multimedia/multimedia_file.tsv'
-        dwca_creator.extract_csv_content(csv_info=CsvFileType(files=[multimedia_file_path],
+        dwca_creator.extract_csv_content(csv_info=ContentData(data=[multimedia_file_path],
                                                               type=MetaElementTypes.MULTIMEDIA,
                                                               csv_encoding=CSVEncoding(csv_delimiter='\t')),
                                          core_ext_type=CoreOrExtType.EXTENSION)
@@ -159,7 +159,7 @@ class TestExtractData:
 
         dwca_creator = Dwca()
 
-        dwca_creator.extract_csv_content(csv_info=CsvFileType(files=csv_occ_with_space['file_paths'],
+        dwca_creator.extract_csv_content(csv_info=ContentData(data=csv_occ_with_space['file_paths'],
                                                               type=MetaElementTypes.OCCURRENCE,
                                                               keys=['catalogNumber'],
                                                               csv_encoding=CSVEncoding(
@@ -181,14 +181,14 @@ class TestExtractData:
 
         dwca_creator = Dwca()
 
-        dwca_creator.extract_csv_content(csv_info=CsvFileType(files=csv_occ_with_space['file_paths'],
+        dwca_creator.extract_csv_content(csv_info=ContentData(data=csv_occ_with_space['file_paths'],
                                                               type=MetaElementTypes.OCCURRENCE,
                                                               keys=['catalogNumber'],
                                                               csv_encoding=CSVEncoding(
                                                                   csv_delimiter=csv_occ_with_space["delimiter"])),
                                          core_ext_type=CoreOrExtType.CORE)
 
-        dwca_creator.extract_csv_content(csv_info=CsvFileType(files=multimedia_with_space['file_paths'],
+        dwca_creator.extract_csv_content(csv_info=ContentData(data=multimedia_with_space['file_paths'],
                                                               type=MetaElementTypes.MULTIMEDIA,
                                                               csv_encoding=CSVEncoding(csv_delimiter=',')),
                                          core_ext_type=CoreOrExtType.EXTENSION)

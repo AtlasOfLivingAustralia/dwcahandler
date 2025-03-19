@@ -1,5 +1,5 @@
 import io
-from dwcahandler import DwcaHandler, CsvFileType, CoreOrExtType, MetaElementTypes
+from dwcahandler import DwcaHandler, ContentData, CoreOrExtType, MetaElementTypes
 from zipfile import ZipFile
 from pathlib import Path
 import xml.etree.ElementTree as ET
@@ -34,7 +34,7 @@ class TestWriteDwca:
         """
         Test that generated dwca is valid with core occ data
         """
-        core_csv = CsvFileType(files=[occurrence_sample_file], keys=['occurrenceID'],
+        core_csv = ContentData(data=[occurrence_sample_file], keys=['occurrenceID'],
                                type=MetaElementTypes.OCCURRENCE)
         p = Path("temp")
         p.mkdir(parents=True, exist_ok=True)
@@ -71,9 +71,9 @@ class TestWriteDwca:
         """
         Test that generated dwca is valid with core occ and multimedia data
         """
-        core_csv = CsvFileType(files=[occurrence_sample_file], keys=['occurrenceID'],
+        core_csv = ContentData(data=[occurrence_sample_file], keys=['occurrenceID'],
                                type=MetaElementTypes.OCCURRENCE)
-        ext_csv = CsvFileType(files=[multimedia_sample_file], keys=['occurrenceID'],
+        ext_csv = ContentData(data=[multimedia_sample_file], keys=['occurrenceID'],
                               type=MetaElementTypes.MULTIMEDIA)
         p = Path("temp")
         p.mkdir(parents=True, exist_ok=True)
@@ -131,7 +131,7 @@ class TestWriteDwca:
                                     ["3", "species3"]],
                               columns=['catalogNumber', 'scientificName'])
 
-        core_csv = CsvFileType(files=occ_df,
+        core_csv = ContentData(data=occ_df,
                                type=MetaElementTypes.OCCURRENCE,
                                keys=['catalogNumber'])
 

@@ -7,7 +7,7 @@ from __future__ import annotations
 from abc import ABCMeta, abstractmethod
 from typing import Union
 from io import BytesIO
-from dwcahandler.dwca import CoreOrExtType, CsvFileType, MetaElementTypes
+from dwcahandler.dwca import CoreOrExtType, ContentData, MetaElementTypes
 from dwcahandler.dwca.eml import Eml
 
 
@@ -15,7 +15,7 @@ class BaseDwca(metaclass=ABCMeta):
     """An abstract DwCA that provides basic operations"""
 
     @abstractmethod
-    def extract_csv_content(self, csv_info: CsvFileType, core_ext_type: CoreOrExtType,
+    def extract_csv_content(self, csv_info: ContentData, core_ext_type: CoreOrExtType,
                             build_coreid_for_ext: bool = False):
         """Get the content from a single file in the DwCA
 
@@ -48,11 +48,11 @@ class BaseDwca(metaclass=ABCMeta):
 
     @abstractmethod
     def write_dwca(self, output_dwca: Union[str, BytesIO]):
-        """Write the content of the DwCA to a directory.
+        """Write the content of the DwCA to a file path (supplied as string) or to BytesIO in memory.
 
-        Writes all CSV files, as well as a meta-file and EML file for the archive.
+        Writes all CSV data, as well as a meta-file and EML file for the archive.
 
-        :param output_dwca: The path to write to or dwca in memory
+        :param output_dwca: The file path or BytesIO
         """
         pass
 
@@ -85,7 +85,7 @@ class BaseDwca(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def delete_records(self, records_to_delete: CsvFileType):
+    def delete_records(self, records_to_delete: ContentData):
         pass
 
     @abstractmethod
@@ -111,10 +111,10 @@ class BaseDwca(metaclass=ABCMeta):
         for multimedia_content, _ in contents:
             self.add_multimedia_info_to_content(multimedia_content)
 
-    def delete_records_in_dwca(self, records_to_delete: CsvFileType, output_dwca: Union[str, BytesIO]):
-        """Delete records in dwca if the key records are defined in CsvFileType
+    def delete_records_in_dwca(self, records_to_delete: ContentData, output_dwca: Union[str, BytesIO]):
+        """Delete records in dwca if the key records are defined in ContentData
 
-        :param records_to_delete: A CsvFileType that containing the text file of the record keys,
+        :param records_to_delete: A ContentData that containing the text file of the record keys,
                                   the key names of the records and MetaElementType type class of the dwca
                                   where the records need to be removed
         :param output_dwca: output dwca path where the result of the dwca is writen to or the output dwca in memory
@@ -125,14 +125,14 @@ class BaseDwca(metaclass=ABCMeta):
         self.generate_meta()
         self.write_dwca(output_dwca)
 
-    def create_dwca(self, core_csv: CsvFileType, output_dwca: Union[str, BytesIO],
-                    ext_csv_list: list[CsvFileType] = None, validate_content: bool = True,
+    def create_dwca(self, core_csv: ContentData, output_dwca: Union[str, BytesIO],
+                    ext_csv_list: list[ContentData] = None, validate_content: bool = True,
                     eml_content: Union[str, Eml] = ''):
         """Create a dwca given the contents of core and extensions and eml content
 
-        :param core_csv: CsvFileType containing the files, class types and keys to form the core of the dwca
+        :param core_csv: ContentData containing the data, class type and keys to form the core of the dwca
         :param output_dwca: the resulting path of the dwca or the dwca in memory
-        :param ext_csv_list: list of CsvFileTypes containing the files, class types and keys to form the
+        :param ext_csv_list: list of ContentData containing the data, class type and keys to form the
                               extensions of the dwca if supplied
         :param validate_content: whether to validate the contents
         :param eml_content: eml content in string or a filled Eml object
@@ -143,7 +143,7 @@ class BaseDwca(metaclass=ABCMeta):
         self.extract_csv_content(csv_info=core_csv, core_ext_type=CoreOrExtType.CORE,
                                  build_coreid_for_ext=True if len(ext_csv_list) > 0 else False)
 
-        # if multimedia files is supplied, do not attempt to convert associated media to multimedia
+        # if multimedia data is supplied, do not attempt to convert associated media to multimedia
         if not any(ext.type == MetaElementTypes.MULTIMEDIA for ext in ext_csv_list):
             image_ext = self.convert_associated_media_to_extension()
             if image_ext:
@@ -200,10 +200,10 @@ class BaseDwca(metaclass=ABCMeta):
         set_keys = self.set_keys(content_keys)
         return self.validate_content(content_to_validate=set_keys, error_file=error_file)
 
-    def validate_file(self, csv: CsvFileType, error_file: str):
+    def validate_file(self, csv: ContentData, error_file: str):
         """Validate the text file
 
-        :param csv: CsvFileType to pass the csv, key and type
+        :param csv: ContentData to pass the csv, key and type
         :param error_file: optional error_file for the errored data
         """
         self.extract_csv_content(csv_info=csv, core_ext_type=CoreOrExtType.CORE)
