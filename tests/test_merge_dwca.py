@@ -421,4 +421,3 @@ class TestMergeDwcaContent:
                 pd.testing.assert_frame_equal(multimedia_df_output, expected_multimedia_df)
 
             zf.close()
-

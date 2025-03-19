@@ -37,7 +37,7 @@ class DwcaHandler:
         def derive_type(file_list: list) -> dict[str, MetaElementTypes]:
             file_types = {}
             for file in file_list:
-                if (filename:=Path(file).stem.upper()) in dict(MetaElementTypes.__members__.items()).keys():
+                if (filename := Path(file).stem.upper()) in dict(MetaElementTypes.__members__.items()).keys():
                     file_types[file] = dict(MetaElementTypes.__members__.items())[filename]
             return file_types
 
@@ -122,7 +122,7 @@ class DwcaHandler:
                                                    keys=get_keys(type=ext_type,
                                                                  override_content_keys=content_keys)))
                 DwcaHandler.create_dwca(core_csv=core_content, ext_csv_list=ext_content, output_dwca=output_dwca,
-                                    eml_content=eml_content)
+                                        eml_content=eml_content)
             else:
                 raise ValueError("The core content cannot be determined. Please check filename in zip file")
 

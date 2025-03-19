@@ -150,7 +150,7 @@ class TestMultimediaExtension:
         # Extract multimedia ext without format
         dwca.extract_csv_content(csv_info=ContentData(data=pd.DataFrame(data=image_data,
                                                                         columns=["occurrenceID", "identifier",
-                                                                                  "format", "type"]),
+                                                                                 "format", "type"]),
                                                       type=MetaElementTypes.MULTIMEDIA),
                                  core_ext_type=CoreOrExtType.EXTENSION)
 
@@ -207,7 +207,7 @@ class TestMultimediaExtension:
         # Extract multimedia ext without format
         dwca.extract_csv_content(csv_info=ContentData(data=pd.DataFrame(data=image_data,
                                                                         columns=["occurrenceID", "identifier",
-                                                                                  "format"]),
+                                                                                 "format"]),
                                                       type=MetaElementTypes.MULTIMEDIA),
                                  core_ext_type=CoreOrExtType.EXTENSION)
 
