@@ -31,25 +31,30 @@ CoreOrExtType = namedtuple("CoreOrExtType", ["CORE", "EXTENSION"])(
     EXTENSION="extension"
 )
 
+MetaDefaultFields = namedtuple("MetaDefaultFields", ["ID", "CORE_ID"])(
+    ID="id",
+    CORE_ID="coreid"
+)
+
 # Default keys for content when creating dwca
 DefaultKeys = namedtuple("DefaultKeys", ["EVENT", "OCCURRENCE"])(
     EVENT = "eventID",
     OCCURRENCE = "occurrenceID"
 )
 
-def get_keys(type: MetaElementTypes, override_content_keys: dict[[MetaElementTypes, list]] = None):
+def get_keys(class_type: MetaElementTypes, override_content_keys: dict[[MetaElementTypes, list]] = None):
     """
     # If override_content_keys not supplied, return the default keys based on content type
-    :param type:  type of content
+    :param class_type: class_type of content
     :param override_content_keys: given content keys
     :return: the list of keys for the content
     """
     if override_content_keys:
         for content_type, keys in override_content_keys.items():
-            if type == content_type and keys and len(keys) > 0:
+            if class_type == content_type and keys and len(keys) > 0:
                 return keys
     defaults = DefaultKeys._asdict()
-    return [defaults[type.name]] if type.name in defaults.keys() else []
+    return [defaults[class_type.name]] if class_type.name in defaults.keys() else []
 
 @dataclass
 class CSVEncoding:

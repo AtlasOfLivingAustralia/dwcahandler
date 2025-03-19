@@ -89,12 +89,12 @@ DwcaHandler.list_class_rowtypes()
 ### Examples of dwcahandler usages:
 
 * Create Darwin Core Archive from csv file. 
-* Keys are used as id/core id for Dwca with extensions and must be supplied for the core and extensions in the data
-* Validation is performed to make sure that the keys are unique in the core of the Dwca
-* If Keys are not provided, the default keys is occurrenceID
-* If multiple Keys are supplied, resulting dwca would generate id/core id
+* Keys in core content are used as id/core id for Dwca with extensions and must be supplied in the data for core and extensions
+* If core data have more than 1 key (for eg: institutionCode, collectionCode and catalogNumber), resulting dwca would generate id/core id for extension
+* Validation is performed to make sure that the keys are unique in the core of the Dwca by default
+* If keys are supplied for the content extension, the validation will be run to check the uniqueness of the keys in the content
+* If keys are not provided, the default keys is eventID for event content and occurrenceID for occurrence content
 * In creating a dwca with multimedia extension, provide format and type values in the Simple Multimedia extension, otherwise, dwcahandler will attempt to fill these info by guessing the mimetype from url.
-
 ```python
 from dwcahandler import ContentData
 from dwcahandler import DwcaHandler
@@ -139,9 +139,9 @@ DwcaHandler.create_dwca(core_csv=core_frame, ext_csv_list=ext_frame, eml_content
 ```
 &nbsp;
 * Convenient helper function to build Darwin Core Archive from a list of csv files.
-* Build event core DwCA if event.txt file is supplied, otherwise, occurrence DwCA if occurrence.txt is supplied. 
-* Raises error if neither event.txt not occurrence.txt is in the list
-* Class row types are determined by file names of the csvs.
+* Build event core DwCA if event.txt file is supplied, otherwise, occurrence core DwCA if occurrence.txt is supplied. 
+* Raises error if neither event.txt nor occurrence.txt is in the list
+* Class row types are determined by file names of the text files.
 * If no content keys provided, the default keys are eventID for event content and occurrenceID for occurrence content
 * Delimiter for txt files are comma delimiter by default. For tab delimiter, supply CsvEncoding
 ```python
@@ -158,10 +158,10 @@ DwcaHandler.create_dwca_from_file_list(files=["/tmp/event.csv", "/tmp/occurrence
 ```
 &nbsp;
 * Convenient helper function to create Darwin Core Archive from csv files in a zip files.
-* Build event core DwCA if event.txt file is supplied, otherwise, occurrence DwCA if occurrence.txt is supplied in the zip file
-* Raises error if neither event.txt not occurrence.txt is in the list
-* Class row types are determined by file names of the csvs.
-* If no content keys provided, the default keys are eventID for event content and occurrenceID for occurrence content
+* Build event core DwCA if event.txt file is supplied, otherwise, occurrence core DwCA if occurrence.txt is supplied in the zip file
+* Raises error if neither event.txt nor occurrence.txt is in the zip file
+* Class row types are determined by file names of the text files.
+* If no content keys provided, the default keys are eventID for event content and occurrenceID for occurrence content.
 * Delimiter for txt files are comma delimiter by default. For tab delimiter, supply CsvEncoding
 ```python
 from dwcahandler import DwcaHandler

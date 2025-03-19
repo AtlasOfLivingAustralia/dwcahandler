@@ -11,7 +11,7 @@ from xml.dom import minidom
 import re
 from dataclasses import dataclass, field
 from typing import Optional
-from dwcahandler.dwca import CSVEncoding, CoreOrExtType, Terms
+from dwcahandler.dwca import CSVEncoding, CoreOrExtType, Terms, MetaDefaultFields
 from enum import Enum
 
 
@@ -225,13 +225,13 @@ class MetaDwCA:
         location = ET.SubElement(files, 'location')
         location.text = meta_elem_attrib.meta_element_type.file_name
         if meta_elem_attrib.core_id:
-            id_field = ET.SubElement(elem, 'id') \
+            id_field = ET.SubElement(elem, MetaDefaultFields.ID) \
                 if meta_elem_attrib.meta_element_type.core_or_ext_type == 'core' \
-                else ET.SubElement(elem, 'coreid')
+                else ET.SubElement(elem, MetaDefaultFields.CORE_ID)
             id_field.attrib['index'] = meta_elem_attrib.core_id.index
 
         for _, f in enumerate(meta_elem_attrib.fields):
-            if f.field_name not in ('id', 'coreid'):
+            if f.field_name not in list(MetaDefaultFields):
                 field_elem = ET.SubElement(elem, "field")
                 if f.index is not None:
                     field_elem.attrib['index'] = f.index

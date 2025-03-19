@@ -77,12 +77,12 @@ class DwcaHandler:
             core_type = core_content[core_filename]
 
             core_content = ContentData(data=[core_filename], type=core_type, csv_encoding=csv_encoding,
-                                       keys=get_keys(type=core_type, override_content_keys=content_keys))
+                                       keys=get_keys(class_type=core_type, override_content_keys=content_keys))
             ext_content = []
             for ext_file, ext_type in ext_content_list.items():
                 ext_content.append(ContentData(data=[ext_file],
                                                type=ext_type, csv_encoding=csv_encoding,
-                                               keys=get_keys(type=ext_type,
+                                               keys=get_keys(class_type=ext_type,
                                                              override_content_keys=content_keys)))
             DwcaHandler.create_dwca(core_csv=core_content, ext_csv_list=ext_content, output_dwca=output_dwca,
                                     eml_content=eml_content)
@@ -113,13 +113,13 @@ class DwcaHandler:
                 core_type = core_content[core_filename]
                 core_content = ContentData(data=io.TextIOWrapper(zf.open(core_filename), encoding="utf-8"),
                                            type=core_type, csv_encoding=csv_encoding,
-                                           keys=get_keys(type=core_type,
+                                           keys=get_keys(class_type=core_type,
                                                          override_content_keys=content_keys))
                 ext_content = []
                 for ext_file, ext_type in ext_content_list.items():
                     ext_content.append(ContentData(data=io.TextIOWrapper(zf.open(ext_file), encoding="utf-8"),
                                                    type=ext_type, csv_encoding=csv_encoding,
-                                                   keys=get_keys(type=ext_type,
+                                                   keys=get_keys(class_type=ext_type,
                                                                  override_content_keys=content_keys)))
                 DwcaHandler.create_dwca(core_csv=core_content, ext_csv_list=ext_content, output_dwca=output_dwca,
                                         eml_content=eml_content)
