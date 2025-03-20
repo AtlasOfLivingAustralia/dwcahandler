@@ -19,22 +19,22 @@ the (usually Darwin Core) terms that each column contains.
 from __future__ import annotations
 
 import io
+import logging
 from collections import namedtuple
 from dataclasses import dataclass, field
-from typing import Optional, Union
-import logging
-import pandas as pd
 from functools import wraps
+from typing import Optional, Union
 
-CoreOrExtType = namedtuple("CoreOrExtType", ["CORE", "EXTENSION"])(
-    CORE="core",
-    EXTENSION="extension"
-)
+import pandas as pd
 
-MetaDefaultFields = namedtuple("MetaDefaultFields", ["ID", "CORE_ID"])(
-    ID="id",
-    CORE_ID="coreid"
-)
+
+class CoreOrExtType(Enum):
+    CORE = "core"
+    EXTENSION = "extension"
+@dataclass(frozen=True)
+class MetaDefaultFields:
+    ID: str = "id"
+    CORE_ID: str = "coreid"
 
 # Default keys for content when creating dwca
 DefaultKeys = namedtuple("DefaultKeys", ["EVENT", "OCCURRENCE"])(
@@ -185,10 +185,13 @@ class Defaults:
                                   default_factory=lambda: {'LF': '\r\n', '\\t': '\t', '\\n': '\n'})
 
 
+from dwcahandler.dwca.dwca_meta import (MetaDwCA, MetaElementAttributes,
+                                        MetaElementInfo, MetaElementTypes,
+                                        get_meta_class_row_type)
 # Imports at end of file to allow classes to be used
-from dwcahandler.dwca.terms import Terms, NsPrefix
-from dwcahandler.dwca.dwca_meta import (MetaElementTypes, MetaElementInfo, MetaDwCA,
-                                        MetaElementAttributes, get_meta_class_row_type)
+from dwcahandler.dwca.terms import NsPrefix, Terms
+
+
 @dataclass
 class ContentData:
     """A class describing the content data used for core and extension.
@@ -223,8 +226,9 @@ class ContentData:
             self.type = other_csv_file_type.type
         return False
 
-from dwcahandler.dwca.eml import Eml
-from dwcahandler.dwca.base_dwca import BaseDwca
-from dwcahandler.dwca.core_dwca import Dwca, DfContent
-from dwcahandler.dwca.dwca_factory import DwcaHandler
+from enum import Enum
 
+from dwcahandler.dwca.base_dwca import BaseDwca
+from dwcahandler.dwca.core_dwca import DfContent, Dwca
+from dwcahandler.dwca.dwca_factory import DwcaHandler
+from dwcahandler.dwca.eml import Eml
