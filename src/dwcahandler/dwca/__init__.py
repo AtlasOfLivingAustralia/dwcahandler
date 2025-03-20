@@ -22,6 +22,7 @@ import io
 import logging
 from collections import namedtuple
 from dataclasses import dataclass, field
+from enum import Enum
 from functools import wraps
 from typing import Optional, Union
 
@@ -226,7 +227,6 @@ class ContentData:
             self.type = other_csv_file_type.type
         return False
 
-from enum import Enum
 
 from dwcahandler.dwca.base_dwca import BaseDwca
 from dwcahandler.dwca.core_dwca import DfContent, Dwca
