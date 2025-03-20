@@ -27,11 +27,17 @@ class DwcaHandler:
             print(f"{name}: {member.value}")
 
     @staticmethod
-    def get_contents_from_file_names(files: list) -> (dict[MetaElementTypes, str], dict[MetaElementTypes, str]):
+    def get_contents_from_file_names(files: list, csv_encoding: CSVEncoding,
+                                     content_keys: dict[MetaElementTypes, list] = None, zf: ZipFile = None) \
+            -> (ContentData, list[ContentData]):
         """Find the core content and extension contents from a list of file paths.
         Core content will always be event if present, otherwise, occurrence content
 
         :param files: list of files
+        :param csv_encoding: delimiter for txt file. Default is comma delimiter txt files if not supplied
+        :param content_keys: optional dictionary of MetaElementTypes and key list
+                                      for eg. {MetaElementTypes.OCCURRENCE, ["occurrenceID"]}
+        :param zf: Zipfile pointer if using
         :return dict of core content type and file name and dict containing ext content type and file name
         """
         def derive_type(file_list: list) -> dict[str, MetaElementTypes]:
@@ -51,9 +57,23 @@ class DwcaHandler:
             core_filename = next(iter(core_file))
             core_type = core_file[core_filename]
             ext_files = {k: v for k, v in contents.items() if v != core_type}
-            return core_file, ext_files
 
-        return None
+            core_data = [core_filename] if not zf else io.TextIOWrapper(zf.open(core_filename), encoding="utf-8")
+            core_content = ContentData(data=core_data,
+                                       type=core_type, csv_encoding=csv_encoding,
+                                       keys=get_keys(class_type=core_type,
+                                                     override_content_keys=content_keys))
+            ext_content = []
+            for ext_file, ext_type in ext_files.items():
+                ext_data = [ext_file] if not zf else io.TextIOWrapper(zf.open(ext_file), encoding="utf-8")
+                ext_content.append(ContentData(data=ext_data,
+                                               type=ext_type, csv_encoding=csv_encoding,
+                                               keys=get_keys(class_type=ext_type,
+                                                             override_content_keys=content_keys)))
+            return core_content, ext_content
+        else:
+            raise ValueError("The core content cannot be determined. Please check filenames against the class type. "
+                             "Use list_class_rowtypes to print the class types. ")
 
     """Perform various DwCA operations"""
     @staticmethod
@@ -71,23 +91,9 @@ class DwcaHandler:
         :param content_keys: optional dictionary of MetaElementTypes and key list
                                       for eg. {MetaElementTypes.OCCURRENCE, ["occurrenceID"]}
         """
-        core_content, ext_content_list = DwcaHandler.get_contents_from_file_names(files)
-        if core_content:
-            core_filename = next(iter(core_content))
-            core_type = core_content[core_filename]
-
-            core_content = ContentData(data=[core_filename], type=core_type, csv_encoding=csv_encoding,
-                                       keys=get_keys(class_type=core_type, override_content_keys=content_keys))
-            ext_content = []
-            for ext_file, ext_type in ext_content_list.items():
-                ext_content.append(ContentData(data=[ext_file],
-                                               type=ext_type, csv_encoding=csv_encoding,
-                                               keys=get_keys(class_type=ext_type,
-                                                             override_content_keys=content_keys)))
-            DwcaHandler.create_dwca(core_csv=core_content, ext_csv_list=ext_content, output_dwca=output_dwca,
-                                    eml_content=eml_content)
-        else:
-            raise ValueError("The core content cannot be determined. Please check filename in zip file")
+        core_content, ext_content_list = DwcaHandler.get_contents_from_file_names(files=files, csv_encoding=csv_encoding)
+        DwcaHandler.create_dwca(core_csv=core_content, ext_csv_list=ext_content_list, output_dwca=output_dwca,
+                                eml_content=eml_content)
 
     @staticmethod
     def create_dwca_from_zip_content(zip_file: str, output_dwca: Union[str, BytesIO],
@@ -107,24 +113,10 @@ class DwcaHandler:
         """
         with ZipFile(zip_file, 'r') as zf:
             files = zf.namelist()
-            core_content, ext_content_list = DwcaHandler.get_contents_from_file_names(files)
-            if core_content:
-                core_filename = next(iter(core_content))
-                core_type = core_content[core_filename]
-                core_content = ContentData(data=io.TextIOWrapper(zf.open(core_filename), encoding="utf-8"),
-                                           type=core_type, csv_encoding=csv_encoding,
-                                           keys=get_keys(class_type=core_type,
-                                                         override_content_keys=content_keys))
-                ext_content = []
-                for ext_file, ext_type in ext_content_list.items():
-                    ext_content.append(ContentData(data=io.TextIOWrapper(zf.open(ext_file), encoding="utf-8"),
-                                                   type=ext_type, csv_encoding=csv_encoding,
-                                                   keys=get_keys(class_type=ext_type,
-                                                                 override_content_keys=content_keys)))
-                DwcaHandler.create_dwca(core_csv=core_content, ext_csv_list=ext_content, output_dwca=output_dwca,
-                                        eml_content=eml_content)
-            else:
-                raise ValueError("The core content cannot be determined. Please check filename in zip file")
+            core_content, ext_content_list = DwcaHandler.get_contents_from_file_names(files=files, csv_encoding=csv_encoding, zf=zf)
+            DwcaHandler.create_dwca(core_csv=core_content, ext_csv_list=ext_content_list, output_dwca=output_dwca,
+                                    eml_content=eml_content)
+            zf.close()
 
     @staticmethod
     def create_dwca(core_csv: ContentData,
