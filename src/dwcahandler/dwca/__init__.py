@@ -186,13 +186,6 @@ class Defaults:
                                   default_factory=lambda: {'LF': '\r\n', '\\t': '\t', '\\n': '\n'})
 
 
-from dwcahandler.dwca.dwca_meta import (MetaDwCA, MetaElementAttributes,
-                                        MetaElementInfo, MetaElementTypes,
-                                        get_meta_class_row_type)
-# Imports at end of file to allow classes to be used
-from dwcahandler.dwca.terms import NsPrefix, Terms
-
-
 @dataclass
 class ContentData:
     """A class describing the content data used for core and extension.
@@ -231,4 +224,9 @@ class ContentData:
 from dwcahandler.dwca.base_dwca import BaseDwca
 from dwcahandler.dwca.core_dwca import DfContent, Dwca
 from dwcahandler.dwca.dwca_factory import DwcaHandler
+from dwcahandler.dwca.dwca_meta import (MetaDwCA, MetaElementAttributes,
+                                        MetaElementInfo, MetaElementTypes,
+                                        get_meta_class_row_type)
 from dwcahandler.dwca.eml import Eml
+# Imports at end of file to allow classes to be used
+from dwcahandler.dwca.terms import NsPrefix, Terms
