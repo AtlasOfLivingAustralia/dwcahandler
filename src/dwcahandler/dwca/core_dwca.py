@@ -21,7 +21,7 @@ import pandas as pd
 from numpy import nan
 from pandas.errors import EmptyDataError
 from pandas.io import parsers
-from dwcahandler.dwca import (BaseDwca, CoreOrExtType, MetaDefaultFields, CSVEncoding,
+from dwcahandler.dwca import (BaseDwca, CoreOrExtType, CSVEncoding,
                               ContentData, Defaults, Eml, Terms, get_keys,
                               MetaDwCA, MetaElementInfo, MetaElementTypes,
                               MetaElementAttributes, Stat, record_diff_stat)
@@ -93,9 +93,9 @@ class Dwca(BaseDwca):
         :param core_df: The data frame to generate identifiers for
         return id field
         """
-        if MetaDefaultFields.ID not in core_df.columns.to_list():
-            core_df.insert(0, MetaDefaultFields.ID, core_df.apply(lambda _: uuid.uuid4(), axis=1), False)
-            return MetaDefaultFields.ID
+        if self.defaults_prop.MetaDefaultFields.ID not in core_df.columns.to_list():
+            core_df.insert(0, self.defaults_prop.MetaDefaultFields.ID, core_df.apply(lambda _: uuid.uuid4(), axis=1), False)
+            return self.defaults_prop.MetaDefaultFields.ID
         else:
             raise ValueError("core df should not contain id column")
 
@@ -140,23 +140,23 @@ class Dwca(BaseDwca):
                 set(link_col).issubset(set(csv_content.index.names))):
             csv_content.reset_index(inplace=True, drop=True)
 
-        csv_content = csv_content.merge(core_df_content.loc[:, MetaDefaultFields.ID],
+        csv_content = csv_content.merge(core_df_content.loc[:, self.defaults_prop.MetaDefaultFields.ID],
                                         left_on=link_col,
                                         right_on=link_col, how='outer')
 
-        if MetaDefaultFields.ID in csv_content.columns.to_list():
-            unmatched_content = csv_content[csv_content[MetaDefaultFields.ID].isnull()]
-            unmatched_content = unmatched_content.drop(columns=[MetaDefaultFields.ID])
+        if self.defaults_prop.MetaDefaultFields.ID in csv_content.columns.to_list():
+            unmatched_content = csv_content[csv_content[self.defaults_prop.MetaDefaultFields.ID].isnull()]
+            unmatched_content = unmatched_content.drop(columns=[self.defaults_prop.MetaDefaultFields.ID])
             if len(unmatched_content) > 0:
                 log.info("There are orphaned keys in extension file")
                 pd.set_option("display.max_columns", 7)
                 pd.set_option('display.max_colwidth', 15)
                 pd.set_option('display.max_rows', 10)
                 log.info("\n%s", unmatched_content)
-            csv_content = csv_content[~csv_content[MetaDefaultFields.ID].isnull()]
-            col = csv_content.pop(MetaDefaultFields.ID)
+            csv_content = csv_content[~csv_content[self.defaults_prop.MetaDefaultFields.ID].isnull()]
+            col = csv_content.pop(self.defaults_prop.MetaDefaultFields.ID)
             csv_content.insert(0, col.name, col)
-            csv_content.rename(columns={MetaDefaultFields.ID: ext_core_id_field}, inplace=True)
+            csv_content.rename(columns={self.defaults_prop.MetaDefaultFields.ID: ext_core_id_field}, inplace=True)
             return csv_content, ext_core_id_field
         else:
             raise ValueError("Something is not right. The core id failed to be created")
@@ -207,8 +207,9 @@ class Dwca(BaseDwca):
         def _add_first_id_field_if_exists(meta_element: MetaElementAttributes):
             zero_index_exist = _find_fields_with_zero_idx(meta_element.fields)
             if meta_element.core_id and meta_element.core_id.index and not zero_index_exist:
-                return [MetaDefaultFields.ID] if meta_element.meta_element_type.core_or_ext_type == CoreOrExtType.CORE \
-                    else [MetaDefaultFields.CORE_ID]
+                return [self.defaults_prop.MetaDefaultFields.ID] if (
+                        meta_element.meta_element_type.core_or_ext_type == CoreOrExtType.CORE) \
+                    else [self.defaults_prop.MetaDefaultFields.CORE_ID]
             else:
                 return []
 
@@ -287,7 +288,7 @@ class Dwca(BaseDwca):
         :return: The updated content
         """
         # Extract columns that need updating, excluding self.keys and id
-        non_update_column = list(MetaDefaultFields)
+        non_update_column = list(self.defaults_prop.MetaDefaultFields)
         non_update_column.extend(keys)
         update_columns = [i for i in delta_df_content.columns.to_list()
                           if i not in non_update_column]
@@ -429,12 +430,13 @@ class Dwca(BaseDwca):
         :return: A data frame indexed by the `id` column that contains the
                 key elements for each record
         """
-        columns = [MetaDefaultFields.ID] if MetaDefaultFields.ID in core_content.columns.tolist() else []
+        columns = [self.defaults_prop.MetaDefaultFields.ID] \
+            if self.defaults_prop.MetaDefaultFields.ID in core_content.columns.tolist() else []
         if all(key in core_content.columns for key in keys):
             columns.extend(keys)
             df = core_content[columns]
-            if MetaDefaultFields.ID in core_content.columns.tolist():
-                df.set_index(MetaDefaultFields.ID, drop=True, inplace=True)
+            if self.defaults_prop.MetaDefaultFields.ID in core_content.columns.tolist():
+                df.set_index(self.defaults_prop.MetaDefaultFields.ID, drop=True, inplace=True)
         else:
             raise ValueError(f"Keys does not exist in core content {''.join(keys)}")
         return df
@@ -869,17 +871,17 @@ class Dwca(BaseDwca):
 
                 if not self.check_duplicates(keys_df, content.keys, error_file):
                     log.error("Validation failed for %s %s content for duplicates keys %s",
-                              content.meta_info.core_or_ext_type, content.meta_info.type, content.keys)
+                              content.meta_info.core_or_ext_type.value, content.meta_info.type, content.keys)
                     validation_content_success = False
 
                 if not self._validate_columns(content):
                     log.error("Validation failed for %s %s content for duplicate columns",
-                              content.meta_info.core_or_ext_type, content.meta_info.type)
+                              content.meta_info.core_or_ext_type.value, content.meta_info.type)
                     validation_content_success = False
 
                 if validation_content_success:
                     log.info("Validation successful for %s %s content for unique keys %s",
-                             content.meta_info.core_or_ext_type, content.meta_info.type, content.keys)
+                             content.meta_info.core_or_ext_type.value, content.meta_info.type, content.keys)
                 else:
                     validation_success = False
 

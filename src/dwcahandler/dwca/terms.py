@@ -16,7 +16,7 @@ log = log.getLogger("DwcaTerms")
 
 
 def absolute_file_paths(directory):
-    """Convert files in a directory into absolute paths and return
+    """Convert data in a directory into absolute paths and return
     as a generator
 
     :param directory: The directory to scan.
@@ -71,7 +71,7 @@ class Terms:
 
     GBIF_EXT = "https://rs.gbif.org/extensions.json"
 
-    GBIF_REGISTERED_EXTENSION = [e for e in GbifRegisteredExt]
+    GBIF_REGISTERED_EXTENSION = pd.DataFrame(columns=["prefix", "identifier", "namespace", "issued_date"])#[e for e in GbifRegisteredExt]
 
     DWC_SOURCE_URL = "https://raw.githubusercontent.com/tdwg/rs.tdwg.org/master/terms/terms.csv"
 
@@ -267,7 +267,7 @@ class Terms:
 
         log.info("Current class and terms")
 
-        exclude_update_prefixes = [NsPrefix.DC.value]
+        exclude_update_prefixes = [NsPrefix.DC.value, NsPrefix.DWC.value]
         terms = Terms()
         print(terms.class_df.groupby(["prefix"]).agg(
             class_prefix_count=pd.NamedAgg(column="prefix", aggfunc="count")
@@ -277,7 +277,7 @@ class Terms:
         ))
         terms.class_df = terms.class_df[terms.class_df.prefix.isin(exclude_update_prefixes)]
         terms.terms_df = terms.terms_df[terms.terms_df.prefix.isin(exclude_update_prefixes)]
-        terms.update_dwc_terms()
+        #terms.update_dwc_terms()
         terms.update_gbif_ext()
         terms.class_df = __sort_values(terms.class_df, "class")
         terms.terms_df = __sort_values(terms.terms_df, "term")
@@ -291,3 +291,5 @@ class Terms:
             term_prefix_count=pd.NamedAgg(column="prefix", aggfunc="count")
         ))
         return terms.terms_df, terms.class_df
+
+#Terms.update_terms()

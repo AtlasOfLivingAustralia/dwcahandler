@@ -5,7 +5,7 @@ from io import BytesIO
 import csv
 from dwcahandler import Eml
 from xml.dom.minidom import parseString
-from dwcahandler import MetaDwCA, MetaDefaultFields
+from dwcahandler import MetaDwCA, Defaults
 
 
 def get_eml_content():
@@ -25,7 +25,7 @@ def make_fields(columns: list, term_uri: str, field_start: int = 0, core_id: str
         idx_start = field_start if field_start != -2 else 0
 
     for idx, col in enumerate(columns):
-        if not (col in list(MetaDefaultFields)):
+        if not (col in list(Defaults.MetaDefaultFields)):
             dwc_term_uri = "http://rs.tdwg.org/dwc/terms" if col == 'occurrenceID' else term_uri
             fields = fields + '\n' + f'<field index="{str(idx + idx_start)}" term="{dwc_term_uri}/{col}"/>'
 

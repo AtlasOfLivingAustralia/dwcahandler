@@ -11,7 +11,7 @@ from xml.dom import minidom
 import re
 from dataclasses import dataclass, field
 from typing import Optional
-from dwcahandler.dwca import CSVEncoding, CoreOrExtType, Terms, MetaDefaultFields
+from dwcahandler.dwca import CSVEncoding, CoreOrExtType, Terms, Defaults
 from enum import Enum
 
 
@@ -72,7 +72,7 @@ class MetaElementAttributes:
 @dataclass
 class MetaDwCA:
     """Complete Metadata for a DwCA including dataset metadata and schema information"""
-    eml_xml_filename: str = field(default='eml.xml')
+    eml_xml_filename: str = field(default=Defaults.eml_xml_filename)
     dwca_meta: ET.Element = field(init=False)
     meta_elements: list[MetaElementAttributes] = field(default_factory=list, init=False)
 
@@ -89,10 +89,10 @@ class MetaDwCA:
 
         fields = node_elm.findall(f'{ns}field')
         id_field = []
-        if core_or_ext_type == 'core':
-            id_field = node_elm.findall(f'{ns}id')
+        if core_or_ext_type == CoreOrExtType.CORE:
+            id_field = node_elm.findall(f'{ns}{Defaults.MetaDefaultFields.ID}')
         else:
-            id_field = node_elm.findall(f'{ns}coreid')
+            id_field = node_elm.findall(f'{ns}{Defaults.MetaDefaultFields.CORE_ID}')
         file_name = node_elm.find(f'{ns}files').find(f'{ns}location').text
         meta_element_info = MetaElementInfo(
             core_or_ext_type=core_or_ext_type,
@@ -138,11 +138,11 @@ class MetaDwCA:
         tree = ET.parse(meta_file)
         root = tree.getroot()
         ns = self._get_namespace(root)
-        node_elm = root.find(f'{ns}{CoreOrExtType.CORE}')
+        node_elm = root.find(f"{ns}{CoreOrExtType.CORE.value}")
         self.meta_elements = [self.__extract_meta_info(ns, node_elm, CoreOrExtType.CORE)]
         self.meta_elements.extend(
             [self.__extract_meta_info(ns, ne, CoreOrExtType.EXTENSION)
-             for ne in root.findall(f'{ns}{CoreOrExtType.EXTENSION}')])
+             for ne in root.findall(f"{ns}{CoreOrExtType.EXTENSION.value}")])
 
     def remove_meta_elements(self, exts_to_remove):
         """Remove extension files from the metadata
@@ -211,7 +211,7 @@ class MetaDwCA:
 
         :param meta_elem_attrib: The meta information for the row
         """
-        elem = ET.SubElement(self.dwca_meta, meta_elem_attrib.meta_element_type.core_or_ext_type)
+        elem = ET.SubElement(self.dwca_meta, meta_elem_attrib.meta_element_type.core_or_ext_type.value)
         elem.attrib['encoding'] = meta_elem_attrib.meta_element_type.charset_encoding
         elem.attrib['rowType'] = meta_elem_attrib.meta_element_type.type.value
         elem.attrib['fieldsTerminatedBy'] = meta_elem_attrib.meta_element_type.csv_encoding.csv_delimiter
@@ -225,13 +225,13 @@ class MetaDwCA:
         location = ET.SubElement(files, 'location')
         location.text = meta_elem_attrib.meta_element_type.file_name
         if meta_elem_attrib.core_id:
-            id_field = ET.SubElement(elem, MetaDefaultFields.ID) \
-                if meta_elem_attrib.meta_element_type.core_or_ext_type == 'core' \
-                else ET.SubElement(elem, MetaDefaultFields.CORE_ID)
+            id_field = ET.SubElement(elem, Defaults.MetaDefaultFields.ID) \
+                if meta_elem_attrib.meta_element_type.core_or_ext_type == CoreOrExtType.CORE \
+                else ET.SubElement(elem, Defaults.MetaDefaultFields.CORE_ID)
             id_field.attrib['index'] = meta_elem_attrib.core_id.index
 
         for _, f in enumerate(meta_elem_attrib.fields):
-            if f.field_name not in list(MetaDefaultFields):
+            if f.field_name not in list(Defaults.MetaDefaultFields):
                 field_elem = ET.SubElement(elem, "field")
                 if f.index is not None:
                     field_elem.attrib['index'] = f.index
