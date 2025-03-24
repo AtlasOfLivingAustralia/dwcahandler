@@ -94,6 +94,7 @@ class MetaDwCA:
         else:
             id_field = node_elm.findall(f'{ns}{Defaults.MetaDefaultFields.CORE_ID}')
         file_name = node_elm.find(f'{ns}files').find(f'{ns}location').text
+        file_name = file_name.strip()
         meta_element_info = MetaElementInfo(
             core_or_ext_type=core_or_ext_type,
             type=get_meta_class_row_type(node_elm.attrib['rowType']),

@@ -27,7 +27,7 @@ class DwcaHandler:
             print(f"{name}: {member.value}")
 
     @staticmethod
-    def get_contents_from_file_names(files: list, csv_encoding: CSVEncoding,
+    def get_contents_from_file_names(files: list, csv_encoding: CSVEncoding = CSVEncoding(),
                                      content_keys: dict[MetaElementTypes, list] = None, zf: ZipFile = None) \
             -> (ContentData, list[ContentData]):
         """Find the core content and extension contents from a list of file paths.
@@ -44,7 +44,7 @@ class DwcaHandler:
             file_types = {}
             for file in file_list:
                 if (filename := Path(file).stem.upper()) in dict(MetaElementTypes.__members__.items()).keys():
-                    file_types[file] = dict(MetaElementTypes.__members__.items())[filename]
+                    file_types[file] = dict(MetaElementTypes.__members__.items())[str(filename)]
             return file_types
 
         contents = derive_type(files)
@@ -91,7 +91,9 @@ class DwcaHandler:
         :param content_keys: optional dictionary of MetaElementTypes and key list
                                       for eg. {MetaElementTypes.OCCURRENCE, ["occurrenceID"]}
         """
-        core_content, ext_content_list = DwcaHandler.get_contents_from_file_names(files=files, csv_encoding=csv_encoding)
+        core_content, ext_content_list = DwcaHandler.get_contents_from_file_names(files=files,
+                                                                                  csv_encoding=csv_encoding,
+                                                                                  content_keys=content_keys)
         DwcaHandler.create_dwca(core_csv=core_content, ext_csv_list=ext_content_list, output_dwca=output_dwca,
                                 eml_content=eml_content)
 
@@ -113,7 +115,10 @@ class DwcaHandler:
         """
         with ZipFile(zip_file, 'r') as zf:
             files = zf.namelist()
-            core_content, ext_content_list = DwcaHandler.get_contents_from_file_names(files=files, csv_encoding=csv_encoding, zf=zf)
+            core_content, ext_content_list = DwcaHandler.get_contents_from_file_names(files=files,
+                                                                                      csv_encoding=csv_encoding,
+                                                                                      content_keys=content_keys,
+                                                                                      zf=zf)
             DwcaHandler.create_dwca(core_csv=core_content, ext_csv_list=ext_content_list, output_dwca=output_dwca,
                                     eml_content=eml_content)
             zf.close()

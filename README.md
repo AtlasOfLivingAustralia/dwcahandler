@@ -176,24 +176,6 @@ eml = Eml(dataset_name='Test Dataset',
 DwcaHandler.create_dwca_from_zip_content(zip_file="/tmp/txt_files.zip",  eml_content=eml, output_dwca='/tmp/dwca.zip')
 ```
 &nbsp;
-* Convenient helper function to create Darwin Core Archive from list of csv files.
-* Class row types are determined by file names of the csvs.
-* If no content keys provided, the default keys are eventID for event content and occurrenceID for occurrence content
-* Delimiter for txt files are comma delimiter by default. For tab delimiter, supply CsvEncoding
-```python
-from dwcahandler import DwcaHandler
-from dwcahandler import Eml
-
-eml = Eml(dataset_name='Test Dataset',
-          description='Dataset description',
-          license='Creative Commons Attribution (International) (CC-BY 4.0 (Int) 4.0)',
-          citation="test citation",
-          rights="test rights")
-
-DwcaHandler.create_dwca_from_file_list(files=["/tmp/event.txt", "/tmp/occurrence.txt", "/tmp/measurement_or_fact.txt"], 
-                                       eml_content=eml, output_dwca='/tmp/dwca.zip')
-```
-&nbsp;
 * Merge Darwin Core Archive
 ```python
 from dwcahandler import DwcaHandler, MetaElementTypes

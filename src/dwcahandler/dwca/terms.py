@@ -15,19 +15,6 @@ log.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', l
 log = log.getLogger("DwcaTerms")
 
 
-def absolute_file_paths(directory):
-    """Convert data in a directory into absolute paths and return
-    as a generator
-
-    :param directory: The directory to scan.
-    :return: An absolute file path.
-    """
-    for dirpath, _, filenames in os.walk(directory):
-        for f in filenames:
-            if re.fullmatch(r'.+\..*', f):
-                yield os.path.abspath(str(os.path.join(dirpath, f)))
-
-
 class NsPrefix(Enum):
     """
     Enumeration of class or terms prefix
@@ -71,7 +58,7 @@ class Terms:
 
     GBIF_EXT = "https://rs.gbif.org/extensions.json"
 
-    GBIF_REGISTERED_EXTENSION = pd.DataFrame(columns=["prefix", "identifier", "namespace", "issued_date"])#[e for e in GbifRegisteredExt]
+    GBIF_REGISTERED_EXTENSION = [e for e in GbifRegisteredExt]
 
     DWC_SOURCE_URL = "https://raw.githubusercontent.com/tdwg/rs.tdwg.org/master/terms/terms.csv"
 
@@ -267,7 +254,7 @@ class Terms:
 
         log.info("Current class and terms")
 
-        exclude_update_prefixes = [NsPrefix.DC.value, NsPrefix.DWC.value]
+        exclude_update_prefixes = [NsPrefix.DC.value]
         terms = Terms()
         print(terms.class_df.groupby(["prefix"]).agg(
             class_prefix_count=pd.NamedAgg(column="prefix", aggfunc="count")
@@ -277,7 +264,7 @@ class Terms:
         ))
         terms.class_df = terms.class_df[terms.class_df.prefix.isin(exclude_update_prefixes)]
         terms.terms_df = terms.terms_df[terms.terms_df.prefix.isin(exclude_update_prefixes)]
-        #terms.update_dwc_terms()
+        terms.update_dwc_terms()
         terms.update_gbif_ext()
         terms.class_df = __sort_values(terms.class_df, "class")
         terms.terms_df = __sort_values(terms.terms_df, "term")
@@ -291,5 +278,3 @@ class Terms:
             term_prefix_count=pd.NamedAgg(column="prefix", aggfunc="count")
         ))
         return terms.terms_df, terms.class_df
-
-#Terms.update_terms()
