@@ -5,8 +5,8 @@ import pandas as pd
 import logging as log
 from urllib.parse import urlparse
 from urllib.request import urlopen
+import numpy as np
 from enum import Enum
-from typing import NamedTuple
 import requests
 
 this_dir, this_filename = os.path.split(__file__)
@@ -14,40 +14,24 @@ this_dir, this_filename = os.path.split(__file__)
 log.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=log.DEBUG)
 log = log.getLogger("DwcaTerms")
 
-
-class NsPrefix(Enum):
-    """
-    Enumeration of class or terms prefix
-    """
-    DWC = "dwc"
-    DC = "dc"
-    GBIF = "gbif"
-    OBIS = "obis"
-    AC = "ac"
+TERMS_DIR = os.path.join(this_dir, "terms")
+REGISTER_FILENAME = "extension_register.csv"
+EXTENSION_REGISTER_PATH = os.path.join(TERMS_DIR, REGISTER_FILENAME)
 
 
-class ExtInfo(NamedTuple):
+def get_ns_prefix():
     """
-    Extension info
+    This is called by the prefix enumeration list
     """
-    uri: str
-    prefix: NsPrefix
-    namespace: str
+    df = pd.read_csv(EXTENSION_REGISTER_PATH)
+    df = pd.DataFrame(df["prefix"], columns=["prefix"])
+    df = df.drop_duplicates()
+    df.loc[df.index.max() + 1] = "dc"  # Add dc prefix
+    ns_list = list(tuple(zip(df["prefix"].str.upper(), df["prefix"])))
+    return ns_list
 
 
-class GbifRegisteredExt(ExtInfo, Enum):
-    """
-    Supported Gbif extensions. Add more extensions to expand the class row type and terms
-    """
-    SIMPLE_MULTIMEDIA = ExtInfo(uri="http://rs.gbif.org/terms/1.0/Multimedia",
-                                prefix=NsPrefix.GBIF,
-                                namespace="http://rs.gbif.org/terms/1.0/")
-    EXTENDED_MEASUREMENT_OR_FACT = ExtInfo(uri="http://rs.iobis.org/obis/terms/ExtendedMeasurementOrFact",
-                                           prefix=NsPrefix.OBIS,
-                                           namespace="http://rs.iobis.org/obis/terms/")
-    # AC_MULTIMEDIA = ExtInfo(uri="http://rs.tdwg.org/ac/terms/Multimedia",
-    #                        prefix=NsPrefix.AC,
-    #                        namespace="http://rs.tdwg.org/ac/terms/")
+NsPrefix = Enum("NsPrefix", dict(get_ns_prefix()))
 
 
 @dataclass
@@ -58,14 +42,13 @@ class Terms:
 
     GBIF_EXT = "https://rs.gbif.org/extensions.json"
 
-    GBIF_REGISTERED_EXTENSION = [e for e in GbifRegisteredExt]
+    GBIF_REGISTERED_EXTENSION = pd.DataFrame()
 
     DWC_SOURCE_URL = "https://raw.githubusercontent.com/tdwg/rs.tdwg.org/master/terms/terms.csv"
 
     TERMS_FILENAME = "terms.csv"
     CLASS_ROW_TYPE = "class-rowtype.csv"
 
-    TERMS_DIR = os.path.join(this_dir, "terms")
     TERMS_FILE_PATH = os.path.join(TERMS_DIR, TERMS_FILENAME)
     CLASS_ROW_TYPE_PATH = os.path.join(TERMS_DIR, CLASS_ROW_TYPE)
 
@@ -76,9 +59,10 @@ class Terms:
         self.terms_df = pd.read_csv(Terms.TERMS_FILE_PATH, dtype='str')
         self.class_df = pd.read_csv(Terms.CLASS_ROW_TYPE_PATH, dtype='str')
 
-    def _update_class_df(self, ns: NsPrefix, updates: pd.DataFrame):
+    def _update_class_df(self, ns, updates: pd.DataFrame):
         """
-        Update class rowtype by replacing all the rows by prefix.
+        Only updates class rowtypes if it's not in the current class rowtype.
+        This is to ensure the existing enum names stays intact (used by MetaElementType enums)
 
         :param ns: Name prefix
         :param updates: dataframe containing the class rows to update
@@ -90,15 +74,18 @@ class Terms:
             return class_term
 
         if len(updates) > 0 and "class_uri" in updates.columns.tolist():
-            updates.insert(0, "class",
-                           updates["class_uri"].apply(
-                               lambda x: f"{__get_class_term(self.class_df, x, ns.value)}"))
-            updates["prefix"] = ns.value
-            return self._update_df(ns, updates, self.class_df)
+            updates = updates[(~updates["class_uri"].isin(self.class_df["class_uri"]))]
+
+            if len(updates) > 0:
+                updates.insert(0, "class",
+                               updates["class_uri"].apply(
+                                   lambda x: f"{__get_class_term(self.class_df, x, ns.value)}"))
+                updates["prefix"] = ns.value
+                return self._update_df(ns, updates, self.class_df)
 
         return self.class_df
 
-    def _update_df(self, ns: NsPrefix, updates: pd.DataFrame, df: pd.DataFrame):
+    def _update_df(self, ns, updates: pd.DataFrame, df: pd.DataFrame):
         """
         Update class row type or terms by replacing all the rows by prefix.
 
@@ -164,11 +151,12 @@ class Terms:
         """
         path_entity = urlparse(term_string)
         path_str = path_entity.path
+        fragment = path_entity.fragment
         match = re.search(r'/([^/]*)$', path_str)
         if match is not None:
             term = match[1]
-            word = re.sub(pattern="(?!^)([A-Z])", repl=r"_\1", string=term) if add_underscore else term
-            return word
+            word = re.sub(pattern="(?!^)(?<![DNA])([A-Z])", repl=r"_\1", string=term) if add_underscore else term
+            return f"{word}_{fragment}" if fragment else word
 
         return term_string
 
@@ -196,7 +184,7 @@ class Terms:
 
         def _extract_term_info(every_term: tuple) -> list:
             def _extract_value(text: str):
-                return text.replace('\\', "").\
+                return text.replace("\\n", "").replace('\\', ""). \
                             replace('"', "").replace("'", "").split("=")[1]
 
             term_name = _extract_value(every_term[0])
@@ -205,11 +193,24 @@ class Terms:
 
             return [term_name, namespace, uri]
 
-        for supported_ext in Terms.GBIF_REGISTERED_EXTENSION:
-            url = _get_latest(supported_ext.uri)
+        def _get_NsPrefix(val: str):
+            prefix = [p for p in NsPrefix if p.value == val]
+            if len(prefix) > 0:
+                return prefix[0]
+            else:
+                return None
+
+        gbif_registered_ext = pd.read_csv(EXTENSION_REGISTER_PATH)
+        # gbif_registered_ext = pd.DataFrame(data={'url': ["http://rs.gbif.org/extension/gbif/1.0/dna_derived_data_2024-07-11.xml"],
+        #                                         "identifier": ["http://rs.gbif.org/terms/1.0/DNADerivedData"],
+        #                                         "prefix": ["gbif"]})
+
+        for index, supported_ext in gbif_registered_ext.iterrows():
+            url = supported_ext["url"]
+            prefix = _get_NsPrefix(supported_ext["prefix"])
             if url:
-                update_class = pd.DataFrame([supported_ext.uri], columns=["class_uri"])
-                self.class_df = self._update_class_df(supported_ext.prefix, update_class)
+                update_class = pd.DataFrame([supported_ext["identifier"]], columns=["class_uri"])
+                self.class_df = self._update_class_df(prefix, update_class)
 
                 with urlopen(url) as f:
 
@@ -230,8 +231,8 @@ class Terms:
                         log.info("Additional standard terms found:\n%s", extra_terms_df)
                     new_terms = df[~df["uri"].isin(existing_terms["uri"])].copy()
                     if len(new_terms) > 0:
-                        new_terms.loc[:, "prefix"] = supported_ext.prefix.value
-                        self.terms_df = self._update_df(supported_ext.prefix, new_terms, self.terms_df)
+                        new_terms.loc[:, "prefix"] = prefix.value
+                        self.terms_df = self._update_df(prefix, new_terms, self.terms_df)
 
     @staticmethod
     def update_terms():
@@ -254,15 +255,15 @@ class Terms:
 
         log.info("Current class and terms")
 
-        exclude_update_prefixes = [NsPrefix.DC.value]
         terms = Terms()
+        exclude_update_prefixes = [NsPrefix.DC.value]
+
         print(terms.class_df.groupby(["prefix"]).agg(
             class_prefix_count=pd.NamedAgg(column="prefix", aggfunc="count")
         ))
         print(terms.terms_df.groupby(["prefix"]).agg(
             term_prefix_count=pd.NamedAgg(column="prefix", aggfunc="count")
         ))
-        terms.class_df = terms.class_df[terms.class_df.prefix.isin(exclude_update_prefixes)]
         terms.terms_df = terms.terms_df[terms.terms_df.prefix.isin(exclude_update_prefixes)]
         terms.update_dwc_terms()
         terms.update_gbif_ext()
@@ -278,3 +279,35 @@ class Terms:
             term_prefix_count=pd.NamedAgg(column="prefix", aggfunc="count")
         ))
         return terms.terms_df, terms.class_df
+
+    @staticmethod
+    def update_register():
+        """
+        terms = Terms()
+        import numpy as np
+        """
+        def _extract_prefix(url_col, identifier_col):
+            def __def_extract_path(str_val):
+                p = urlparse(str_val)
+                return p.path
+            path_str = __def_extract_path(url_col)
+            test = re.search("/extension/(.*)/.*", path_str)
+            if test:
+                return test.group(1).replace("/1.0", "")
+            else:
+                test = re.search("/(core)/.*", path_str)
+                if test and test.group(1):
+                    return "dwc"
+            path_str = __def_extract_path(identifier_col)
+            test = re.search("/(dwc)/.*", path_str)
+            if test:
+                return test.group(1)
+            return None
+
+        d = requests.get(Terms.GBIF_EXT).json()
+        gbif_ext_df = pd.DataFrame.from_dict(d["extensions"])
+        gbif_ext_df = gbif_ext_df[gbif_ext_df["isLatest"]]
+        gbif_ext_df = gbif_ext_df[~(gbif_ext_df["title"] + gbif_ext_df["description"]).str.contains("deprecate", case=False)]
+        # Note: Search url first so that urls like http://rs.gbif.org/extension/dwc/ChronometricAge_2024-03-11.xml results in prefix dwc
+        gbif_ext_df["prefix"] = np.vectorize(_extract_prefix)(gbif_ext_df["url"], gbif_ext_df["identifier"])
+        gbif_ext_df.to_csv(EXTENSION_REGISTER_PATH, index=False)
