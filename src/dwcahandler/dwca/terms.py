@@ -139,6 +139,8 @@ class Terms:
         if len(dwc_class_df) > 0:
             self.class_df = self._update_class_df(NsPrefix.DWC, dwc_class_df)
 
+        return self.terms_df, self.class_df
+
     @staticmethod
     def extract_term(term_string, add_underscore: bool = False):
         """
@@ -173,30 +175,21 @@ class Terms:
         """
         Update the class row type and terms specified by GBIF_REGISTERED_EXTENSION and update by prefix
         """
-        def _get_latest(identifier: str):
-            d = requests.get(Terms.GBIF_EXT).json()
-            gbif_ext_df = pd.DataFrame.from_dict(d["extensions"])
-            ext_df = gbif_ext_df[(gbif_ext_df["identifier"] == identifier) & (gbif_ext_df["isLatest"])]
-            url: str = ""
-            if len(ext_df) > 0 and "url" in ext_df.columns.tolist():
-                url = ext_df["url"].values[0]
-            return url
-
-        def _extract_term_info(every_term: tuple) -> list:
+        def _extract_term_info(current_term: tuple) -> list:
             def _extract_value(text: str):
                 return text.replace("\\n", "").replace('\\', ""). \
                             replace('"', "").replace("'", "").split("=")[1]
 
-            term_name = _extract_value(every_term[0])
-            namespace = _extract_value(every_term[1])
-            uri = _extract_value(every_term[2])
+            term_name = _extract_value(current_term[0])
+            namespace = _extract_value(current_term[1])
+            uri = _extract_value(current_term[2])
 
             return [term_name, namespace, uri]
 
-        def _get_NsPrefix(val: str):
-            prefix = [p for p in NsPrefix if p.value == val]
-            if len(prefix) > 0:
-                return prefix[0]
+        def _get_ns_prefix(val: str):
+            ns_prefix = [p for p in NsPrefix if p.value == val]
+            if len(ns_prefix) > 0:
+                return ns_prefix[0]
             else:
                 return None
 
@@ -207,7 +200,7 @@ class Terms:
 
         for index, supported_ext in gbif_registered_ext.iterrows():
             url = supported_ext["url"]
-            prefix = _get_NsPrefix(supported_ext["prefix"])
+            prefix = _get_ns_prefix(supported_ext["prefix"])
             if url:
                 update_class = pd.DataFrame([supported_ext["identifier"]], columns=["class_uri"])
                 self.class_df = self._update_class_df(prefix, update_class)
@@ -233,6 +226,8 @@ class Terms:
                     if len(new_terms) > 0:
                         new_terms.loc[:, "prefix"] = prefix.value
                         self.terms_df = self._update_df(prefix, new_terms, self.terms_df)
+
+        return self.terms_df, self.class_df
 
     @staticmethod
     def update_terms():
