@@ -38,3 +38,4 @@ ggbn,PERMIT,http://data.ggbn.org/schemas/ggbn/terms/Permit
 ggbn,PREPARATION,http://data.ggbn.org/schemas/ggbn/terms/Preparation
 ggbn,PRESERVATION,http://data.ggbn.org/schemas/ggbn/terms/Preservation
 obis,EXTENDED_MEASUREMENT_OR_FACT,http://rs.iobis.org/obis/terms/ExtendedMeasurementOrFact
+test
