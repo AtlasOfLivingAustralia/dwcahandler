@@ -1,0 +1,72 @@
+
+name: Check for dwc terms
+on:
+  workflow_dispatch:
+    branches: [ "feature/events" ]
+#on:
+#  schedule:
+#    - cron: '0 0 1 * *'
+jobs:
+  updateterms:
+    runs-on: ubuntu-latest
+    outputs:
+      file-diff1: ${{ steps.check-file-diff-steps.outputs.file-diff1 }}
+      file-diff2: ${{ steps.check-file-diff-steps.outputs.file-diff2 }}
+      file-diff3: ${{ steps.check-file-diff-steps.outputs.file-diff3 }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+      - name: Call script to update terms
+        run: |
+          cd ${{ github.workspace }}
+          poetry run update-terms
+          # cat __init__.py
+          # echo test >> __init__.py
+          # echo test1 >> test2.txt
+          # cat __init__.py
+      - id: check-file-diff-step
+        name: Check file diff
+        run: |
+          echo ${{ github.workspace }}
+          cd ${{ github.workspace }}/src/dwcahandler/dwca/terms
+          diff1=$(git diff --name-only extension-register.csv)
+          echo $diff1
+          diff2=$(git diff --name-only class-rowtype.csv)
+          echo $diff2
+          diff3=$(git diff --name-only terms.csv)
+          echo $diff3
+          {
+            echo "file-diff1=$diff1"
+            echo "file-diff2=$diff2"
+            echo "file-diff3=$diff3"
+           } >> $GITHUB_OUTPUT
+      - name: Create pull request
+        if: ${{ (steps.check-file-diff-step.outputs.file-diff1 != '') || 
+                (steps.check-file-diff-step.outputs.file-diff2 != '') ||
+                (steps.check-file-diff-step.outputs.file-diff3 != '') }}
+        run: |
+          # echo "NOW=$(date +'%Y-%m-%dT%H:%M:%S')"
+          # echo $NOW
+          git checkout -b gbif-extension-update
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          cd ${{ github.workspace }}/src/dwcahandler/dwca/terms
+          if [ ${{ steps.check-file-diff-step.outputs.file-diff1 }} != '' ]
+          then
+            git commit -m "New updates from gbif extensions updates" extension-register.csv
+          fi
+          if [ ${{ steps.check-file-diff-step.outputs.file-diff2 }} != '' ]
+          then
+            git commit -m "New updates from gbif extensions updates" class-rowtype.csv
+          fi
+          if [ ${{ steps.check-file-diff-step.outputs.file-diff3 }} != '' ]
+          then
+            git commit -m "New updates from gbif extensions updates" terms.csv
+          fi          
+          git push origin gbif-extension-update
+          gh pr create -H gbif-extension-update -B main --title 'New updates to gbif extension' --body 'Created by Github action'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -75,8 +75,8 @@ print(df_terms, df_class)
 ```python 
 from dwcahandler import MetaElementTypes
 
-MetaElementTypes.OCCURRENCE
-MetaElementTypes.MULTIMEDIA
+print(MetaElementTypes.OCCURRENCE)
+print(MetaElementTypes.MULTIMEDIA)
 ```
 
 To list all the class rowtypes

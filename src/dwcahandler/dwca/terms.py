@@ -15,7 +15,7 @@ log.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', l
 log = log.getLogger("DwcaTerms")
 
 TERMS_DIR = os.path.join(this_dir, "terms")
-REGISTER_FILENAME = "extension_register.csv"
+REGISTER_FILENAME = "extension-register.csv"
 EXTENSION_REGISTER_PATH = os.path.join(TERMS_DIR, REGISTER_FILENAME)
 
 
@@ -153,12 +153,15 @@ class Terms:
         """
         path_entity = urlparse(term_string)
         path_str = path_entity.path
-        fragment = path_entity.fragment
-        match = re.search(r'/([^/]*)$', path_str)
-        if match is not None:
-            term = match[1]
-            word = re.sub(pattern="(?!^)(?<![DNA])([A-Z])", repl=r"_\1", string=term) if add_underscore else term
-            return f"{word}_{fragment}" if fragment else word
+        if path_str:
+            fragment = path_entity.fragment
+            match = re.search(r'/([^/]*)$', path_str)
+            if match is not None:
+                term = match[1]
+                word = re.sub(pattern="(?!^)(?<![DNA])([A-Z])", repl=r"_\1", string=term) if add_underscore else term
+                return f"{word}_{fragment}" if fragment else word
+        else:
+            raise ValueError("Error reading from meta xml. This is caused by empty term in the meta xml")
 
         return term_string
 
@@ -278,8 +281,7 @@ class Terms:
     @staticmethod
     def update_register():
         """
-        terms = Terms()
-        import numpy as np
+        Register to keep a snapshot of the gbif extensions plus all the issue dates.
         """
         def _extract_prefix(url_col, identifier_col):
             def __def_extract_path(str_val):
