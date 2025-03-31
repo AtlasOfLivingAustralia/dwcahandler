@@ -21,6 +21,10 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.9"
+      - name: Install project dependencies
+        run: |
+          python -m pip install poetry
+          poetry install
       - name: Call script to update terms
         run: |
           cd ${{ github.workspace }}
