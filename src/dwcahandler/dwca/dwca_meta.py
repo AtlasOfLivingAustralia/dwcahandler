@@ -244,7 +244,7 @@ class MetaDwCA:
                     field_elem.attrib['default'] = f.default
 
     def create(self):
-        """Create a `meta.xml` file for this meta-infomation
+        """Create a `meta.xml` file for this meta-information
         """
         self.dwca_meta.attrib['xmlns'] = 'http://rs.tdwg.org/dwc/text/'
         self.dwca_meta.attrib['metadata'] = self.eml_xml_filename
