@@ -255,7 +255,7 @@ class Terms:
 
         terms = Terms()
         exclude_update_prefixes = [NsPrefix.DC.value]
-
+        print("Here is what we have before update: ")
         print(terms.class_df.groupby(["prefix"]).agg(
             class_prefix_count=pd.NamedAgg(column="prefix", aggfunc="count")
         ))
@@ -269,7 +269,7 @@ class Terms:
         terms.terms_df = __sort_values(terms.terms_df, "term")
         terms.class_df.to_csv(Terms.CLASS_ROW_TYPE_PATH, index=False)
         terms.terms_df.to_csv(Terms.TERMS_FILE_PATH, index=False)
-
+        print("Here is what we have after update: ")
         print(terms.class_df.groupby(["prefix"]).agg(
             class_prefix_count=pd.NamedAgg(column="prefix", aggfunc="count")
         ))

@@ -38,6 +38,9 @@ jobs:
         run: |
           echo ${{ github.workspace }}
           cd ${{ github.workspace }}/src/dwcahandler/dwca/terms
+          echo test >> extension-register.csv
+          echo test >> class-rowtype.csv
+          echo test >> terms.csv
           diff1=$(git diff --name-only extension-register.csv)
           echo $diff1
           diff2=$(git diff --name-only class-rowtype.csv)
