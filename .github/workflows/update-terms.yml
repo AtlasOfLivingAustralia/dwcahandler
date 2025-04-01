@@ -2,12 +2,8 @@
 name: Check for dwc terms
 on:
   workflow_dispatch: {}
-  push:
-    branches:
-      - 'feature/events'
-#on:
-#  schedule:
-#    - cron: '0 0 1 * *'
+  schedule:
+    - cron: '0 0 15 * *'
 jobs:
   updateterms:
     runs-on: ubuntu-latest
