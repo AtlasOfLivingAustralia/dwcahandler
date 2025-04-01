@@ -711,3 +711,4 @@ ggbn,weightUnit,http://data.ggbn.org/schemas/ggbn/terms/weightUnit
 obis,measurementTypeID,http://rs.iobis.org/obis/terms/measurementTypeID
 obis,measurementUnitID,http://rs.iobis.org/obis/terms/measurementUnitID
 obis,measurementValueID,http://rs.iobis.org/obis/terms/measurementValueID
+test
