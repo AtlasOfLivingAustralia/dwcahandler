@@ -171,7 +171,7 @@ class BaseDwca(metaclass=ABCMeta):
         """Merging another dwca to bring in the new records and update the existing records
 
         :param delta_dwca: delta dwca that contains the updated or new records
-        :param output_dwca: output dwca containing the path to the physical file and the output of dwca writen in memory
+        :param output_dwca: output dwca containing the path to the physical file and the output of dwca written in memory
         :param keys_lookup: keys to lookup merging with delta_dwca to update content
         :param extension_sync:
         :param validate_delta:
