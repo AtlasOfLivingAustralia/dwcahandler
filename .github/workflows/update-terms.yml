@@ -34,9 +34,6 @@ jobs:
         run: |
           echo ${{ github.workspace }}
           cd ${{ github.workspace }}/src/dwcahandler/dwca/terms
-          echo test >> extension-register.csv
-          echo test >> class-rowtype.csv
-          echo test >> terms.csv
           diff1=$(git diff --name-only extension-register.csv)
           echo $diff1
           diff2=$(git diff --name-only class-rowtype.csv)
@@ -75,6 +72,6 @@ jobs:
             CHANGEDFILES="$CHANGEDFILES ${{ steps.check-file-diff-step.outputs.file-diff3 }} "          
           fi          
           git push origin $BRANCH
-          gh pr create -H $BRANCH -B main --title "New updates to gbif extension on $BRANCH-NAME" --body "$CHANGEDFILES"
+          gh pr create -H $BRANCH -B main --title "New updates to gbif extension on $BRANCH" --body "$CHANGEDFILES"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
