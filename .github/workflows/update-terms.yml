@@ -53,28 +53,28 @@ jobs:
                 (steps.check-file-diff-step.outputs.file-diff2 != '') ||
                 (steps.check-file-diff-step.outputs.file-diff3 != '') }}
         run: |
-          echo "BRANCH-NAME=gbif-extension-update-$(date +'%Y-%m-%dT%H:%M:%S')"
-          git checkout -b "$BRANCH-NAME"
+          echo "BRANCH=gbif-extension-update-$(date +'%Y-%m-%dT%H:%M:%S')"
+          git checkout -b "$BRANCH"
           git config user.name github-actions
           git config user.email github-actions@github.com
           cd ${{ github.workspace }}/src/dwcahandler/dwca/terms
-          CHANGED-FILES="Please review the changes to the following files: "
+          CHANGEDFILES="Please review the changes to the following files: "
           if [ ${{ steps.check-file-diff-step.outputs.file-diff1 }} != '' ]
           then
             git commit -m "New updates from gbif extensions updates" extension-register.csv
-            CHANGED-FILES="$CHANGED-FILES ${{ steps.check-file-diff-step.outputs.file-diff1 }} "
+            CHANGEDFILES="$CHANGEDFILES ${{ steps.check-file-diff-step.outputs.file-diff1 }} "
           fi
           if [ ${{ steps.check-file-diff-step.outputs.file-diff2 }} != '' ]
           then
             git commit -m "New updates from gbif extensions updates" class-rowtype.csv
-            CHANGED-FILES="$CHANGED-FILES ${{ steps.check-file-diff-step.outputs.file-diff2 }} "
+            CHANGEDFILES="$CHANGEDFILES ${{ steps.check-file-diff-step.outputs.file-diff2 }} "
           fi
           if [ ${{ steps.check-file-diff-step.outputs.file-diff3 }} != '' ]
           then
             git commit -m "New updates from gbif extensions updates" terms.csv
-            CHANGED-FILES="$CHANGED-FILES ${{ steps.check-file-diff-step.outputs.file-diff3 }} "          
+            CHANGEDFILES="$CHANGEDFILES ${{ steps.check-file-diff-step.outputs.file-diff3 }} "          
           fi          
-          git push origin $BRANCH-NAME
-          gh pr create -H $BRANCH-NAME -B main --title "New updates to gbif extension on $BRANCH-NAME" --body "$CHANGED-FILES"
+          git push origin $BRANCH
+          gh pr create -H $BRANCH -B main --title "New updates to gbif extension on $BRANCH-NAME" --body "$CHANGEDFILES"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
