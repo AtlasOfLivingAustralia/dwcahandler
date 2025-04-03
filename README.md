@@ -27,9 +27,9 @@ poetry shell
 poetry install
 ```
 
-* To update the darwin core terms supported in dwcahandler package
+* To import the darwin core and all the gbif extensions class row types and terms into dwcahandler
 ```bash
-poetry run update-dwc-terms
+poetry run update-terms
 ```
 &nbsp;
 ### Build
@@ -55,8 +55,9 @@ To install published package from testpypi
 pip install -i https://test.pypi.org/simple/ dwcahandler
 ```
 &nbsp;
-### Supported extensions that have been tested in ALA:
-* Standard Darwin Core Terms and Class
+### DwcaHandler is currently supporting the latest gbif extensions. 
+### DwCA with the following extensions that have been ingested and tested in ALA are:
+* Darwin Core Terms and Class RowTypes
 * Simple Multimedia https://rs.gbif.org/extension/gbif/1.0/multimedia.xml
 * Extended Measurement Or Fact http://rs.iobis.org/obis/terms/ExtendedMeasurementOrFact
 
@@ -79,7 +80,7 @@ print(MetaElementTypes.OCCURRENCE)
 print(MetaElementTypes.MULTIMEDIA)
 ```
 
-To list all the class rowtypes
+To list all the Class Rowtypes
 ```python
 from dwcahandler import DwcaHandler
 
