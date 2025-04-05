@@ -217,8 +217,8 @@ class Dwca(BaseDwca):
 
             files = zf.namelist()
 
-            log.info("Reading from %s", self.dwca_file_loc)
-
+            log.info("Reading from %s. Zip file size is %i, containing files: %s",
+                     self.dwca_file_loc, zf.start_dir, ",".join(zf.namelist()))
             with io.TextIOWrapper(zf.open(self.defaults_prop.meta_xml_filename)) as meta_xml:
                 self.meta_content.read_meta_file(meta_xml)
                 meta_xml.close()
@@ -991,8 +991,9 @@ class Dwca(BaseDwca):
             if self.eml_content:
                 dwca_zip.writestr(self.defaults_prop.eml_xml_filename, self.eml_content)
             self._write_associated_files(dwca_zip=dwca_zip)
+            log.info("Dwca zip file created in %s: size %i, containing files: %s",
+                     output_dwca, dwca_zip.start_dir, ",".join(dwca_zip.namelist()))
             dwca_zip.close()
-        log.info("Dwca written to: %s", output_dwca)
 
     def _read_csv(self,
                   csv_file: Union[str, io.TextIOWrapper],
