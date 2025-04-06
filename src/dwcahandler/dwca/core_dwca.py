@@ -482,11 +482,11 @@ class Dwca(BaseDwca):
     def _delete_content(self, content, delete_content):
         """Delete
 
-        :param content: The existing data frame
-        :param delete_content: The data frame to delete
-        :return: The data frame with the list of deletions removed
+        :param content: The existing data frame where the records need to be deleted
+        :param delete_content: The data frame containing the keys
+        :return: The data frame with the records removed
         """
-        content = self._filter_content(delete_content, content.df_content)
+        content = content.df_content[~content.df_content.index.isin(delete_content.index)]
         return content
 
     def delete_records(self, records_to_delete: ContentData):
@@ -982,6 +982,11 @@ class Dwca(BaseDwca):
 
         :param output_dwca: The file path to write the .zip file to or dwca in memory
         """
+        # Make sure that the memory that's being overwritten is r
+        if isinstance(output_dwca, BytesIO):
+            output_dwca.flush()
+            output_dwca.truncate(0)
+            output_dwca.seek(0)
         with ZipFile(output_dwca, 'w', allowZip64=True,
                      compression=zipfile.ZIP_DEFLATED) as dwca_zip:
             self._write_df_content_to_zip_file(dwca_zip=dwca_zip, content=self.core_content)
