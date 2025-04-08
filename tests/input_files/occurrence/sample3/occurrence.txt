@@ -1,0 +1,7 @@
+institutionCode,collectionCode,catalogNumber,scientificName,decimalLatitude,decimalLongitude,basisOfRecord
+IA,CA,CA-1,Species A,-36.0000,150.5678,PreservedSpecimen
+IA,CA,CA-2,Species A-1,-20.0000,145.1234,PreservedSpecimen
+IA,CA,CA-3,Species A-2,-20.0000,146.1234,PreservedSpecimen
+IA,CB,CB-1,Species C,-20.00000,150.4567,PreservedSpecimen
+IA,CB,CB-2,Species C,-20.00000,150.4567,PreservedSpecimen
+IA,CC,CC-1,Species D,-30.20000,150.0123,PreservedSpecimen

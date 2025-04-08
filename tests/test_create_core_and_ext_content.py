@@ -4,22 +4,24 @@ from operator import attrgetter
 import pytest
 import pandas as pd
 from pandas import testing as pdtest
-from dwcahandler.dwca import CSVEncoding, CsvFileType, CoreOrExtType, MetaElementTypes
+from dwcahandler.dwca import CSVEncoding, ContentData, CoreOrExtType, MetaElementTypes
 from dwcahandler.dwca.core_dwca import Dwca
 
 
-single_csv_occ_test = {"file_paths": ['./input_files/occurrence/occ_file1.csv'],
+single_csv_occ_test = {"file_paths": ['./input_files/sample/occurrence/occ_file1.csv'],
                        "delimiter": ","}
-multiple_csv_occ_test = {"file_paths": glob.glob(os.path.join("./input_files/occurrence", "*.csv")),
+multiple_csv_occ_test = {"file_paths": glob.glob(os.path.join("input_files/sample/occurrence", "*.csv")),
                          "delimiter": ","}
-multiple_tsv_occ_test = {"file_paths": glob.glob(os.path.join("./input_files/occurrence", "*.tsv")),
+multiple_tsv_occ_test = {"file_paths": glob.glob(os.path.join("input_files/sample/occurrence", "*.tsv")),
                          "delimiter": "\t"}
 duplicates_csv_occ_test = {"file_paths": single_csv_occ_test["file_paths"] + multiple_csv_occ_test["file_paths"],
                            "delimiter": ","}
-csv_occ_with_space = {"file_paths": ['./input_files/occurrence/occ_file1.csv', './input_files/sample/occ_header_with_space.csv'],
-                       "delimiter": ","}
-multimedia_with_space = {"file_paths": ['./input_files/multimedia/multimedia_file.csv', './input_files/sample/multimedia_header_with_space.csv'],
+csv_occ_with_space = {"file_paths": ['./input_files/sample/occurrence/occ_file1.csv',
+                                     './input_files/sample/occ_header_with_space.csv'],
                       "delimiter": ","}
+multimedia_with_space = {"file_paths": ['./input_files/sample/multimedia/multimedia_file.csv',
+                                        './input_files/sample/multimedia_header_with_space.csv'],
+                         "delimiter": ","}
 
 
 def get_expected_combined_occ_df(file_paths: list, keys: list, delimiter: str = ","):
@@ -28,14 +30,13 @@ def get_expected_combined_occ_df(file_paths: list, keys: list, delimiter: str = 
     for df in dfs:
         all_records_df = pd.concat([all_records_df, df], ignore_index=True)
     all_records_df.drop_duplicates(inplace=True)
-    all_records_df.set_index(keys=keys, drop=False, inplace=True)
     return all_records_df
 
 
 @pytest.fixture
 def test_case(request):
-    yield {"file_type": CsvFileType(files=request.param["file_paths"],
-                                    type='occurrence',
+    yield {"file_type": ContentData(data=request.param["file_paths"],
+                                    type=MetaElementTypes.OCCURRENCE,
                                     keys=['catalogNumber'],
                                     csv_encoding=CSVEncoding(csv_delimiter=request.param["delimiter"])),
            "expected_result": get_expected_combined_occ_df(file_paths=request.param["file_paths"],
@@ -68,8 +69,8 @@ class TestExtractData:
                                          core_ext_type=CoreOrExtType.CORE)
 
         # Drop id field from testing
-        pd.testing.assert_frame_equal(dwca_creator.core_content.df_content.drop(
-                                        columns=['id']), test_case['expected_result'])
+        pd.testing.assert_frame_equal(left=dwca_creator.core_content.df_content.reset_index(drop=True),
+                                      right=test_case['expected_result'].reset_index(drop=True))
 
         meta_columns = list(map(attrgetter('field_name'),
                                 dwca_creator.meta_content.meta_elements[0].fields))
@@ -77,7 +78,7 @@ class TestExtractData:
         assert dwca_creator.core_content.df_content.columns.to_list() == meta_columns
 
         assert (dwca_creator.meta_content.meta_elements[0].meta_element_type.type ==
-                MetaElementTypes.get_element('occurrence'))
+                MetaElementTypes.OCCURRENCE)
 
     def test_extract_csv_ext_content(self):
         """
@@ -86,36 +87,35 @@ class TestExtractData:
 
         dwca_creator = Dwca()
 
-        dwca_creator.extract_csv_content(csv_info=CsvFileType(files=multiple_csv_occ_test['file_paths'],
-                                                              type='occurrence',
+        dwca_creator.extract_csv_content(csv_info=ContentData(data=multiple_csv_occ_test['file_paths'],
+                                                              type=MetaElementTypes.OCCURRENCE,
                                                               keys=['catalogNumber'],
                                                               csv_encoding=CSVEncoding(
                                                                   csv_delimiter=multiple_csv_occ_test["delimiter"])),
                                          core_ext_type=CoreOrExtType.CORE)
 
-        multimedia_file_path = './input_files/multimedia/multimedia_file.csv'
-        dwca_creator.extract_csv_content(csv_info=CsvFileType(files=[multimedia_file_path],
-                                                              type='multimedia',
+        multimedia_file_path = 'input_files/sample/multimedia/multimedia_file.csv'
+        dwca_creator.extract_csv_content(csv_info=ContentData(data=[multimedia_file_path],
+                                                              type=MetaElementTypes.MULTIMEDIA,
                                                               keys=['catalogNumber'],
                                                               csv_encoding=CSVEncoding(csv_delimiter=',')),
                                          core_ext_type=CoreOrExtType.EXTENSION)
 
         # Drop coreid field from testing as this is generated
-        pd.testing.assert_frame_equal(dwca_creator.ext_content[0].df_content.drop(
-            columns=['coreid']), pd.read_csv(multimedia_file_path))
+        pd.testing.assert_frame_equal(dwca_creator.ext_content[0].df_content, pd.read_csv(multimedia_file_path))
 
         meta_columns = list(map(attrgetter('field_name'),
                                 dwca_creator.meta_content.meta_elements[1].fields))
 
         assert sorted(list(map(attrgetter('field_name'), dwca_creator.meta_content.meta_elements[1].fields))) == \
-               sorted(['coreid', 'catalogNumber', 'identifier', 'format', 'type'])
+               sorted(['catalogNumber', 'identifier', 'format', 'type'])
 
         # Test both the meta content extension and extension dataframe is consistent
         assert dwca_creator.ext_content[0].df_content.columns.to_list() == meta_columns
 
         # Test that the meta content extension if of multimedia type
         assert (dwca_creator.meta_content.meta_elements[1].meta_element_type.type ==
-                MetaElementTypes.get_element('multimedia'))
+                MetaElementTypes.MULTIMEDIA)
 
     def test_extract_tsv_ext_content(self):
         """
@@ -124,36 +124,33 @@ class TestExtractData:
 
         dwca_creator = Dwca()
 
-        dwca_creator.extract_csv_content(csv_info=CsvFileType(files=multiple_tsv_occ_test['file_paths'],
-                                                              type='occurrence',
+        dwca_creator.extract_csv_content(csv_info=ContentData(data=multiple_tsv_occ_test['file_paths'],
+                                                              type=MetaElementTypes.OCCURRENCE,
                                                               keys=['catalogNumber'],
                                                               csv_encoding=CSVEncoding(
                                                                   csv_delimiter=multiple_tsv_occ_test["delimiter"])),
                                          core_ext_type=CoreOrExtType.CORE)
 
-        multimedia_file_path = './input_files/multimedia/multimedia_file.tsv'
-        dwca_creator.extract_csv_content(csv_info=CsvFileType(files=[multimedia_file_path],
-                                                              type='multimedia',
-                                                              keys=['catalogNumber'],
+        multimedia_file_path = 'input_files/sample/multimedia/multimedia_file.tsv'
+        dwca_creator.extract_csv_content(csv_info=ContentData(data=[multimedia_file_path],
+                                                              type=MetaElementTypes.MULTIMEDIA,
                                                               csv_encoding=CSVEncoding(csv_delimiter='\t')),
                                          core_ext_type=CoreOrExtType.EXTENSION)
 
-        # Drop coreid field from testing as this is generated
-        pd.testing.assert_frame_equal(dwca_creator.ext_content[0].df_content.drop(
-            columns=['coreid']), pd.read_csv(multimedia_file_path, delimiter='\t'))
+        pd.testing.assert_frame_equal(left=dwca_creator.ext_content[0].df_content,
+                                      right=pd.read_csv(multimedia_file_path, delimiter='\t'))
 
         meta_columns = list(map(attrgetter('field_name'),
                                 dwca_creator.meta_content.meta_elements[1].fields))
 
         assert sorted(list(map(attrgetter('field_name'), dwca_creator.meta_content.meta_elements[1].fields))) == \
-               sorted(['coreid', 'catalogNumber', 'identifier', 'format', 'type'])
+               sorted(['catalogNumber', 'identifier', 'format', 'type'])
 
         # Test both the meta content extension and extension dataframe is consistent
         assert dwca_creator.ext_content[0].df_content.columns.to_list() == meta_columns
 
         # Test that the meta content extension if of multimedia type
-        assert (dwca_creator.meta_content.meta_elements[1].meta_element_type.type ==
-                MetaElementTypes.get_element('multimedia'))
+        assert (dwca_creator.meta_content.meta_elements[1].meta_element_type.type == MetaElementTypes.MULTIMEDIA)
 
     def test_extract_csv_with_header_space(self):
         """
@@ -162,20 +159,20 @@ class TestExtractData:
 
         dwca_creator = Dwca()
 
-        dwca_creator.extract_csv_content(csv_info=CsvFileType(files=csv_occ_with_space['file_paths'],
-                                                              type='occurrence',
+        dwca_creator.extract_csv_content(csv_info=ContentData(data=csv_occ_with_space['file_paths'],
+                                                              type=MetaElementTypes.OCCURRENCE,
                                                               keys=['catalogNumber'],
                                                               csv_encoding=CSVEncoding(
                                                                   csv_delimiter=csv_occ_with_space["delimiter"])),
                                          core_ext_type=CoreOrExtType.CORE)
 
-        expected_column_list = ["id", "catalogNumber", "basisOfRecord", "scientificName",
-                                "license","decimalLatitude","decimalLongitude"]
+        expected_column_list = ["catalogNumber", "basisOfRecord", "scientificName",
+                                "license", "decimalLatitude", "decimalLongitude"]
         assert set(dwca_creator.core_content.df_content.columns) == set(expected_column_list)
         assert len(dwca_creator.core_content.df_content) == 5
         pdtest.assert_series_equal(dwca_creator.core_content.df_content["catalogNumber"],
-                               pd.Series(["C1", "C2", "C3", "C4", "C5"], dtype=str, name='catalogNumber'),
-                               check_index_type=False, check_index=False)
+                                   pd.Series(["C1", "C2", "C3", "C4", "C5"], dtype=str, name='catalogNumber'),
+                                   check_index_type=False, check_index=False)
 
     def test_extract_csv_ext_with_header_space(self):
         """
@@ -184,30 +181,31 @@ class TestExtractData:
 
         dwca_creator = Dwca()
 
-        dwca_creator.extract_csv_content(csv_info=CsvFileType(files=csv_occ_with_space['file_paths'],
-                                                              type='occurrence',
+        dwca_creator.extract_csv_content(csv_info=ContentData(data=csv_occ_with_space['file_paths'],
+                                                              type=MetaElementTypes.OCCURRENCE,
                                                               keys=['catalogNumber'],
                                                               csv_encoding=CSVEncoding(
                                                                   csv_delimiter=csv_occ_with_space["delimiter"])),
                                          core_ext_type=CoreOrExtType.CORE)
 
-        dwca_creator.extract_csv_content(csv_info=CsvFileType(files=multimedia_with_space['file_paths'],
-                                                              type='multimedia',
-                                                              keys=['catalogNumber'],
+        dwca_creator.extract_csv_content(csv_info=ContentData(data=multimedia_with_space['file_paths'],
+                                                              type=MetaElementTypes.MULTIMEDIA,
                                                               csv_encoding=CSVEncoding(csv_delimiter=',')),
                                          core_ext_type=CoreOrExtType.EXTENSION)
 
-        expected_column_list = ["id", "catalogNumber", "basisOfRecord", "scientificName",
-                                "license","decimalLatitude","decimalLongitude"]
+        expected_column_list = ["catalogNumber", "basisOfRecord", "scientificName",
+                                "license", "decimalLatitude", "decimalLongitude"]
         assert set(dwca_creator.core_content.df_content.columns) == set(expected_column_list)
         assert len(dwca_creator.core_content.df_content) == 5
-        pdtest.assert_series_equal(dwca_creator.core_content.df_content["catalogNumber"],
-                               pd.Series(["C1", "C2", "C3", "C4", "C5"], dtype=str, name="catalogNumber"),
-                               check_index_type=False, check_index=False)
+        pdtest.assert_series_equal(
+            dwca_creator.core_content.df_content["catalogNumber"],
+            pd.Series(["C1", "C2", "C3", "C4", "C5"], dtype=str, name="catalogNumber"),
+            check_index_type=False, check_index=False)
 
-        expected_column_list = ["coreid", "catalogNumber", "identifier", "format", "type"]
+        expected_column_list = ["catalogNumber", "identifier", "format", "type"]
         assert set(dwca_creator.ext_content[0].df_content.columns) == set(expected_column_list)
         assert len(dwca_creator.ext_content[0].df_content) == 5
-        pdtest.assert_series_equal(dwca_creator.ext_content[0].df_content["catalogNumber"],
-                               pd.Series(["C1", "C2", "C3", "C4", "C5"], dtype=str, name="catalogNumber"),
-                               check_index_type=False, check_index=False)
+        pdtest.assert_series_equal(
+            dwca_creator.ext_content[0].df_content["catalogNumber"],
+            pd.Series(["C1", "C2", "C3", "C4", "C5"], dtype=str, name="catalogNumber"),
+            check_index_type=False, check_index=False)

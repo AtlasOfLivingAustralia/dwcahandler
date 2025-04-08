@@ -1,6 +1,6 @@
 import pandas as pd
 import dwcahandler
-from dwcahandler.dwca import CsvFileType, CoreOrExtType
+from dwcahandler.dwca import ContentData, CoreOrExtType, MetaElementTypes
 from dwcahandler.dwca.core_dwca import Dwca
 from operator import attrgetter
 import logging
@@ -17,12 +17,12 @@ VIDEO_URL = "https://images.ala.org.au/image/proxyImage?imageId=537799d7-f4d6-49
 INVALID_URL = "test"
 DELETED_MEDIA_URL = "https://images.ala.org.au/image/proxyImageThumbnailLarge?imageId=nonexistent"
 
-image_ext = CsvFileType(files=pd.DataFrame(data=[["1", IMAGE_URL],
-                                                 ["2", AUDIO_URL],
-                                                 ["3", VIDEO_URL],
-                                                 ["3", MIMETYPE_IMAGE_URL]],
-                                           columns=['occurrenceID', 'identifier']),
-                        type='multimedia',
+image_ext = ContentData(data=pd.DataFrame(data=[["1", IMAGE_URL],
+                                                ["2", AUDIO_URL],
+                                                ["3", VIDEO_URL],
+                                                ["3", MIMETYPE_IMAGE_URL]],
+                                          columns=['occurrenceID', 'identifier']),
+                        type=MetaElementTypes.MULTIMEDIA,
                         keys=['occurrenceID'])
 
 
@@ -53,31 +53,34 @@ class TestMultimediaExtension:
 
         dwca = Dwca()
 
-        dwca.extract_csv_content(csv_info=CsvFileType(files=occ_associated_media_df,
+        dwca.extract_csv_content(csv_info=ContentData(data=occ_associated_media_df,
                                                       keys=['occurrenceID'],
-                                                      type='occurrence'),
+                                                      type=MetaElementTypes.OCCURRENCE),
                                  core_ext_type=CoreOrExtType.CORE)
 
         associated_media_image_ext = dwca.convert_associated_media_to_extension()
 
         assert 'associatedMedia' not in dwca.core_content.df_content.columns
         assert sorted(list(map(attrgetter('field_name'), dwca.meta_content.meta_elements[0].fields))) == \
-               sorted(['id', 'occurrenceID', 'scientificName'])
+               sorted(['occurrenceID', 'scientificName'])
 
-        pd.testing.assert_frame_equal(associated_media_image_ext.files.reset_index(), image_ext.files)
+        pd.testing.assert_frame_equal(associated_media_image_ext.data.reset_index(drop=True), image_ext.data)
         assert associated_media_image_ext.type == image_ext.type
         assert associated_media_image_ext.keys[0] == image_ext.keys[0]
 
         dwca.extract_csv_content(csv_info=associated_media_image_ext,
-                                 core_ext_type=CoreOrExtType.EXTENSION)
+                                 core_ext_type=CoreOrExtType.EXTENSION,
+                                 build_coreid_for_ext=True)
 
         # Compare multimedia ext dataframe (without the coreid) against the expected image_ext dataframe
-        pd.testing.assert_frame_equal(dwca.ext_content[0].df_content.reset_index().drop(columns=['coreid']),
-                                      image_ext.files)
+        pd.testing.assert_frame_equal(dwca.ext_content[0].df_content.reset_index(drop=True),
+                                      image_ext.data, check_index_type=False)
 
         # Check the meta content is updated
         assert sorted(list(map(attrgetter('field_name'), dwca.meta_content.meta_elements[1].fields))) == \
-               sorted(['coreid', 'identifier'])
+               sorted(["identifier", "occurrenceID"])
+
+        assert dwca.meta_content.meta_elements[1].core_id.index == dwca.meta_content.meta_elements[1].fields[0].index
 
     def test_fill_additional_multimedia_info(self, mock_mime_types):
         """
@@ -87,11 +90,11 @@ class TestMultimediaExtension:
         dwca = Dwca()
 
         # Extract core occurrence
-        dwca.extract_csv_content(csv_info=CsvFileType(files=pd.DataFrame(data=[["1", "species1"],
-                                                                               ["2", "species2"],
-                                                                               ["3", "species3"]],
-                                                                         columns=['occurrenceID', 'scientificName']),
-                                                      type='occurrence',
+        dwca.extract_csv_content(csv_info=ContentData(data=pd.DataFrame(data=[["1", "species1"],
+                                                                              ["2", "species2"],
+                                                                              ["3", "species3"]],
+                                                                        columns=['occurrenceID', 'scientificName']),
+                                                      type=MetaElementTypes.OCCURRENCE,
                                                       keys=['occurrenceID']),
                                  core_ext_type=CoreOrExtType.CORE)
 
@@ -108,8 +111,7 @@ class TestMultimediaExtension:
                                               columns=['occurrenceID', 'identifier', 'format', 'type'])
 
         # Test that the multimedia extension will now contain the format and type
-        pd.testing.assert_frame_equal(dwca.ext_content[0].df_content.drop(
-                                      columns=['coreid']), expected_multimedia_df)
+        pd.testing.assert_frame_equal(dwca.ext_content[0].df_content, expected_multimedia_df)
 
     def test_fill_multimedia_info_with_format_type_partially_supplied(self, mock_mime_types):
         """
@@ -121,17 +123,17 @@ class TestMultimediaExtension:
         dwca = Dwca()
 
         # Extract core occurrence
-        dwca.extract_csv_content(csv_info=CsvFileType(files=pd.DataFrame(data=[["1", "species1"],
-                                                                               ["2", "species2"],
-                                                                               ["3", "species3"],
-                                                                               ["4", "species4"],
-                                                                               ["5", "species5"],
-                                                                               ["6", "species6"],
-                                                                               ["7", "species7"],
-                                                                               ["8", "species8"],
-                                                                               ["9", "species9"]],
-                                                                         columns=['occurrenceID', 'scientificName']),
-                                                      type='occurrence',
+        dwca.extract_csv_content(csv_info=ContentData(data=pd.DataFrame(data=[["1", "species1"],
+                                                                              ["2", "species2"],
+                                                                              ["3", "species3"],
+                                                                              ["4", "species4"],
+                                                                              ["5", "species5"],
+                                                                              ["6", "species6"],
+                                                                              ["7", "species7"],
+                                                                              ["8", "species8"],
+                                                                              ["9", "species9"]],
+                                                                        columns=['occurrenceID', 'scientificName']),
+                                                      type=MetaElementTypes.OCCURRENCE,
                                                       keys=['occurrenceID']),
                                  core_ext_type=CoreOrExtType.CORE)
 
@@ -146,11 +148,10 @@ class TestMultimediaExtension:
                       ["9", None, None, None]]
 
         # Extract multimedia ext without format
-        dwca.extract_csv_content(csv_info=CsvFileType(files=pd.DataFrame(data=image_data,
-                                                                         columns=["occurrenceID", "identifier",
-                                                                                  "format", "type"]),
-                                                      type='multimedia',
-                                                      keys=['occurrenceID']),
+        dwca.extract_csv_content(csv_info=ContentData(data=pd.DataFrame(data=image_data,
+                                                                        columns=["occurrenceID", "identifier",
+                                                                                 "format", "type"]),
+                                                      type=MetaElementTypes.MULTIMEDIA),
                                  core_ext_type=CoreOrExtType.EXTENSION)
 
         # Fill multimedia extension info
@@ -171,8 +172,7 @@ class TestMultimediaExtension:
 
         # Test that the multimedia extension format and type is filled if none provided but
         # if format and type is provided it remains as provided
-        pd.testing.assert_frame_equal(dwca.ext_content[0].df_content.drop(
-            columns=['coreid']), expected_multimedia_df)
+        pd.testing.assert_frame_equal(dwca.ext_content[0].df_content, expected_multimedia_df)
 
     def test_fill_multimedia_info_type_from_format(self, mock_mime_types):
         """
@@ -182,16 +182,16 @@ class TestMultimediaExtension:
         dwca = Dwca()
 
         # Extract core occurrence
-        dwca.extract_csv_content(csv_info=CsvFileType(files=pd.DataFrame(data=[["1", "species1"],
-                                                                               ["2", "species2"],
-                                                                               ["3", "species3"],
-                                                                               ["4", "species4"],
-                                                                               ["5", "species5"],
-                                                                               ["6", "species6"],
-                                                                               ["7", "species7"],
-                                                                               ["8", "species8"]],
-                                                                         columns=['occurrenceID', 'scientificName']),
-                                                      type='occurrence',
+        dwca.extract_csv_content(csv_info=ContentData(data=pd.DataFrame(data=[["1", "species1"],
+                                                                              ["2", "species2"],
+                                                                              ["3", "species3"],
+                                                                              ["4", "species4"],
+                                                                              ["5", "species5"],
+                                                                              ["6", "species6"],
+                                                                              ["7", "species7"],
+                                                                              ["8", "species8"]],
+                                                                        columns=['occurrenceID', 'scientificName']),
+                                                      type=MetaElementTypes.OCCURRENCE,
                                                       keys=['occurrenceID']),
                                  core_ext_type=CoreOrExtType.CORE)
 
@@ -205,11 +205,10 @@ class TestMultimediaExtension:
                       ["8", INVALID_MIMETYPE_URL, None]]
 
         # Extract multimedia ext without format
-        dwca.extract_csv_content(csv_info=CsvFileType(files=pd.DataFrame(data=image_data,
-                                                                         columns=["occurrenceID", "identifier",
-                                                                                  "format"]),
-                                                      type='multimedia',
-                                                      keys=['occurrenceID']),
+        dwca.extract_csv_content(csv_info=ContentData(data=pd.DataFrame(data=image_data,
+                                                                        columns=["occurrenceID", "identifier",
+                                                                                 "format"]),
+                                                      type=MetaElementTypes.MULTIMEDIA),
                                  core_ext_type=CoreOrExtType.EXTENSION)
 
         # Fill multimedia extension info
@@ -229,5 +228,4 @@ class TestMultimediaExtension:
 
         # Test that the multimedia extension format and type is filled if none provided but
         # if format and type is provided it remains as provided
-        pd.testing.assert_frame_equal(dwca.ext_content[0].df_content.drop(
-            columns=['coreid']), expected_multimedia_df)
+        pd.testing.assert_frame_equal(dwca.ext_content[0].df_content, expected_multimedia_df)

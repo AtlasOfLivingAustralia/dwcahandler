@@ -1,0 +1,18 @@
+eventID,parentEventID,eventType,eventDate,decimalLatitude,decimalLongitude,coordinateUncertaintyInMeters,samplingProtocol,samplingEffort,deploymentGroups,locality,eventRemarks,habitat
+PEVENT_A,,Survey,,,,,,,,,,
+PEVENT_B,,Survey,,,,,,,,,,
+DEPLOY1_PE_A,PEVENT_A,Deployment,,-17.1,145.2,1,,,PEVENT_A,Site 1,sample remarks test 1,tropical rainforest
+DEPLOY2_PE_A,PEVENT_A,Deployment,,-17.1,145.2,1,,,PEVENT_A,Site 1,sample remarks test 2,tropical rainforest
+DEPLOY1_PE_B,PEVENT_B,Deployment,,-17.3,145.3,1,,,PEVENT_B,Site 2,sample remarks test 3,tropical rainforest
+DEPLOY2_PE_B,PEVENT_B,Deployment,,-17.4,145.4,1,,,PEVENT_B,Site 2,sample remarks test 4,tropical rainforest
+TR_1,DEPLOY1_PE_A,Trigger,2022-12-17,,,,camera trap,2022-12-17T08:25:51Z/2022-12-17T08:25:54Z,,,,
+TR_2,DEPLOY1_PE_A,Trigger,2022-12-18,,,,camera trap,2022-12-18T02:30:01Z/2022-12-18T02:30:05Z,,,,
+TR_3,DEPLOY2_PE_A,Trigger,2022-12-15,,,,camera trap,2022-12-15T04:10:45Z/2022-12-15T04:10:49Z,,,,
+TR_4,DEPLOY2_PE_A,Trigger,2022-12-15,,,,camera trap,2022-12-15T13:20:10Z/2022-12-15T13:20:15Z,,,,
+TR_5,DEPLOY2_PE_A,Trigger,2022-12-15,,,,camera trap,2022-12-15T20:09:48Z/2022-12-15T20:09:51Z,,,,
+TR_6,DEPLOY1_PE_B,Trigger,2022-12-10,,,,camera trap,2022-12-10T17:05:36Z/2022-12-10T17:05:36Z,,,,
+TR_7,DEPLOY1_PE_B,Trigger,2022-12-10,,,,camera trap,2022-12-10T20:14:11Z/2022-12-10T20:14:12Z,,,,
+TR_8,DEPLOY1_PE_B,Trigger,2022-12-10,,,,camera trap,2022-12-10T22:42:03Z/2022-12-10T22:42:04Z,,,,
+TR_9,DEPLOY2_PE_B,Trigger,2022-11-05,,,,camera trap,2022-11-05T01:10:49Z/2022-11-05T01:11:00Z,,,,
+TR_10,DEPLOY2_PE_B,Trigger,2022-11-05,,,,camera trap,2022-11-05T06:07:16Z/2022-11-05T06:08:49Z,,,,
+TR_11,DEPLOY2_PE_B,Trigger,2022-11-06,,,,camera trap,2022-11-06T05:07:16Z/2022-11-06T05:07:24Z,,,,

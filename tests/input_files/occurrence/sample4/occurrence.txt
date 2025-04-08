@@ -1,0 +1,13 @@
+occurrenceID,basisOfRecord,scientificName,license,decimalLatitude,decimalLongitude
+014826,Human Observation,Ageratina adenophora,CC-BY 4.0 (Int),-30.0000,144.0000
+014825,Human Observation,Ageratina adenophora,CC-BY 4.0 (Int),-31.1111,145.0000
+014824,Human Observation,Delairea odorata,CC-BY 4.0 (Int),-32.085431,100.828059
+014823,Human Observation,Delairea odorata,CC-BY 4.0 (Int),-33.097233,101.820888
+014822,Human Observation,Delairea odorata,CC-BY 4.0 (Int),-34.099936,102.821654
+014821,Human Observation,Delairea odorata,CC-BY 4.0 (Int),-35.893671,104.999974
+014802,Human Observation,Alectryon coriaceus,CC-BY 4.0 (Int),-34.113747,120.889354
+014801,Human Observation,Eucalyptus robusta,CC-BY 4.0 (Int),-36.0000,144.308848
+014800,Human Observation,Arundo donax,CC-BY 4.0 (Int),-30.440251,146.240159
+014799,Human Observation,Arundo donax,CC-BY 4.0 (Int),-31.547195,150.783246
+014798,Human Observation,Arundo donax,CC-BY 4.0 (Int),-40.481117,150.823468
+014792,Human Observation,Euphorbia paralias,CC-BY 4.0 (Int),-28.0000,115.0000
