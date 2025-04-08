@@ -692,7 +692,10 @@ class Dwca(BaseDwca):
                 multimedia_without_type.loc[:, 'type'] = multimedia_without_type['format'].map(lambda x: get_media_type(x))
                 multimedia_df.update(multimedia_without_type)
 
-            multimedia_content.df_content = multimedia_df
+            # Only update if there are additional info added
+            if len(multimedia_df.columns) > len(multimedia_content.df_content.columns):
+                multimedia_content.df_content = multimedia_df
+                self._update_meta_fields(content=multimedia_content)
 
     def _extract_media(self, content, assoc_media_col: str):
         """Extract embedded associated media and place it in a media extension data frame
