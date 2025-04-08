@@ -733,11 +733,14 @@ class Dwca(BaseDwca):
             log.info("Extracting associated media links")
             assoc_media_col = filtered_column[0]
             image_df = self._extract_media(self.core_content.df_content, assoc_media_col)
+            image_df.drop_duplicates(inplace=True)
             if len(image_df) > 0:
                 self._update_meta_fields(content=self.core_content, key_field=self.core_content.keys[0])
                 log.info("%s associated media extracted", str(len(image_df)))
+                multimedia_keys = self.core_content.keys.copy()
+                multimedia_keys.append("identifier")
                 return ContentData(data=image_df, type=MetaElementTypes.MULTIMEDIA,
-                                   keys=self.core_content.keys)
+                                   keys=multimedia_keys)
 
             log.info("Nothing to extract from associated media")
 
