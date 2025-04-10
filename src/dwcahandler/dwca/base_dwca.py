@@ -15,13 +15,11 @@ class BaseDwca(metaclass=ABCMeta):
     """An abstract DwCA that provides basic operations"""
 
     @abstractmethod
-    def extract_csv_content(self, csv_info: ContentData, core_ext_type: CoreOrExtType,
-                            build_coreid_for_ext: bool = False):
+    def extract_csv_content(self, csv_info: ContentData, core_ext_type: CoreOrExtType):
         """Get the content from a single file in the DwCA
 
         :param csv_info: The CSV file to extract
         :param core_ext_type: Is this a core or extension CSV file
-        :param build_coreid_for_ext: indicator to add id and core id
         """
         pass
 
@@ -140,8 +138,7 @@ class BaseDwca(metaclass=ABCMeta):
         if ext_csv_list is None:
             ext_csv_list = []
 
-        self.extract_csv_content(csv_info=core_csv, core_ext_type=CoreOrExtType.CORE,
-                                 build_coreid_for_ext=True if len(ext_csv_list) > 0 else False)
+        self.extract_csv_content(csv_info=core_csv, core_ext_type=CoreOrExtType.CORE)
 
         # if multimedia data is supplied, do not attempt to convert associated media to multimedia
         if not any(ext.type == MetaElementTypes.MULTIMEDIA for ext in ext_csv_list):
@@ -153,8 +150,7 @@ class BaseDwca(metaclass=ABCMeta):
         for ext in ext_csv_list:
             if ext.keys and len(ext.keys) > 0:
                 content_to_validate[ext.type] = ext.keys
-            self.extract_csv_content(csv_info=ext, core_ext_type=CoreOrExtType.EXTENSION,
-                                     build_coreid_for_ext=True)
+            self.extract_csv_content(csv_info=ext, core_ext_type=CoreOrExtType.EXTENSION)
 
         self.fill_additional_info()
 

@@ -69,8 +69,7 @@ class TestMultimediaExtension:
         assert associated_media_image_ext.keys[0] == image_ext.keys[0]
 
         dwca.extract_csv_content(csv_info=associated_media_image_ext,
-                                 core_ext_type=CoreOrExtType.EXTENSION,
-                                 build_coreid_for_ext=True)
+                                 core_ext_type=CoreOrExtType.EXTENSION)
 
         # Compare multimedia ext dataframe (without the coreid) against the expected image_ext dataframe
         pd.testing.assert_frame_equal(dwca.ext_content[0].df_content.reset_index(drop=True),

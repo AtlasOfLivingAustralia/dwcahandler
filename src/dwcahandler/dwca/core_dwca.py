@@ -893,13 +893,11 @@ class Dwca(BaseDwca):
 
         return True if validation_success else False
 
-    def extract_csv_content(self, csv_info: ContentData,
-                            core_ext_type: CoreOrExtType, build_coreid_for_ext: bool = False):
+    def extract_csv_content(self, csv_info: ContentData, core_ext_type: CoreOrExtType):
         """Read the data from a CSV description into a content frame and include it in the Dwca.
 
         :param csv_info: The CSV file(s)
         :param core_ext_type: Whether this is a core or extension content frame
-        :param build_coreid_for_ext: indicator to build id and core id to support dwca with extension
         """
         if isinstance(csv_info.data, pd.DataFrame) :
             csv_content = csv_info.data
@@ -915,16 +913,15 @@ class Dwca(BaseDwca):
         else:
             keys = self.core_content.keys
         core_id_field: str = ""
-        if build_coreid_for_ext:
-            if len(keys) > 1:
-                if core_ext_type == CoreOrExtType.CORE:
-                    core_id_field = self._update_core_ids(csv_content)
-                    self._build_index_for_content(csv_content, keys)
-                elif core_ext_type == CoreOrExtType.EXTENSION:
-                    csv_content, core_id_field = self._update_extension_ids(
-                        csv_content, self.core_content.df_content, keys)
-            elif len(keys) > 0:
-                core_id_field = keys[0]
+        if len(keys) > 1:
+            if core_ext_type == CoreOrExtType.CORE:
+                core_id_field = self._update_core_ids(csv_content)
+                self._build_index_for_content(csv_content, keys)
+            elif core_ext_type == CoreOrExtType.EXTENSION:
+                csv_content, core_id_field = self._update_extension_ids(
+                    csv_content, self.core_content.df_content, keys)
+        elif len(keys) > 0:
+            core_id_field = keys[0]
 
         if csv_info.associated_files_loc:
             self._update_associated_files([csv_info.associated_files_loc])
