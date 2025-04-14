@@ -142,7 +142,7 @@ class Dwca(BaseDwca):
 
         csv_content = csv_content.merge(core_df_content.loc[:, self.defaults_prop.MetaDefaultFields.ID],
                                         left_on=link_col,
-                                        right_on=link_col, how='outer')
+                                        right_on=link_col, how='inner')
 
         if self.defaults_prop.MetaDefaultFields.ID in csv_content.columns.to_list():
             unmatched_content = csv_content[csv_content[self.defaults_prop.MetaDefaultFields.ID].isnull()]
