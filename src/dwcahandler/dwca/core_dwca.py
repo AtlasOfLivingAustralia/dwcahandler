@@ -709,19 +709,19 @@ class Dwca(BaseDwca):
         :return: The images data frame
         """
         cols = []
-        if not self.core_content.df_content.index.names[0]:
+        if len(self.core_content.df_content.index.names) > 0:
             cols = self.core_content.keys.copy()
             cols.append(assoc_media_col)
-        image_df = pd.DataFrame(content[cols])
-        # filter off empty rows with empty value
-        image_df = image_df[~image_df[assoc_media_col].isna()]
-        if len(image_df) > 0:
-            image_df = image_df.assign(identifier=image_df[assoc_media_col].
-                                       str.split(r'[\\|;]')).explode('identifier')
-            image_df.drop(columns=[assoc_media_col], inplace=True)
-            content.drop(columns=[assoc_media_col], inplace=True)
-
-        return image_df
+            image_df = pd.DataFrame(content[cols])
+            # filter off empty rows with empty value
+            image_df = image_df[~image_df[assoc_media_col].isna()]
+            if len(image_df) > 0:
+                image_df = image_df.assign(identifier=image_df[assoc_media_col].
+                                           str.split(r'[\\|;]')).explode('identifier')
+                image_df.drop(columns=[assoc_media_col], inplace=True)
+                content.drop(columns=[assoc_media_col], inplace=True)
+            return image_df
+        return pd.DataFrame()
 
     def convert_associated_media_to_extension(self):
         """Convert any embedded associated media terms in the core frame into a simple
@@ -736,8 +736,8 @@ class Dwca(BaseDwca):
             log.info("Extracting associated media links")
             assoc_media_col = filtered_column[0]
             image_df = self._extract_media(self.core_content.df_content, assoc_media_col)
-            image_df.drop_duplicates(inplace=True)
             if len(image_df) > 0:
+                image_df.drop_duplicates(inplace=True)
                 self._update_meta_fields(content=self.core_content, key_field=self.core_content.keys[0])
                 log.info("%s associated media extracted", str(len(image_df)))
                 multimedia_keys = self.core_content.keys.copy()
