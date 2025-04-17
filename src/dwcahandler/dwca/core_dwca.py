@@ -17,6 +17,7 @@ from dataclasses import MISSING, asdict, dataclass, field
 from pathlib import Path
 from typing import Union
 from zipfile import ZipFile
+from distutils.util import strtobool
 import pandas as pd
 from numpy import nan
 from pandas.errors import EmptyDataError
@@ -187,11 +188,12 @@ class Dwca(BaseDwca):
         return DfContent(df_content=csv_content, meta_info=meta_element_type,
                          stat=Stat(self.count_stat(csv_content)))
 
-    def extract_dwca(self, exclude_ext_files: list = None):
+    def extract_dwca(self, extra_read_param: dict = None, exclude_ext_files: list = None):
         """Read a DwCA file into this object.
         The archive is expected to be in zip file form, located at the `dwca_file_loc` attribute.
         The content and meta-information are initialised from the archive.
 
+        :param extra_read_param: additional read param to use when reading
         :param exclude_ext_files: Ignore the following file names
         """
         def convert_values(v):
@@ -247,7 +249,8 @@ class Dwca(BaseDwca):
                     csv_content = self._read_csv(
                         csv_file, columns=dwc_headers,
                         csv_encoding_param=CSVEncoding(**csv_encoding),
-                        ignore_header_lines=int(meta_elm.meta_element_type.ignore_header_lines))
+                        ignore_header_lines=int(meta_elm.meta_element_type.ignore_header_lines),
+                        extra_param=extra_read_param)
                     if meta_elm.meta_element_type.core_or_ext_type == CoreOrExtType.CORE:
                         self.core_content = self._set_content(csv_content,
                                                               meta_elm.meta_element_type)
@@ -749,7 +752,7 @@ class Dwca(BaseDwca):
 
         return None
 
-    def _combine_contents(self, contents: list, csv_encoding, use_chunking=False):
+    def _combine_contents(self, contents: list, csv_encoding, extra_read_param: dict = None, use_chunking=False):
         """Combine the contents of a list of CSV files into a single content data frame.
 
         :param contents: The list of CSV files
@@ -766,7 +769,8 @@ class Dwca(BaseDwca):
                 df_content = self._add_new_rows(df_content,
                                                 self._read_csv(content, ignore_header_lines=0,
                                                                csv_encoding_param=csv_encoding,
-                                                               iterator=use_chunking))
+                                                               iterator=use_chunking,
+                                                               extra_param=extra_read_param))
 
             log.info("Extracted total of %d records from %s",
                      self.count_stat(df_content), ','.join(contents))
@@ -893,18 +897,20 @@ class Dwca(BaseDwca):
 
         return True if validation_success else False
 
-    def extract_csv_content(self, csv_info: ContentData, core_ext_type: CoreOrExtType):
+    def extract_csv_content(self, csv_info: ContentData, core_ext_type: CoreOrExtType, extra_read_param: dict = None):
         """Read the data from a CSV description into a content frame and include it in the Dwca.
 
         :param csv_info: The CSV file(s)
         :param core_ext_type: Whether this is a core or extension content frame
+        :param extra_read_param: extra read param to use when reading csv
         """
         if isinstance(csv_info.data, pd.DataFrame) :
             csv_content = csv_info.data
         elif isinstance(csv_info.data, io.TextIOWrapper):
-            csv_content = self._read_csv(csv_info.data)
+            csv_content = self._read_csv(csv_file=csv_info.data, extra_param=extra_read_param)
         else:
-            csv_content = self._combine_contents(csv_info.data, csv_info.csv_encoding)
+            csv_content = self._combine_contents(contents=csv_info.data, csv_encoding=csv_info.csv_encoding,
+                                                 extra_read_param=extra_read_param)
 
         # Use default keys if not provided
         if core_ext_type == CoreOrExtType.CORE:
@@ -1010,7 +1016,8 @@ class Dwca(BaseDwca):
                   ignore_header_lines: int = 0,
                   iterator: bool = False,
                   chunksize: int = 100,
-                  nrows: int = 0) -> Union[pd.DataFrame, parsers.TextFileReader]:
+                  nrows: int = 0,
+                  extra_param: dict = None) -> Union[pd.DataFrame, parsers.TextFileReader]:
         """Read a CSV file and convert it into a data frame
 
         :param csv_file:  The file path
@@ -1022,8 +1029,11 @@ class Dwca(BaseDwca):
         :param iterator: Return an iterator, rather than a data frame (False by default)
         :param chunksize: The number of records to chunk
         :param nrows: The number of rows to read (all by default)
+        :param extra_param: A dictionary containing extra values to use.
         :return: Either a data frame or a reader, depending on the iterator parameter
         """
+        if extra_param is None:
+            extra_param = {}
         if csv_encoding_param is MISSING:
             csv_encoding_param = self.defaults_prop.csv_encoding
 
@@ -1039,18 +1049,35 @@ class Dwca(BaseDwca):
             else None
 
         try:
-            ret_val = pd.read_csv(csv_file, delimiter=csv_encoding_param.csv_delimiter,
-                                  escapechar=escape_char,
-                                  quotechar=quote_char,
-                                  lineterminator=line_terminator,
-                                  names=columns,
-                                  skiprows=ignore_header_lines,  # skip first n lines
-                                  skip_blank_lines=True,
-                                  dtype='str',
-                                  index_col=False,
-                                  chunksize=chunksize if iterator else None,
-                                  iterator=iterator,
-                                  nrows=nrows if nrows > 0 else None)
+            read_param = {"delimiter": csv_encoding_param.csv_delimiter,
+                          "escapechar": escape_char,
+                          "quotechar": quote_char,
+                          "lineterminator": line_terminator,
+                          "names": columns,
+                          "skiprows": ignore_header_lines,
+                          "skip_blank_lines": True,
+                          "dtype": 'str',
+                          "index_col": False,
+                          "chunksize": chunksize if iterator else None,
+                          "iterator": iterator,
+                          "nrows": nrows if nrows > 0 else None}
+            if extra_param and len(extra_param) > 0:
+                def __is_integer(s: str) -> bool:
+                    if re.match(r'^[+-]?[0-9]+$', s):
+                        return True
+                    return False
+
+                for key, value in extra_param.items():
+                    if value.lower() in ["true", "false"]:
+                        read_param.update({key: strtobool(value)})
+                    elif value.lower() in ["nan", "none"]:
+                        read_param.update({key: None})
+                    elif __is_integer(value):
+                        read_param.update({key: int(value)})
+                    else:
+                        read_param.update({key: value})
+
+            ret_val = pd.read_csv(csv_file, **read_param)
 
             if isinstance(ret_val, pd.DataFrame):
                 # Drop rows where all the columns are Nan

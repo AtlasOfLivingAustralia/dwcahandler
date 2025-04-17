@@ -15,11 +15,12 @@ class BaseDwca(metaclass=ABCMeta):
     """An abstract DwCA that provides basic operations"""
 
     @abstractmethod
-    def extract_csv_content(self, csv_info: ContentData, core_ext_type: CoreOrExtType):
+    def extract_csv_content(self, csv_info: ContentData, core_ext_type: CoreOrExtType, extra_read_param: dict = None):
         """Get the content from a single file in the DwCA
 
         :param csv_info: The CSV file to extract
         :param core_ext_type: Is this a core or extension CSV file
+        :param extra_read_param: extra param to use when reading csv
         """
         pass
 
@@ -55,9 +56,10 @@ class BaseDwca(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def extract_dwca(self, exclude_ext_files: list = None):
+    def extract_dwca(self,  extra_read_param: dict = None, exclude_ext_files: list = None):
         """Extract content of dwca into memory of the dwca class
 
+        :param extra_read_param: extra param to use when reading csv
         :param exclude_ext_files:
         """
         pass
@@ -125,7 +127,7 @@ class BaseDwca(metaclass=ABCMeta):
 
     def create_dwca(self, core_csv: ContentData, output_dwca: Union[str, BytesIO],
                     ext_csv_list: list[ContentData] = None, validate_content: bool = True,
-                    eml_content: Union[str, Eml] = ''):
+                    eml_content: Union[str, Eml] = '', extra_read_param: dict = None):
         """Create a dwca given the contents of core and extensions and eml content
 
         :param core_csv: ContentData containing the data, class type and keys to form the core of the dwca
@@ -134,11 +136,13 @@ class BaseDwca(metaclass=ABCMeta):
                               extensions of the dwca if supplied
         :param validate_content: whether to validate the contents
         :param eml_content: eml content in string or a filled Eml object
+        :param extra_read_param: extra param to use when reading csv
         """
         if ext_csv_list is None:
             ext_csv_list = []
 
-        self.extract_csv_content(csv_info=core_csv, core_ext_type=CoreOrExtType.CORE)
+        self.extract_csv_content(csv_info=core_csv, core_ext_type=CoreOrExtType.CORE,
+                                 extra_read_param=extra_read_param)
 
         # if multimedia data is supplied, do not attempt to convert associated media to multimedia
         if not any(ext.type == MetaElementTypes.MULTIMEDIA for ext in ext_csv_list):
@@ -150,7 +154,8 @@ class BaseDwca(metaclass=ABCMeta):
         for ext in ext_csv_list:
             if ext.keys and len(ext.keys) > 0:
                 content_to_validate[ext.type] = ext.keys
-            self.extract_csv_content(csv_info=ext, core_ext_type=CoreOrExtType.EXTENSION)
+            self.extract_csv_content(csv_info=ext, core_ext_type=CoreOrExtType.EXTENSION,
+                                     extra_read_param=extra_read_param)
 
         self.fill_additional_info()
 
@@ -184,23 +189,25 @@ class BaseDwca(metaclass=ABCMeta):
         self.generate_meta()
         self.write_dwca(output_dwca)
 
-    def validate_dwca(self, content_keys: dict, error_file: str):
+    def validate_dwca(self, content_keys: dict, error_file: str, extra_read_param: dict = None):
         """Validate dwca to check if content has unique keys. By default, validates the core content.
            If additional checks required in another content, supply it as content_keys
 
         :param content_keys: a dictionary of class type and the key
                              for eg. {MetaElementTypes.OCCURRENCE, "occurrenceID"}
         :param error_file: optional error_file for the errored data
+        :param extra_read_param: extra read options to use
         """
-        self.extract_dwca()
+        self.extract_dwca(extra_read_param=extra_read_param)
         set_keys = self.set_keys(content_keys)
         return self.validate_content(content_to_validate=set_keys, error_file=error_file)
 
-    def validate_file(self, csv: ContentData, error_file: str):
+    def validate_file(self, csv: ContentData, error_file: str, extra_read_param: dict = None):
         """Validate the text file
 
         :param csv: ContentData to pass the csv, key and type
         :param error_file: optional error_file for the errored data
+        :param extra_read_param: extra read param to use
         """
         self.extract_csv_content(csv_info=csv, core_ext_type=CoreOrExtType.CORE)
         return self.validate_content(error_file=error_file)

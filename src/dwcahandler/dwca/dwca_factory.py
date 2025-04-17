@@ -79,7 +79,8 @@ class DwcaHandler:
     @staticmethod
     def create_dwca_from_file_list(files: list, output_dwca: Union[str, BytesIO],
                                    eml_content: Union[str, Eml] = '', csv_encoding: CSVEncoding = CSVEncoding(),
-                                   content_keys: dict[MetaElementTypes, list] = None):
+                                   content_keys: dict[MetaElementTypes, list] = None,
+                                   extra_read_param: dict = None):
         """Helper function to create a dwca based on a list of txt files. The file names will determine the class type
            Builds event core dwca if event.txt is supplied,
            otherwise build an occurrence core dwca if occurrence.txt is supplied.
@@ -90,17 +91,19 @@ class DwcaHandler:
         :param csv_encoding: delimiter for txt file. Default is comma delimiter txt files if not supplied
         :param content_keys: optional dictionary of MetaElementTypes and key list
                                       for eg. {MetaElementTypes.OCCURRENCE, ["occurrenceID"]}
+        :param extra_read_param: extra read param to use if any
         """
         core_content, ext_content_list = DwcaHandler.get_contents_from_file_names(files=files,
                                                                                   csv_encoding=csv_encoding,
                                                                                   content_keys=content_keys)
         DwcaHandler.create_dwca(core_csv=core_content, ext_csv_list=ext_content_list, output_dwca=output_dwca,
-                                eml_content=eml_content)
+                                eml_content=eml_content, extra_read_param=extra_read_param)
 
     @staticmethod
     def create_dwca_from_zip_content(zip_file: str, output_dwca: Union[str, BytesIO],
                                      eml_content: Union[str, Eml] = '', csv_encoding: CSVEncoding = CSVEncoding(),
-                                     content_keys: dict[MetaElementTypes, list] = None):
+                                     content_keys: dict[MetaElementTypes, list] = None,
+                                     extra_read_param: dict = None):
         """Helper function to create a dwca based on a list of txt files in a zip file.
            The file names will determine the class type
            Builds event core dwca if event.txt is supplied,
@@ -112,6 +115,7 @@ class DwcaHandler:
         :param csv_encoding: delimiter for txt file. Default is comma delimiter txt files if not supplied
         :param content_keys: optional dictionary of class type and the key
                              for eg. {MetaElementTypes.OCCURRENCE, ["occurrenceID"]}
+        :param extra_read_param: extra read param to use if any
         """
         with ZipFile(zip_file, 'r') as zf:
             files = zf.namelist()
@@ -120,7 +124,7 @@ class DwcaHandler:
                                                                                       content_keys=content_keys,
                                                                                       zf=zf)
             DwcaHandler.create_dwca(core_csv=core_content, ext_csv_list=ext_content_list, output_dwca=output_dwca,
-                                    eml_content=eml_content)
+                                    eml_content=eml_content, extra_read_param=extra_read_param)
             zf.close()
 
     @staticmethod
@@ -128,7 +132,8 @@ class DwcaHandler:
                     output_dwca: Union[str, BytesIO],
                     ext_csv_list: list[ContentData] = None,
                     validate_content: bool = True,
-                    eml_content: Union[str, Eml] = ''):
+                    eml_content: Union[str, Eml] = '',
+                    extra_read_param: dict = None):
         """Create a suitable DwCA from a list of CSV data
 
         :param core_csv: The core source
@@ -136,9 +141,11 @@ class DwcaHandler:
         :param output_dwca: Where to place the resulting Dwca
         :param validate_content: Validate the DwCA before processing
         :param eml_content: eml content in string or Eml class
+        :param extra_read_param: extra read param to use if any
         """
         Dwca().create_dwca(core_csv=core_csv, ext_csv_list=ext_csv_list, output_dwca=output_dwca,
-                           validate_content=validate_content, eml_content=eml_content)
+                           validate_content=validate_content, eml_content=eml_content,
+                           extra_read_param=extra_read_param)
 
     @staticmethod
     def delete_records(dwca_file: Union[str, BytesIO], records_to_delete: ContentData,
@@ -172,7 +179,8 @@ class DwcaHandler:
                                                  validate_delta=validate_delta_content)
 
     @staticmethod
-    def validate_dwca(dwca_file: Union[str, BytesIO], content_keys: dict = None, error_file: str = None):
+    def validate_dwca(dwca_file: Union[str, BytesIO], content_keys: dict = None,
+                      extra_read_param: dict = None, error_file: str = None):
         """Validate dwca for unique key and column for core content by default.
             If content_keys is supplied, the content is also validated.
 
@@ -180,15 +188,18 @@ class DwcaHandler:
         :param content_keys: a dictionary of class type and the key.
                 When content_keys are provided, validation will be performed on the content as well.
                              for eg. {MetaElementTypes.OCCURRENCE, "occurrenceID"}
+        :param extra_read_param: extra read param to use if any
         :param error_file: The file to write errors to. If None, errors are logged
         """
-        return Dwca(dwca_file_loc=dwca_file).validate_dwca(content_keys, error_file)
+        return Dwca(dwca_file_loc=dwca_file).validate_dwca(content_keys=content_keys, error_file=error_file,
+                                                           extra_read_param=extra_read_param)
 
     @staticmethod
-    def validate_file(csv_file: ContentData, error_file: str = None):
+    def validate_file(csv_file: ContentData, extra_read_param: dict = None, error_file: str = None):
         """Test a CSV file for consistency
 
         :param csv_file: The path to the CSV
+        :param extra_read_param: extra read param to use if any
         :param error_file: The file to write errors to, if None log errors
         """
-        return Dwca().validate_file(csv_file, error_file)
+        return Dwca().validate_file(csv=csv_file, extra_read_param=extra_read_param, error_file=error_file)
