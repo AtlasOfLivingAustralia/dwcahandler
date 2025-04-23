@@ -17,7 +17,6 @@ from dataclasses import MISSING, asdict, dataclass, field
 from pathlib import Path
 from typing import Union
 from zipfile import ZipFile
-from distutils.util import strtobool
 import pandas as pd
 from numpy import nan
 from pandas.errors import EmptyDataError
@@ -1078,9 +1077,20 @@ class Dwca(BaseDwca):
                         return True
                     return False
 
+                def __parse_bool(value_bool: str):
+                    if isinstance(value_bool, bool):
+                        return value_bool
+
+                    value_bool = str(value_bool).strip().lower()
+                    if value_bool in ('true', 'yes', '1'):
+                        return True
+                    elif value_bool in ('false', 'no', '0'):
+                        return False
+                    return None
+
                 for key, value in extra_param.items():
                     if value.lower() in ["true", "false"]:
-                        read_param.update({key: strtobool(value)})
+                        read_param.update({key: __parse_bool(value)})
                     elif value.lower() in ["nan", "none"]:
                         read_param.update({key: None})
                     elif __is_integer(value):
