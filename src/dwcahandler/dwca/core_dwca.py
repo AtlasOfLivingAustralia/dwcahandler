@@ -338,10 +338,12 @@ class Dwca(BaseDwca):
         """
         return pd.concat([df_content, new_rows], ignore_index=False)
 
-    def set_keys(self, keys: dict = None):
+    def set_keys(self, keys: dict = None, strict: bool = False):
         """Set unique identifier keys.
 
         :param keys: The dict of keys for content
+        :param strict: The extension keys must be set if the default keys is defined for the extension.
+                        This is necessary for merging extension contents
         :return: The keys which have been set for the content
         """
         set_keys = {}
@@ -360,6 +362,15 @@ class Dwca(BaseDwca):
                             col_term.append(a_key)
                     dwca_content.keys = col_term
                     set_keys[k] = col_term
+
+        if strict:
+            # Set default key for remaining extension content which has not been set
+            for content in self.ext_content:
+                if content.meta_info.type and len(content.keys) == 0:
+                    keys = get_keys(class_type=content.meta_info.type)
+                    if len(keys) > 0:
+                        content.keys = keys
+                        set_keys[content.meta_info.type] = keys
 
         return set_keys
 

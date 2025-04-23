@@ -33,9 +33,10 @@ class CoreOrExtType(Enum):
     EXTENSION = "extension"
 
 # Default keys for content when creating dwca
-DefaultKeys = namedtuple("DefaultKeys", ["EVENT", "OCCURRENCE"])(
+DefaultKeys = namedtuple("DefaultKeys", ["EVENT", "OCCURRENCE", "MULTIMEDIA"])(
     EVENT = "eventID",
-    OCCURRENCE = "occurrenceID"
+    OCCURRENCE = "occurrenceID",
+    MULTIMEDIA = "identifier"
 )
 
 def get_keys(class_type: MetaElementTypes, override_content_keys: dict[[MetaElementTypes, list]] = None):

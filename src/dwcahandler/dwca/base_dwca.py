@@ -77,7 +77,7 @@ class BaseDwca(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def set_keys(self, keys: dict):
+    def set_keys(self, keys: dict, strict: bool = False):
         pass
 
     @abstractmethod
@@ -179,8 +179,8 @@ class BaseDwca(metaclass=ABCMeta):
         """
         self.extract_dwca()
         delta_dwca.extract_dwca()
-        self.set_keys(keys_lookup)
-        delta_dwca.set_keys(keys_lookup)
+        self.set_keys(keys=keys_lookup, strict=True)
+        delta_dwca.set_keys(keys=keys_lookup, strict=True)
         if validate_delta and not delta_dwca.validate_content():
             raise SystemExit(Exception("Some validations error found in the delta dwca. Dwca is not merged."))
         self.merge_contents(delta_dwca, extension_sync)
