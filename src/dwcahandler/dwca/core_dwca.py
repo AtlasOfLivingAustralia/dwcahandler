@@ -260,17 +260,19 @@ class Dwca(BaseDwca):
 
             zf.close()
 
-    def _add_new_columns(self, df_content, delta_df_content):
-        """Add additional columns to a data frame
+    def _add_new_columns(self, df_content, delta_df_content, keys):
+        """Add additional columns to a data frame if they're not part of the keys
 
         New columns are initialised to vectors of NaN
 
         :param df_content: The base data frame content
         :param delta_df_content: The data frane content to add
+        :param keys: keys used for merging
         """
         df_columns = df_content.columns.to_list()
         delta_df_columns = delta_df_content.columns.to_list()
         new_columns = list(set(delta_df_columns) - set(df_columns))
+        new_columns = list(set(new_columns) - set(keys))
         if len(new_columns) > 0:
             # Set to empty string instead of nan to resolve warning message
             # see https://pandas.pydata.org/pdeps/0006-ban-upcasting.html
@@ -310,18 +312,15 @@ class Dwca(BaseDwca):
         """
         return core_content[core_content.index.isin(delta_core_content.index)].index
 
-    def _delete_old_ext_records(self, content, core_content, delta_core_content, core_keys):
+    def _delete_old_ext_records(self, content, core_content, delta_core_content):
         """Drop all extension rows where core records are exist in both content and delta
 
         :param content: The extension
         :param core_content: The core records
         :param delta_core_content: The delta update
-        :param core_keys: The key fields
         """
         core_exist = self._find_records_exist_in_both(core_content, delta_core_content)
-        exist = content.df_content.index
-        for key in core_keys:
-            exist = exist.get_level_values(key).isin(core_exist)
+        exist = content.df_content.droplevel(content.keys).index.isin(core_exist)
         if len(content.df_content.loc[exist]) > 0:
             log.info("Number of rows dropped from extension %s because of ext_sync: %s",
                      content.meta_info.type.name, str(len(content.df_content.loc[exist])))
@@ -398,7 +397,7 @@ class Dwca(BaseDwca):
         :param stat: The statistics to update
         :return: A list of any new columns
         """
-        new_columns = self._add_new_columns(df_content, delta_df_content)
+        new_columns = self._add_new_columns(df_content, delta_df_content, keys)
 
         if update:
             self._update_values(df_content, delta_df_content, keys, stat)
@@ -588,11 +587,11 @@ class Dwca(BaseDwca):
             for content, _ in contents:
                 if extension_sync:
                     self._delete_old_ext_records(content, self.core_content.df_content,
-                                                 delta_dwca.core_content.df_content,
-                                                 self.core_content.keys)
+                                                 delta_dwca.core_content.df_content)
 
-                content.df_content = self._merge_df_content(content, delta_content,
-                                                            self.core_content.keys)
+                content.df_content = self._merge_df_content(content=content,
+                                                            delta_content=delta_content,
+                                                            keys=self.core_content.keys)
 
             if len(contents) == 0:
                 # Copy delta ext content into self ext content
