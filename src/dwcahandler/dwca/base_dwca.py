@@ -57,7 +57,7 @@ class BaseDwca(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def extract_dwca(self,  extra_read_param: dict = None, exclude_ext_files: list = None):
+    def extract_dwca(self, extra_read_param: dict = None, exclude_ext_files: list = None):
         """Extract content of dwca into memory of the dwca class
 
         :param extra_read_param: extra param to use when reading csv

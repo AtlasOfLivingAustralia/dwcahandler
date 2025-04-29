@@ -476,29 +476,28 @@ class Dwca(BaseDwca):
             for elm in self.meta_content.meta_elements:
                 if elm.meta_element_type.file_name == content.meta_info.file_name:
                     coreid_idx = elm.core_id.index
-                    for field in elm.fields:
-                        if field.index == coreid_idx:
-                            return field.field_name
+                    for a_field in elm.fields:
+                        if a_field.index == coreid_idx:
+                            return a_field.field_name
                     return Defaults.MetaDefaultFields.ID if content.meta_info.core_or_ext_type == CoreOrExtType.CORE \
                         else Defaults.MetaDefaultFields.CORE_ID
             return None
 
         if len(self.ext_content) > 0:
             id_column = __get_coreid_column(self.core_content)
-            core_index_keys = self._extract_core_keys(self.core_content.df_content,
-                                                  self.core_content.keys, id_column)
+            core_index_keys = self._extract_core_keys(self.core_content.df_content, self.core_content.keys, id_column)
             for content in self.ext_content:
                 coreid_column = __get_coreid_column(content)
                 if coreid_column:
                     # Make sure coreid columns are populated by filtering off empty core ids.
-                    log.info ("content %s contains %i records before filtering empty coreid",
-                              content.meta_info.file_name, len(content.df_content))
+                    log.info("content %s contains %i records before filtering empty coreid",
+                             content.meta_info.file_name, len(content.df_content))
                     content.df_content = content.df_content[content.df_content[coreid_column].notna()]
-                    log.info ("content %s contains %i records after filtering empty coreid",
-                              content.meta_info.file_name, len(content.df_content))
+                    log.info("content %s contains %i records after filtering empty coreid",
+                             content.meta_info.file_name, len(content.df_content))
                     content.df_content = content.df_content[content.df_content[coreid_column].isin(core_index_keys.index)]
-                    log.info ("content %s contains %i records after filtering unlinked coreids",
-                              content.meta_info.file_name, len(content.df_content))
+                    log.info("content %s contains %i records after filtering unlinked coreids",
+                             content.meta_info.file_name, len(content.df_content))
 
                     self._add_ext_lookup_key(content.df_content, core_index_keys,
                                              self.core_content.keys, content.keys, coreid_column)
@@ -842,7 +841,7 @@ class Dwca(BaseDwca):
         :param rows Row number that cause the failed validation. Starts with 0
         """
         if isinstance(error_df, pd.DataFrame):
-            error_report = {"Content":  content_type.value,
+            error_report = {"Content": content_type.value,
                             "Message": message.value,
                             "Error": str(error_values),
                             "Row": str(rows)}
@@ -868,11 +867,11 @@ class Dwca(BaseDwca):
                 log.error("Empty values found in dataframe row: %s",
                           content_keys_df.index[empty_values_condition.all(axis=1)].tolist())
 
-                self.__report_error(content_type = content_type,
-                                    message = ValidationError.EMPTY_KEYS,
-                                    error_values = [None],
-                                    rows = content_keys_df.index[empty_values_condition.all(axis=1)].tolist(),
-                                    error_df = error_df)
+                self.__report_error(content_type=content_type,
+                                    message=ValidationError.EMPTY_KEYS,
+                                    error_values=[None],
+                                    rows=content_keys_df.index[empty_values_condition.all(axis=1)].tolist(),
+                                    error_df=error_df)
                 checks_status = False
 
             # check incase-sensitive duplicates
@@ -885,11 +884,11 @@ class Dwca(BaseDwca):
             if duplicate_condition.values.any():
                 log.error("Duplicate %s found. Total rows affected: %s", keys, duplicate_condition.sum())
                 log.error("Duplicate values: %s", pd.unique(content_keys_df[duplicate_condition].stack()))
-                self.__report_error(content_type = content_type,
-                                    message = ValidationError.EMPTY_KEYS,
-                                    error_values = list(pd.unique(content_keys_df[duplicate_condition].stack())),
-                                    rows = content_keys_df.index[duplicate_condition].tolist(),
-                                    error_df = error_df)
+                self.__report_error(content_type=content_type,
+                                    message=ValidationError.EMPTY_KEYS,
+                                    error_values=list(pd.unique(content_keys_df[duplicate_condition].stack())),
+                                    rows=content_keys_df.index[duplicate_condition].tolist(),
+                                    error_df=error_df)
                 checks_status = False
 
         return checks_status
@@ -918,20 +917,20 @@ class Dwca(BaseDwca):
         headers = self._read_header(content.df_content)
         if sum(not c or c.isspace() for c in headers) > 0:
             log.error("Some column headers are blank")
-            self.__report_error(content_type = content_type,
-                                message = ValidationError.UNNAMED_COLUMNS,
-                                error_values = [None],
-                                rows = [None],
-                                error_df = error_df)
+            self.__report_error(content_type=content_type,
+                                message=ValidationError.UNNAMED_COLUMNS,
+                                error_values=[None],
+                                rows=[None],
+                                error_df=error_df)
             return False
 
         if content.df_content.columns.str.contains('^unnamed:', case=False).any():
             log.error("One or more column is unnamed. "
                       "This usually happens if there are empty column in the csv")
-            self.__report_error(content_type = content_type,
-                                message = ValidationError.UNNAMED_COLUMNS,
-                                error_values = ["^unnamed"],
-                                rows = [None],
+            self.__report_error(content_type=content_type,
+                                message=ValidationError.UNNAMED_COLUMNS,
+                                error_values=["^unnamed"],
+                                rows=[None],
                                 error_df=error_df)
             return False
 
