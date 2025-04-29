@@ -154,7 +154,8 @@ class BaseDwca(metaclass=ABCMeta):
         content_to_validate = {}
         for ext in ext_csv_list:
             if ext.keys and len(ext.keys) > 0:
-                content_to_validate[ext.type] = ext.keys
+                if ext.type in [MetaElementTypes.OCCURRENCE, MetaElementTypes.EVENT]:
+                    content_to_validate[ext.type] = ext.keys
             self.extract_csv_content(csv_info=ext, core_ext_type=CoreOrExtType.EXTENSION,
                                      extra_read_param=extra_read_param)
 

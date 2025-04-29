@@ -80,7 +80,8 @@ class DwcaHandler:
     def create_dwca_from_file_list(files: list, output_dwca: Union[str, BytesIO],
                                    eml_content: Union[str, Eml] = '', csv_encoding: CSVEncoding = CSVEncoding(),
                                    content_keys: dict[MetaElementTypes, list] = None,
-                                   extra_read_param: dict = None):
+                                   extra_read_param: dict = None,
+                                   validate_content: bool = True):
         """Helper function to create a dwca based on a list of txt files. The file names will determine the class type
            Builds event core dwca if event.txt is supplied,
            otherwise build an occurrence core dwca if occurrence.txt is supplied.
@@ -92,18 +93,21 @@ class DwcaHandler:
         :param content_keys: optional dictionary of MetaElementTypes and key list
                                       for eg. {MetaElementTypes.OCCURRENCE, ["occurrenceID"]}
         :param extra_read_param: extra read param to use if any
+        :param validate_content Validate the contents
         """
         core_content, ext_content_list = DwcaHandler.get_contents_from_file_names(files=files,
                                                                                   csv_encoding=csv_encoding,
                                                                                   content_keys=content_keys)
         DwcaHandler.create_dwca(core_csv=core_content, ext_csv_list=ext_content_list, output_dwca=output_dwca,
-                                eml_content=eml_content, extra_read_param=extra_read_param)
+                                eml_content=eml_content, extra_read_param=extra_read_param,
+                                validate_content=validate_content)
 
     @staticmethod
     def create_dwca_from_zip_content(zip_file: str, output_dwca: Union[str, BytesIO],
                                      eml_content: Union[str, Eml] = '', csv_encoding: CSVEncoding = CSVEncoding(),
                                      content_keys: dict[MetaElementTypes, list] = None,
-                                     extra_read_param: dict = None):
+                                     extra_read_param: dict = None,
+                                     validate_content: bool = True):
         """Helper function to create a dwca based on a list of txt files in a zip file.
            The file names will determine the class type
            Builds event core dwca if event.txt is supplied,
@@ -116,6 +120,7 @@ class DwcaHandler:
         :param content_keys: optional dictionary of class type and the key
                              for eg. {MetaElementTypes.OCCURRENCE, ["occurrenceID"]}
         :param extra_read_param: extra read param to use if any
+        :param validate_content Validate the contents
         """
         with ZipFile(zip_file, 'r') as zf:
             files = zf.namelist()
@@ -124,7 +129,8 @@ class DwcaHandler:
                                                                                       content_keys=content_keys,
                                                                                       zf=zf)
             DwcaHandler.create_dwca(core_csv=core_content, ext_csv_list=ext_content_list, output_dwca=output_dwca,
-                                    eml_content=eml_content, extra_read_param=extra_read_param)
+                                    eml_content=eml_content, extra_read_param=extra_read_param,
+                                    validate_content=validate_content)
             zf.close()
 
     @staticmethod
@@ -139,7 +145,9 @@ class DwcaHandler:
         :param core_csv: The core source
         :param ext_csv_list: A list of extension sources
         :param output_dwca: Where to place the resulting Dwca
-        :param validate_content: Validate the DwCA before processing
+        :param validate_content: Validate the DwCA before processing.
+                                 Dwca is not created if the validation fails for the content.
+                                 Current contents validated by default is Event and Occurrence
         :param eml_content: eml content in string or Eml class
         :param extra_read_param: extra read param to use if any
         """
