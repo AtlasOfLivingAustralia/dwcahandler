@@ -180,7 +180,7 @@ class DwcaHandler:
 
     @staticmethod
     def validate_dwca(dwca_file: Union[str, BytesIO], content_keys: dict = None,
-                      extra_read_param: dict = None, error_file: str = None):
+                      extra_read_param: dict = None, error_df: pd.DataFrame = None):
         """Validate dwca for unique key and column for core content by default.
             If content_keys is supplied, the content is also validated.
 
@@ -189,17 +189,17 @@ class DwcaHandler:
                 When content_keys are provided, validation will be performed on the content as well.
                              for eg. {MetaElementTypes.OCCURRENCE, "occurrenceID"}
         :param extra_read_param: extra read param to use if any
-        :param error_file: The file to write errors to. If None, errors are logged
+        :param error_df: The reference to the dataframe to write errors to. If None, errors are logged
         """
-        return Dwca(dwca_file_loc=dwca_file).validate_dwca(content_keys=content_keys, error_file=error_file,
+        return Dwca(dwca_file_loc=dwca_file).validate_dwca(content_keys=content_keys, error_df=error_df,
                                                            extra_read_param=extra_read_param)
 
     @staticmethod
-    def validate_file(csv_file: ContentData, extra_read_param: dict = None, error_file: str = None):
+    def validate_file(csv_file: ContentData, extra_read_param: dict = None, error_df: str = None):
         """Test a CSV file for consistency
 
         :param csv_file: The path to the CSV
         :param extra_read_param: extra read param to use if any
-        :param error_file: The file to write errors to, if None log errors
+        :param error_df: The reference to the dataframe error to write errors to, if None log errors
         """
-        return Dwca().validate_file(csv=csv_file, extra_read_param=extra_read_param, error_file=error_file)
+        return Dwca().validate_file(csv=csv_file, extra_read_param=extra_read_param, error_df=error_df)

@@ -39,6 +39,16 @@ DefaultKeys = namedtuple("DefaultKeys", ["EVENT", "OCCURRENCE", "MULTIMEDIA"])(
     MULTIMEDIA = "identifier"
 )
 
+class ValidationError(Enum):
+    EMPTY_KEYS = "EMPTY_KEYS"
+    DUPLICATE_KEYS = "DUPLICATE_KEYS"
+    DUPLICATE_COLUMNS = "DUPLICATE_COLUMNS"
+    UNNAMED_COLUMNS = "UNNAMED_COLUMNS"
+
+
+def get_error_report() -> pd.DataFrame:
+    return pd.DataFrame(pd.DataFrame(columns=["Content", "Message", "Error", "Row"]))
+
 def get_keys(class_type: MetaElementTypes, override_content_keys: dict[[MetaElementTypes, list]] = None):
     """
     # If override_content_keys not supplied, return the default keys based on content type

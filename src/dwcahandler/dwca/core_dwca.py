@@ -24,7 +24,8 @@ from pandas.io import parsers
 from dwcahandler.dwca import (BaseDwca, CoreOrExtType, CSVEncoding,
                               ContentData, Defaults, Eml, Terms, get_keys,
                               MetaDwCA, MetaElementInfo, MetaElementTypes,
-                              MetaElementAttributes, Stat, record_diff_stat)
+                              MetaElementAttributes, Stat, record_diff_stat,
+                              ValidationError)
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.DEBUG)
@@ -434,21 +435,22 @@ class Dwca(BaseDwca):
         """
         df_content.set_index(keys, drop=False, inplace=True)
 
-    def _extract_core_keys(self, core_content, keys):
+    def _extract_core_keys(self, core_content: pd.DataFrame, keys: list, id_column: str):
         """Get the key terms for a data frame.
 
         :param core_content: The content data frame
         :param keys: The keys that uniquely identify the record
+        :param id_column: Column name used for id
         :return: A data frame indexed by the `id` column that contains the
                 key elements for each record
         """
-        columns = [self.defaults_prop.MetaDefaultFields.ID] \
-            if self.defaults_prop.MetaDefaultFields.ID in core_content.columns.tolist() else []
-        if all(key in core_content.columns for key in keys):
-            columns.extend(keys)
-            df = core_content[columns]
-            if self.defaults_prop.MetaDefaultFields.ID in core_content.columns.tolist():
-                df.set_index(self.defaults_prop.MetaDefaultFields.ID, drop=True, inplace=True)
+        columns = keys.copy()
+        if id_column not in keys:
+            columns.append(id_column)
+        df = pd.DataFrame()
+        if all(col in core_content.columns for col in columns):
+            df = core_content[columns].copy()
+            df.set_index(id_column, drop=False, inplace=True)
         else:
             raise ValueError(f"Keys does not exist in core content {''.join(keys)}")
         return df
@@ -464,30 +466,62 @@ class Dwca(BaseDwca):
     def build_indexes(self):
         """Build unique indexes, using the key terms for both core and extensions
         """
+
+        def __get_coreid_column(content: DfContent):
+            """
+            Get the column name of id or coreid
+            :param content: Content to find the id or coreid column
+            :return: The column name if found
+            """
+            for elm in self.meta_content.meta_elements:
+                if elm.meta_element_type.file_name == content.meta_info.file_name:
+                    coreid_idx = elm.core_id.index
+                    for field in elm.fields:
+                        if field.index == coreid_idx:
+                            return field.field_name
+                    return Defaults.MetaDefaultFields.ID if content.meta_info.core_or_ext_type == CoreOrExtType.CORE \
+                        else Defaults.MetaDefaultFields.CORE_ID
+            return None
+
         if len(self.ext_content) > 0:
+            id_column = __get_coreid_column(self.core_content)
             core_index_keys = self._extract_core_keys(self.core_content.df_content,
-                                                      self.core_content.keys)
+                                                  self.core_content.keys, id_column)
             for content in self.ext_content:
-                self._add_ext_lookup_key(content.df_content, core_index_keys,
-                                         self.core_content.keys, content.keys)
+                coreid_column = __get_coreid_column(content)
+                if coreid_column:
+                    # Make sure coreid columns are populated by filtering off empty core ids.
+                    log.info ("content %s contains %i records before filtering empty coreid",
+                              content.meta_info.file_name, len(content.df_content))
+                    content.df_content = content.df_content[content.df_content[coreid_column].notna()]
+                    log.info ("content %s contains %i records after filtering empty coreid",
+                              content.meta_info.file_name, len(content.df_content))
+                    content.df_content = content.df_content[content.df_content[coreid_column].isin(core_index_keys.index)]
+                    log.info ("content %s contains %i records after filtering unlinked coreids",
+                              content.meta_info.file_name, len(content.df_content))
+
+                    self._add_ext_lookup_key(content.df_content, core_index_keys,
+                                             self.core_content.keys, content.keys, coreid_column)
 
             self._cleanup_keys(core_index_keys)
 
         self._build_index_for_content(self.core_content.df_content, self.core_content.keys)
 
-    def _add_core_key(self, df_content, core_df_content, core_keys):
+    def _add_core_key(self, df_content: pd.DataFrame, core_df_content: pd.DataFrame, core_keys: list,
+                      coreid_column: str):
         """Update the keys used to uniquely identify a record
 
         The first column is assumed to be the `coreid` or `id` field
 
         :param df_content: The (extension) data frame to update
-        :param core_df_content: The core data frame
-        :param core_keys: The keys to use to
+        :param core_df_content: The core data frame containing the keys (derived from core content)
+        :param core_keys: The keys which need to be added to the df_content
+        :param coreid_column: Column name used for coreid
         :return: The updated data frame
         """
-        # assume that first column if the coreid or id field
-        df_content.set_index(df_content.columns[0], drop=False, inplace=True)
+        df_content.set_index(coreid_column, drop=False, inplace=True)
         self._update_df(df_content, core_df_content, core_keys, core_keys)
+        df_content.reset_index(inplace=True, drop=True)
         return df_content
 
     @record_diff_stat
@@ -546,34 +580,42 @@ class Dwca(BaseDwca):
                     ext.df_content = self._delete_content(content=ext,
                                                           delete_content=delete_content)
 
-    def _add_ext_lookup_key(self, df_content, core_df_content, core_keys, keys):
+    def _add_ext_lookup_key(self, df_content: pd.DataFrame, core_df_content: pd.DataFrame, core_keys: list,
+                            keys: list, coreid_column: str):
         """Add a lookup key to a data frame
 
         :param df_content: The content data frame
         :param core_df_content: The core content data frame
         :param core_keys: The keys that uniquely identify the core record
-        :param keys: The additional keys
-        :return: The content data frame with additional indexes for the keys
+        :param keys: The additional keys for extension (for eg: identifier for multimedia extension)
+        :param coreid_column: Column used for coreid
+        :return: The content data frame with indexes for the keys
         """
-        # Core key is first level, hence need to be set first, then followed by extension key
-        if not set(core_keys).issubset(df_content.columns.to_list()):
-            self._add_core_key(df_content, core_df_content, core_keys)
-            df_content.set_index(core_keys, inplace=True, drop=True)
-        else:
-            df_content.set_index(core_keys, inplace=True, drop=False)
+        existing_col = []
+        for a_key in core_keys:
+            if a_key in df_content.columns.to_list():
+                existing_col.append(a_key)
+
+        # Add the key column from core content that is not part of the coreid
+        if len(core_keys) > 0:
+            self._add_core_key(df_content, core_df_content, core_keys, coreid_column)
+
+        for i, a_key in enumerate(core_keys):
+            drop_flag = False if a_key in existing_col else True
+            append_flag = True if i > 0 else False
+            df_content.set_index(a_key, inplace=True, drop=drop_flag, append=append_flag)
 
         for key in keys:
             if key not in core_keys:
                 df_content.set_index(key, inplace=True, drop=False, append=True)
         return df_content
 
-    # Extension Sync
     def merge_contents(self, delta_dwca: Dwca, extension_sync: bool = False,
                        match_by_filename: bool = False):
         """Merge the contents of this DwCA with a delta DwCA
 
         :param delta_dwca: The delta DwCA to apply
-        :param extension_sync: refresh the extensions from delta dwca
+        :param extension_sync: if True, remove existing extension and refresh the extensions from delta dwca
                                 if the occurrences exist in both
         :param match_by_filename: Match by filename of contents apart from the content types.
         This is particularly useful if a dwca contains more than one content of same type
@@ -791,18 +833,32 @@ class Dwca(BaseDwca):
 
         raise ValueError('content is empty')
 
-    def check_duplicates(self, content_keys_df, keys, error_file=None):
+    def __report_error(self, content_type: MetaElementTypes, message: ValidationError,
+                       error_values: list, rows: list, error_df: pd.DataFrame = None):
+        """Update error report if this is set
+        :param content_type type of content
+        :param message Error message
+        :param error_values Values that fail validation
+        :param rows Row number that cause the failed validation. Starts with 0
+        """
+        if isinstance(error_df, pd.DataFrame):
+            error_report = {"Content":  content_type.value,
+                            "Message": message.value,
+                            "Error": str(error_values),
+                            "Row": str(rows)}
+            error_df.loc[len(error_df)] = error_report
+            return error_df
+
+    def check_duplicates(self, content_type: MetaElementTypes, content_keys_df: pd.DataFrame,
+                         keys: list, error_df: pd.DataFrame = None):
         """Check a content frame for duplicate keys
 
+        :param content_type: Content Type where the validation is occurring
         :param content_keys_df: The content frame to check
         :param keys: The key columns
-        :param error_file: A file to write problem records to
+        :param error_df: Report dataframe
         :return: True if there are no duplicates, False otherwise
         """
-
-        def report_error(content, keys, message, condition, error_file=None):
-            content.loc[condition.values, keys].to_csv(error_file, index=False)
-
         checks_status: bool = True
         if len(keys) > 0:
             empty_values_condition = content_keys_df.isnull()
@@ -811,8 +867,12 @@ class Dwca(BaseDwca):
                           empty_values_condition.sum().sum())
                 log.error("Empty values found in dataframe row: %s",
                           content_keys_df.index[empty_values_condition.all(axis=1)].tolist())
-                if error_file:
-                    report_error(content_keys_df, keys, "Empty Values", empty_values_condition)
+
+                self.__report_error(content_type = content_type,
+                                    message = ValidationError.EMPTY_KEYS,
+                                    error_values = [None],
+                                    rows = content_keys_df.index[empty_values_condition.all(axis=1)].tolist(),
+                                    error_df = error_df)
                 checks_status = False
 
             # check incase-sensitive duplicates
@@ -825,14 +885,16 @@ class Dwca(BaseDwca):
             if duplicate_condition.values.any():
                 log.error("Duplicate %s found. Total rows affected: %s", keys, duplicate_condition.sum())
                 log.error("Duplicate values: %s", pd.unique(content_keys_df[duplicate_condition].stack()))
-                if error_file:
-                    report_error(content_keys_df, keys, "Duplicate Values",
-                                 duplicate_condition, error_file)
+                self.__report_error(content_type = content_type,
+                                    message = ValidationError.EMPTY_KEYS,
+                                    error_values = list(pd.unique(content_keys_df[duplicate_condition].stack())),
+                                    rows = content_keys_df.index[duplicate_condition].tolist(),
+                                    error_df = error_df)
                 checks_status = False
 
         return checks_status
 
-    def _extract_keys(self, df_content, keys):
+    def _extract_keys(self, df_content: pd.DataFrame, keys: list):
         """Get the key columns for a data frame
 
         :param df_content: The content data frame
@@ -841,36 +903,48 @@ class Dwca(BaseDwca):
         """
         return df_content[keys]
 
-    def _validate_columns(self, content):
+    def _validate_columns(self, content_type: MetaElementTypes, content: DfContent, error_df: pd.DataFrame):
         """Validate the columns in content
             Validate the column header if any of it contains Unnamed header.
             This usually happens if a csv has empty column. Pandas automatically
             assigns the column header with a column name called Unnamed:
 
-        :param content: The content
+        :param content_type The Content Type
+        :param content: The content itself
+        :param error_df: The report dataframe containing the error validation
         :return: True if all columns have a valid name,
                 False if a name is blank or column contain some unnamed header
         """
         headers = self._read_header(content.df_content)
         if sum(not c or c.isspace() for c in headers) > 0:
             log.error("Some column headers are blank")
+            self.__report_error(content_type = content_type,
+                                message = ValidationError.UNNAMED_COLUMNS,
+                                error_values = [None],
+                                rows = [None],
+                                error_df = error_df)
             return False
 
         if content.df_content.columns.str.contains('^unnamed:', case=False).any():
             log.error("One or more column is unnamed. "
                       "This usually happens if there are empty column in the csv")
+            self.__report_error(content_type = content_type,
+                                message = ValidationError.UNNAMED_COLUMNS,
+                                error_values = ["^unnamed"],
+                                rows = [None],
+                                error_df=error_df)
             return False
 
         return True
 
-    def validate_content(self, content_to_validate: dict = None, error_file: str = None):
+    def validate_content(self, content_to_validate: dict = None, error_df: pd.DataFrame = None):
         """Validate the content of the DwCA. Validates core content by default
 
         - No duplicate record keys
         - Valid columns
 
         :param content_to_validate: content to validate
-        :param error_file: A file to record errors
+        :param error_df: A file to record errors
         :return: True if the DwCA is value, False otherwise
         """
 
@@ -888,12 +962,12 @@ class Dwca(BaseDwca):
                 validation_content_success = True
                 keys_df = self._extract_keys(content.df_content, content.keys)
 
-                if not self.check_duplicates(keys_df, content.keys, error_file):
+                if not self.check_duplicates(class_type, keys_df, content.keys, error_df):
                     log.error("Validation failed for %s %s content for duplicates keys %s",
                               content.meta_info.core_or_ext_type.value, content.meta_info.type, content.keys)
                     validation_content_success = False
 
-                if not self._validate_columns(content):
+                if not self._validate_columns(class_type, content, error_df):
                     log.error("Validation failed for %s %s content for duplicate columns",
                               content.meta_info.core_or_ext_type.value, content.meta_info.type)
                     validation_content_success = False

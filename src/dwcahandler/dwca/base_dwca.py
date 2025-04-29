@@ -7,6 +7,7 @@ from __future__ import annotations
 from abc import ABCMeta, abstractmethod
 from typing import Union
 from io import BytesIO
+import pandas as pd
 from dwcahandler.dwca import CoreOrExtType, ContentData, MetaElementTypes
 from dwcahandler.dwca.eml import Eml
 
@@ -89,7 +90,7 @@ class BaseDwca(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def validate_content(self, content_to_validate: dict = None, error_file: str = None):
+    def validate_content(self, content_to_validate: dict = None, error_df: pd.DataFrame = None):
         pass
 
     @abstractmethod
@@ -189,25 +190,26 @@ class BaseDwca(metaclass=ABCMeta):
         self.generate_meta()
         self.write_dwca(output_dwca)
 
-    def validate_dwca(self, content_keys: dict, error_file: str, extra_read_param: dict = None):
+    def validate_dwca(self, content_keys: dict, error_df: pd.DataFrame = None, extra_read_param: dict = None):
         """Validate dwca to check if content has unique keys. By default, validates the core content.
            If additional checks required in another content, supply it as content_keys
 
         :param content_keys: a dictionary of class type and the key
                              for eg. {MetaElementTypes.OCCURRENCE, "occurrenceID"}
-        :param error_file: optional error_file for the errored data
+        :param error_df: optional error_df containing a reference to the dataframe object
+                           where the validation error is written to
         :param extra_read_param: extra read options to use
         """
         self.extract_dwca(extra_read_param=extra_read_param)
         set_keys = self.set_keys(content_keys)
-        return self.validate_content(content_to_validate=set_keys, error_file=error_file)
+        return self.validate_content(content_to_validate=set_keys, error_df=error_df)
 
-    def validate_file(self, csv: ContentData, error_file: str, extra_read_param: dict = None):
+    def validate_file(self, csv: ContentData, error_df: pd.DataFrame = None, extra_read_param: dict = None):
         """Validate the text file
 
         :param csv: ContentData to pass the csv, key and type
-        :param error_file: optional error_file for the errored data
+        :param error_df: optional error_df for the errored data
         :param extra_read_param: extra read param to use
         """
-        self.extract_csv_content(csv_info=csv, core_ext_type=CoreOrExtType.CORE)
-        return self.validate_content(error_file=error_file)
+        self.extract_csv_content(csv_info=csv, core_ext_type=CoreOrExtType.CORE, extra_read_param=extra_read_param)
+        return self.validate_content(error_df=error_df)
