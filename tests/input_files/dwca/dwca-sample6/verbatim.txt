@@ -1,0 +1,10 @@
+gbifID	institutionCode	collectionCode	basisOfRecord	catalogNumber	decimalLatitude	decimalLongitude	scientificName
+sample1	I1	COL-A	FossileSpecimen	33699	-33.7948	112.4737	"Species A"
+sample2	I1	COL-A	FossileSpecimen	33703	-33.7948	112.4737	"Species A"
+sample3	I1	COL-A	FossileSpecimen	31739	-19.887	112.254	"Species B"
+sample4	I1	COL-A	FossileSpecimen	31691	-19.887	112.254	"Species B"
+sample5	I1	COL-A	FossileSpecimen	31697	-19.887	112.254	"Species B"
+sample6	I1	COL-A	FossileSpecimen	31695	-19.887	112.254	"Species B"
+sample7	I1	COL-A	FossileSpecimen	31693	-19.887	112.254	"Species B"
+sample8	I1	COL-A	FossileSpecimen	31696	-19.887	112.254	"Species B"
+sample9	I1	COL-A	FossileSpecimen	31735	-19.887	112.254	"Species B"

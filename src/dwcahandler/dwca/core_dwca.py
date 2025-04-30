@@ -17,15 +17,15 @@ from dataclasses import MISSING, asdict, dataclass, field
 from pathlib import Path
 from typing import Union
 from zipfile import ZipFile
-
 import pandas as pd
 from numpy import nan
 from pandas.errors import EmptyDataError
 from pandas.io import parsers
 from dwcahandler.dwca import (BaseDwca, CoreOrExtType, CSVEncoding,
-                              CsvFileType, Defaults, Eml,
+                              ContentData, Defaults, Eml, Terms, get_keys,
                               MetaDwCA, MetaElementInfo, MetaElementTypes,
-                              Stat, record_diff_stat)
+                              MetaElementAttributes, Stat, record_diff_stat,
+                              ValidationError)
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.DEBUG)
@@ -84,7 +84,7 @@ class Dwca(BaseDwca):
         """
         return len(content)
 
-    def _update_core_ids(self, core_df):
+    def _update_core_ids(self, core_df) -> str:
         """Generate core identifiers for a core data frame.
 
         UUID identifiers are generated for each row in the core data frame.
@@ -92,11 +92,13 @@ class Dwca(BaseDwca):
         useful identifier is available in the source data.
 
         :param core_df: The data frame to generate identifiers for
+        return id field
         """
-        if 'id' not in core_df.columns.to_list():
-            core_df.insert(0, 'id', core_df.apply(lambda _: uuid.uuid4(), axis=1), False)
+        if self.defaults_prop.MetaDefaultFields.ID not in core_df.columns.to_list():
+            core_df.insert(0, self.defaults_prop.MetaDefaultFields.ID, core_df.apply(lambda _: uuid.uuid4(), axis=1), False)
+            return self.defaults_prop.MetaDefaultFields.ID
         else:
-            core_df['id'] = core_df['id'].map(lambda _: uuid.uuid4())
+            raise ValueError("core df should not contain id column")
 
     def _update_df(self, to_update_df, lookup_df, update_field, from_update_field):
         """Update a data frame via lookup
@@ -115,7 +117,8 @@ class Dwca(BaseDwca):
 
         return len(to_update_df.loc[exist])
 
-    def _update_extension_ids(self, csv_content, core_df_content, link_col: list):
+    def _update_extension_ids(self, csv_content: pd.DataFrame, core_df_content: pd.DataFrame,
+                              link_col: list) -> (pd.DataFrame, str):
         """Update the extension tables with (usually generated) identifiers
             from a core data frame.
 
@@ -126,25 +129,38 @@ class Dwca(BaseDwca):
         :param csv_content: The extension to update
         :param core_df_content: The core data frame
         :param link_col: The columns that link the extension to the core
+        :return a tuple containing extension data frame containing the core id and the core id field
         """
-        if 'coreid' in csv_content:
-            csv_content.pop('coreid')
+        ext_core_id_field: str = 'coreid'
+
+        if ext_core_id_field in csv_content:
+            csv_content.pop(ext_core_id_field)
 
         # Having link_col as index and column raises ambiguous error in merge
         if (set(link_col).issubset(set(csv_content.columns.to_list())) and
                 set(link_col).issubset(set(csv_content.index.names))):
             csv_content.reset_index(inplace=True, drop=True)
 
-        csv_content = csv_content.merge(core_df_content.loc[:, 'id'],
+        csv_content = csv_content.merge(core_df_content.loc[:, self.defaults_prop.MetaDefaultFields.ID],
                                         left_on=link_col,
                                         right_on=link_col, how='inner')
 
-        if 'id' in csv_content.columns.to_list():
-            col = csv_content.pop('id')
+        if self.defaults_prop.MetaDefaultFields.ID in csv_content.columns.to_list():
+            unmatched_content = csv_content[csv_content[self.defaults_prop.MetaDefaultFields.ID].isnull()]
+            unmatched_content = unmatched_content.drop(columns=[self.defaults_prop.MetaDefaultFields.ID])
+            if len(unmatched_content) > 0:
+                log.info("There are orphaned keys in extension file")
+                pd.set_option("display.max_columns", 7)
+                pd.set_option('display.max_colwidth', 15)
+                pd.set_option('display.max_rows', 10)
+                log.info("\n%s", unmatched_content)
+            csv_content = csv_content[~csv_content[self.defaults_prop.MetaDefaultFields.ID].isnull()]
+            col = csv_content.pop(self.defaults_prop.MetaDefaultFields.ID)
             csv_content.insert(0, col.name, col)
-            csv_content.rename(columns={"id": "coreid"}, inplace=True)
-
-        return csv_content
+            csv_content.rename(columns={self.defaults_prop.MetaDefaultFields.ID: ext_core_id_field}, inplace=True)
+            return csv_content, ext_core_id_field
+        else:
+            raise ValueError("Something is not right. The core id failed to be created")
 
     def _update_associated_files(self, assoc_files: list[str]):
         """Update the internal list of additional files.
@@ -172,23 +188,39 @@ class Dwca(BaseDwca):
         return DfContent(df_content=csv_content, meta_info=meta_element_type,
                          stat=Stat(self.count_stat(csv_content)))
 
-    def extract_dwca(self, exclude_ext_files: list = None):
+    def extract_dwca(self, extra_read_param: dict = None, exclude_ext_files: list = None):
         """Read a DwCA file into this object.
         The archive is expected to be in zip file form, located at the `dwca_file_loc` attribute.
         The content and meta-information are initialised from the archive.
 
+        :param extra_read_param: additional read param to use when reading
         :param exclude_ext_files: Ignore the following file names
         """
         def convert_values(v):
             invalid_values = self.defaults_prop.translate_table.keys()
             return self.defaults_prop.translate_table[v] if v in invalid_values else v
 
+        def _find_fields_with_zero_idx(meta_element_fields: list):
+            for elm_field in meta_element_fields:
+                if elm_field.index == "0":
+                    return elm_field
+            return None
+
+        def _add_first_id_field_if_exists(meta_element: MetaElementAttributes):
+            zero_index_exist = _find_fields_with_zero_idx(meta_element.fields)
+            if meta_element.core_id and meta_element.core_id.index and not zero_index_exist:
+                return [self.defaults_prop.MetaDefaultFields.ID] if (
+                        meta_element.meta_element_type.core_or_ext_type == CoreOrExtType.CORE) \
+                    else [self.defaults_prop.MetaDefaultFields.CORE_ID]
+            else:
+                return []
+
         with ZipFile(self.dwca_file_loc, 'r') as zf:
 
             files = zf.namelist()
 
-            log.info("Reading from %s", self.dwca_file_loc)
-
+            log.info("Reading from %s. Zip file size is %i, containing files: %s",
+                     self.dwca_file_loc, zf.start_dir, ",".join(zf.namelist()))
             with io.TextIOWrapper(zf.open(self.defaults_prop.meta_xml_filename)) as meta_xml:
                 self.meta_content.read_meta_file(meta_xml)
                 meta_xml.close()
@@ -206,7 +238,8 @@ class Dwca(BaseDwca):
             for meta_elm in self.meta_content.meta_elements:
                 csv_file_name = meta_elm.meta_element_type.file_name
                 with io.TextIOWrapper(zf.open(csv_file_name), encoding="utf-8") as csv_file:
-                    dwc_headers = [f.field_name for f in meta_elm.fields if f.index is not None]
+                    dwc_headers = _add_first_id_field_if_exists(meta_elm)
+                    dwc_headers.extend([f.field_name for f in meta_elm.fields if f.index is not None])
                     duplicates = [i for i in set(dwc_headers) if dwc_headers.count(i) > 1]
                     if len(duplicates) > 0:
                         raise ValueError(f"Duplicate columns {duplicates} specified in the "
@@ -216,7 +249,8 @@ class Dwca(BaseDwca):
                     csv_content = self._read_csv(
                         csv_file, columns=dwc_headers,
                         csv_encoding_param=CSVEncoding(**csv_encoding),
-                        ignore_header_lines=int(meta_elm.meta_element_type.ignore_header_lines))
+                        ignore_header_lines=int(meta_elm.meta_element_type.ignore_header_lines),
+                        extra_param=extra_read_param)
                     if meta_elm.meta_element_type.core_or_ext_type == CoreOrExtType.CORE:
                         self.core_content = self._set_content(csv_content,
                                                               meta_elm.meta_element_type)
@@ -227,17 +261,19 @@ class Dwca(BaseDwca):
 
             zf.close()
 
-    def _add_new_columns(self, df_content, delta_df_content):
-        """Add additional columns to a data frame
+    def _add_new_columns(self, df_content, delta_df_content, keys):
+        """Add additional columns to a data frame if they're not part of the keys
 
         New columns are initialised to vectors of NaN
 
         :param df_content: The base data frame content
         :param delta_df_content: The data frane content to add
+        :param keys: keys used for merging
         """
         df_columns = df_content.columns.to_list()
         delta_df_columns = delta_df_content.columns.to_list()
         new_columns = list(set(delta_df_columns) - set(df_columns))
+        new_columns = list(set(new_columns) - set(keys))
         if len(new_columns) > 0:
             # Set to empty string instead of nan to resolve warning message
             # see https://pandas.pydata.org/pdeps/0006-ban-upcasting.html
@@ -257,7 +293,7 @@ class Dwca(BaseDwca):
         :return: The updated content
         """
         # Extract columns that need updating, excluding self.keys and id
-        non_update_column = ['id', 'coreid']
+        non_update_column = list(self.defaults_prop.MetaDefaultFields)
         non_update_column.extend(keys)
         update_columns = [i for i in delta_df_content.columns.to_list()
                           if i not in non_update_column]
@@ -277,18 +313,15 @@ class Dwca(BaseDwca):
         """
         return core_content[core_content.index.isin(delta_core_content.index)].index
 
-    def _delete_old_ext_records(self, content, core_content, delta_core_content, core_keys):
+    def _delete_old_ext_records(self, content, core_content, delta_core_content):
         """Drop all extension rows where core records are exist in both content and delta
 
         :param content: The extension
         :param core_content: The core records
         :param delta_core_content: The delta update
-        :param core_keys: The key fields
         """
         core_exist = self._find_records_exist_in_both(core_content, delta_core_content)
-        exist = content.df_content.index
-        for key in core_keys:
-            exist = exist.get_level_values(key).isin(core_exist)
+        exist = content.df_content.droplevel(content.keys).index.isin(core_exist)
         if len(content.df_content.loc[exist]) > 0:
             log.info("Number of rows dropped from extension %s because of ext_sync: %s",
                      content.meta_info.type.name, str(len(content.df_content.loc[exist])))
@@ -304,27 +337,47 @@ class Dwca(BaseDwca):
         """
         return pd.concat([df_content, new_rows], ignore_index=False)
 
-    def set_keys(self, keys: dict = None):
+    def set_keys(self, keys: dict = None, strict: bool = False):
         """Set unique identifier keys.
 
         :param keys: The dict of keys for content
+        :param strict: The extension keys must be set if the default keys is defined for the extension.
+                        This is necessary for merging extension contents
         :return: The keys which have been set for the content
         """
         set_keys = {}
         if keys and len(keys) > 0:
             for k, v in keys.items():
-                dwca_content, _ = self.get_content(MetaElementTypes.get_element(k).row_type_ns)
+                contents = self.get_content(class_type=k)
                 # If found then set the key for the content
-                if dwca_content:
-                    dwca_content.keys = [v] if isinstance(v, str) else v
-                    set_keys[k] = v
+                for dwca_content, _ in contents:
+                    key_list = [v] if isinstance(v, str) else v
+                    col_term = []
+                    for a_key in key_list:
+                        # this is in case a_key is url form for eg: http://rs.gbif.org/terms/1.0/gbifID
+                        if a_key not in dwca_content.df_content.columns.tolist():
+                            col_term.append(Terms.extract_term(a_key))
+                        else:
+                            col_term.append(a_key)
+                    dwca_content.keys = col_term
+                    set_keys[k] = col_term
+
+        if strict:
+            # Set default key for remaining extension content which has not been set
+            for content in self.ext_content:
+                if content.meta_info.type and len(content.keys) == 0:
+                    keys = get_keys(class_type=content.meta_info.type)
+                    if len(keys) > 0:
+                        content.keys = keys
+                        set_keys[content.meta_info.type] = keys
 
         return set_keys
 
-    def _update_meta_fields(self, content):
+    def _update_meta_fields(self, content: DfContent, key_field: str = None):
         """Update meta content fields by reading the content frame"""
         fields = self._read_header(content.df_content)
-        self.meta_content.update_meta_element(meta_element_info=content.meta_info, fields=fields)
+        self.meta_content.update_meta_element(meta_element_info=content.meta_info, fields=fields,
+                                              index_field=key_field)
 
     def _filter_content(self, df_content, delta_df_content):
         """Filter delta content that is not already in the existing content
@@ -345,7 +398,7 @@ class Dwca(BaseDwca):
         :param stat: The statistics to update
         :return: A list of any new columns
         """
-        new_columns = self._add_new_columns(df_content, delta_df_content)
+        new_columns = self._add_new_columns(df_content, delta_df_content, keys)
 
         if update:
             self._update_values(df_content, delta_df_content, keys, stat)
@@ -374,95 +427,6 @@ class Dwca(BaseDwca):
         # return the merged content
         return self._add_new_rows(content.df_content, new_rows)
 
-    def _find_duplicate_columns(self, content):
-        """Find any duplicated columns in a content frame
-
-        :param content: The content frame
-        :return: A list of duplicated fields
-        """
-        all_columns = self._read_header(content.df_content)
-        sanitized_fields = self.meta_content.map_headers(all_columns)
-        list_fields = [f.field_name for f in sanitized_fields]
-        dup_fields = [item for item in set(list_fields) if list_fields.count(item) > 1]
-        if len(dup_fields) > 0:
-            log.error("Duplicate fields found: %s", ','.join(dup_fields))
-        return dup_fields
-
-    def merge_df_dwc_columns(self):
-        """Merge any duplicated columns in the core content.
-
-        Note that only yhr core content is merged.
-        """
-        content = self.core_content
-        dup_fields = self._find_duplicate_columns(content)
-        updated = False
-
-        if len(dup_fields) > 0:
-            all_columns = self._read_header(content.df_content)
-            for dup in dup_fields:
-                columns = list(filter(
-                    lambda term, dp_term=dup: re.fullmatch(pattern=f".*?{dp_term}", string=term),
-                    all_columns))
-                if dup in columns:
-                    other_col = columns[1]
-                    df = self.core_content.df_content
-                    self.core_content.stat.set_update_stat(0)
-                    self._update_column(df, dup, other_col, self.core_content.stat)
-                    log.info("columns %s updated with values from %s. Here is the stat: %s",
-                             dup, other_col, str(self.core_content.stat))
-                    log.info("column %s dropped", other_col)
-                    updated = True
-
-        if updated:
-            self._update_meta_fields(content)
-
-    def _update_column(self, df, col, other_col, stat):
-        """Update a data frame, copying values from another column with non-null entries.
-
-        Updates come from two sources:
-
-        - A direct value from other_col
-        - An entry in `dynamicProperties` keyed to `other_col`
-
-        :param df: The data frame to update
-        :param col: The column to update
-        :param other_col: The column to copy values from
-        :param stat: A statistics object to record updates
-        :return:
-        """
-        # Step 1: if dcterms_xxx is not null, replace the dcterms_xxx into xxx field,
-        # also clean up the dynamic properties for the rows
-        to_update = df[other_col].notnull()  # df[dup].isnull() &
-        df.loc[to_update, col] = df.loc[to_update, other_col]
-        stat.add_update_stat(len(df[to_update]))
-        log.info(df.loc[to_update, col])
-        # Also cleanup the dynamicProperties
-        df.loc[to_update, 'dynamicProperties'] = df.loc[to_update, 'dynamicProperties'].str.replace(
-            f'(,?)("dcterms_{col}":".*?")(?=,?)', '', regex=True).str.replace('{,', '{', regex=True)
-
-        # Step 2: Check if col value is still null. If null, extract from the dynamic properties
-        to_update = df[col].isnull()
-        df.loc[to_update, col] = df.loc[to_update, 'dynamicProperties'].\
-            str.extract(rf'.*?"dcterms_{col}":"(.*?)"')[0]
-        df.loc[to_update, 'dynamicProperties'] = (
-                    df.loc[to_update, 'dynamicProperties'].str.
-                    replace(f'(,?)("dcterms_{col}":".*?")(?=,?)', '', regex=True).str.
-                    replace('{,', '{', regex=True))
-        stat.add_update_stat(len(df[to_update]))
-        df.drop(columns=[other_col], inplace=True)
-
-    def _regenerate_coreids(self):
-        """Rebuild core identifiers.
-
-        Adds an `id` column if one does not exist and generates a UUID (4) for each core row.
-        Corresponding extension rows are updated to match.
-        """
-        self.core_content.df_content['id'] = (self.core_content.df_content['id'].
-                                              map(lambda _: uuid.uuid4()))
-        for content in self.ext_content:
-            content.df_content = self._update_extension_ids(
-                content.df_content, self.core_content.df_content, self.core_content.keys)
-
     def _build_index_for_content(self, df_content: pd.DataFrame, keys: list):
         """Update a data frame index with values from a list of key columns.
 
@@ -471,18 +435,24 @@ class Dwca(BaseDwca):
         """
         df_content.set_index(keys, drop=False, inplace=True)
 
-    def _extract_core_keys(self, core_content, keys):
+    def _extract_core_keys(self, core_content: pd.DataFrame, keys: list, id_column: str):
         """Get the key terms for a data frame.
 
         :param core_content: The content data frame
         :param keys: The keys that uniquely identify the record
+        :param id_column: Column name used for id
         :return: A data frame indexed by the `id` column that contains the
                 key elements for each record
         """
-        columns = ['id']
-        columns.extend(keys)
-        df = core_content[columns]
-        df.set_index('id', drop=True, inplace=True)
+        columns = keys.copy()
+        if id_column not in keys:
+            columns.append(id_column)
+        df = pd.DataFrame()
+        if all(col in core_content.columns for col in columns):
+            df = core_content[columns].copy()
+            df.set_index(id_column, drop=False, inplace=True)
+        else:
+            raise ValueError(f"Keys does not exist in core content {''.join(keys)}")
         return df
 
     def _cleanup_keys(self, core_index_keys):
@@ -496,52 +466,84 @@ class Dwca(BaseDwca):
     def build_indexes(self):
         """Build unique indexes, using the key terms for both core and extensions
         """
-        core_index_keys = self._extract_core_keys(self.core_content.df_content,
-                                                  self.core_content.keys)
-        for content in self.ext_content:
-            self._add_ext_lookup_key(content.df_content, core_index_keys,
-                                     self.core_content.keys, content.keys)
 
-        self._cleanup_keys(core_index_keys)
+        def __get_coreid_column(content: DfContent):
+            """
+            Get the column name of id or coreid
+            :param content: Content to find the id or coreid column
+            :return: The column name if found
+            """
+            for elm in self.meta_content.meta_elements:
+                if elm.meta_element_type.file_name == content.meta_info.file_name:
+                    coreid_idx = elm.core_id.index
+                    for a_field in elm.fields:
+                        if a_field.index == coreid_idx:
+                            return a_field.field_name
+                    return Defaults.MetaDefaultFields.ID if content.meta_info.core_or_ext_type == CoreOrExtType.CORE \
+                        else Defaults.MetaDefaultFields.CORE_ID
+            return None
+
+        if len(self.ext_content) > 0:
+            id_column = __get_coreid_column(self.core_content)
+            core_index_keys = self._extract_core_keys(self.core_content.df_content, self.core_content.keys, id_column)
+            for content in self.ext_content:
+                coreid_column = __get_coreid_column(content)
+                if coreid_column:
+                    # Make sure coreid columns are populated by filtering off empty core ids.
+                    log.info("content %s contains %i records before filtering empty coreid",
+                             content.meta_info.file_name, len(content.df_content))
+                    content.df_content = content.df_content[content.df_content[coreid_column].notna()]
+                    log.info("content %s contains %i records after filtering empty coreid",
+                             content.meta_info.file_name, len(content.df_content))
+                    content.df_content = content.df_content[content.df_content[coreid_column].isin(core_index_keys.index)]
+                    log.info("content %s contains %i records after filtering unlinked coreids",
+                             content.meta_info.file_name, len(content.df_content))
+
+                    self._add_ext_lookup_key(content.df_content, core_index_keys,
+                                             self.core_content.keys, content.keys, coreid_column)
+
+            self._cleanup_keys(core_index_keys)
 
         self._build_index_for_content(self.core_content.df_content, self.core_content.keys)
 
-    def _add_core_key(self, df_content, core_df_content, core_keys):
+    def _add_core_key(self, df_content: pd.DataFrame, core_df_content: pd.DataFrame, core_keys: list,
+                      coreid_column: str):
         """Update the keys used to uniquely identify a record
 
         The first column is assumed to be the `coreid` or `id` field
 
         :param df_content: The (extension) data frame to update
-        :param core_df_content: The core data frame
-        :param core_keys: The keys to use to
+        :param core_df_content: The core data frame containing the keys (derived from core content)
+        :param core_keys: The keys which need to be added to the df_content
+        :param coreid_column: Column name used for coreid
         :return: The updated data frame
         """
-        # assume that first column if the coreid or id field
-        df_content.set_index(df_content.columns[0], drop=False, inplace=True)
+        df_content.set_index(coreid_column, drop=False, inplace=True)
         self._update_df(df_content, core_df_content, core_keys, core_keys)
+        df_content.reset_index(inplace=True, drop=True)
         return df_content
 
     @record_diff_stat
     def _delete_content(self, content, delete_content):
         """Delete
 
-        :param content: The existing data frame
-        :param delete_content: The data frame to delete
-        :return: The data frame with the list of deletions removed
+        :param content: The existing data frame where the records need to be deleted
+        :param delete_content: The data frame containing the keys
+        :return: The data frame with the records removed
         """
-        content = self._filter_content(delete_content, content.df_content)
+        content = content.df_content[~content.df_content.index.isin(delete_content.index)]
         return content
 
-    def delete_records(self, records_to_delete: CsvFileType):
+    def delete_records(self, records_to_delete: ContentData):
         """Delete records from either a core or extension content frame
 
         :param records_to_delete: A CSV file of records to delete, keyed to the DwCA file
          """
         delete_content = pd.DataFrame()
-        if isinstance(records_to_delete.files, pd.DataFrame):
-            delete_content = records_to_delete.files.copy(deep=True)
+        if isinstance(records_to_delete.data, pd.DataFrame):
+            delete_content = records_to_delete.data.copy(deep=True)
         else:
-            delete_content = self._combine_contents(records_to_delete.files, records_to_delete.csv_encoding,
+            delete_content = self._combine_contents(records_to_delete.data, records_to_delete.csv_encoding,
                                                     use_chunking=False)
         valid_delete_file = (all(col in delete_content.columns for col in records_to_delete.keys)
                              or len(delete_content) > 0)
@@ -551,84 +553,88 @@ class Dwca(BaseDwca):
             return
 
         self._build_index_for_content(delete_content, records_to_delete.keys)
-        dwca_content, core_or_ext = self.get_content(
-                                MetaElementTypes.get_element(records_to_delete.type).row_type_ns)
-        log.info("Removing records from %s", core_or_ext)
-        if core_or_ext == CoreOrExtType.CORE:
-            self.core_content.keys = records_to_delete.keys
-            for ext in self.ext_content:
-                ext.keys = records_to_delete.keys
-            self.build_indexes()
-        else:
-            self._build_index_for_content(df_content=dwca_content.df_content,
-                                          keys=records_to_delete.keys)
+        contents = self.get_content(class_type=records_to_delete.type)
 
-        log.info("Index built in %s. Starting deletion in core %s",
-                 core_or_ext, records_to_delete.type)
+        for dwca_content, core_or_ext in contents:
+            log.info("Removing records from %s", core_or_ext)
+            if core_or_ext == CoreOrExtType.CORE:
+                self.core_content.keys = records_to_delete.keys
+                for ext in self.ext_content:
+                    ext.keys = records_to_delete.keys
+                self.build_indexes()
+            else:
+                self._build_index_for_content(df_content=dwca_content.df_content,
+                                              keys=records_to_delete.keys)
 
-        self.core_content.df_content = self._delete_content(content=dwca_content,
-                                                            delete_content=delete_content)
+            log.info("Index built in %s. Starting deletion in core %s",
+                     core_or_ext, records_to_delete.type)
 
-        # Remove the extension records that are related to the core records that have been removed
-        if core_or_ext == CoreOrExtType.CORE:
-            for ext in self.ext_content:
-                log.info("Removing records from ext: %s", ext.meta_info.type.name)
-                ext.df_content = self._delete_content(content=ext,
-                                                      delete_content=delete_content)
+            self.core_content.df_content = self._delete_content(content=dwca_content,
+                                                                delete_content=delete_content)
 
-    def _add_ext_lookup_key(self, df_content, core_df_content, core_keys, keys):
+            # Remove the extension records that are related to the core records that have been removed
+            if core_or_ext == CoreOrExtType.CORE:
+                for ext in self.ext_content:
+                    log.info("Removing records from ext: %s", ext.meta_info.type.name)
+                    ext.df_content = self._delete_content(content=ext,
+                                                          delete_content=delete_content)
+
+    def _add_ext_lookup_key(self, df_content: pd.DataFrame, core_df_content: pd.DataFrame, core_keys: list,
+                            keys: list, coreid_column: str):
         """Add a lookup key to a data frame
 
         :param df_content: The content data frame
         :param core_df_content: The core content data frame
         :param core_keys: The keys that uniquely identify the core record
-        :param keys: The additional keys
-        :return: The content data frame with additional indexes for the keys
+        :param keys: The additional keys for extension (for eg: identifier for multimedia extension)
+        :param coreid_column: Column used for coreid
+        :return: The content data frame with indexes for the keys
         """
-        # Core key is first level, hence need to be set first, then followed by extension key
-        if not set(core_keys).issubset(df_content.columns.to_list()):
-            self._add_core_key(df_content, core_df_content, core_keys)
-            df_content.set_index(core_keys, inplace=True, drop=True)
-        else:
-            df_content.set_index(core_keys, inplace=True, drop=False)
+        existing_col = []
+        for a_key in core_keys:
+            if a_key in df_content.columns.to_list():
+                existing_col.append(a_key)
+
+        # Add the key column from core content that is not part of the coreid
+        if len(core_keys) > 0:
+            self._add_core_key(df_content, core_df_content, core_keys, coreid_column)
+
+        for i, a_key in enumerate(core_keys):
+            drop_flag = False if a_key in existing_col else True
+            append_flag = True if i > 0 else False
+            df_content.set_index(a_key, inplace=True, drop=drop_flag, append=append_flag)
 
         for key in keys:
             if key not in core_keys:
                 df_content.set_index(key, inplace=True, drop=False, append=True)
         return df_content
 
-    # Extension Sync
     def merge_contents(self, delta_dwca: Dwca, extension_sync: bool = False,
-                       regen_ids: bool = False):
+                       match_by_filename: bool = False):
         """Merge the contents of this DwCA with a delta DwCA
 
         :param delta_dwca: The delta DwCA to apply
-        :param extension_sync: refresh the extensions from delta dwca
+        :param extension_sync: if True, remove existing extension and refresh the extensions from delta dwca
                                 if the occurrences exist in both
-        :param regen_ids: Regenerate unique identifiers for the records
+        :param match_by_filename: Match by filename of contents apart from the content types.
+        This is particularly useful if a dwca contains more than one content of same type
         """
         self.build_indexes()
         delta_dwca.build_indexes()
 
         for _, delta_content in enumerate(delta_dwca.ext_content):
-            content, _ = self.get_content(delta_content.meta_info.type.row_type_ns)
-            if content:
+            contents = self.get_content(class_type=delta_content.meta_info.type,
+                                        file_name=delta_content.meta_info.file_name if match_by_filename else "")
+            for content, _ in contents:
                 if extension_sync:
                     self._delete_old_ext_records(content, self.core_content.df_content,
-                                                 delta_dwca.core_content.df_content,
-                                                 self.core_content.keys)
-                # create a copy of list
-                # Use keys other than coreid. Coreid should not be used as update keys if possible
-                ext_keys = []
-                ext_keys.extend(self.core_content.keys)
-                update = False
-                if len(content.keys) > 0:
-                    ext_keys.extend(content.keys)
-                    update = True
-                content.df_content = self._merge_df_content(content, delta_content,
-                                                            ext_keys, update)
+                                                 delta_dwca.core_content.df_content)
 
-            else:
+                content.df_content = self._merge_df_content(content=content,
+                                                            delta_content=delta_content,
+                                                            keys=self.core_content.keys)
+
+            if len(contents) == 0:
                 # Copy delta ext content into self ext content
                 self.ext_content.append(delta_content)
                 self._update_meta_fields(delta_content)
@@ -637,27 +643,34 @@ class Dwca(BaseDwca):
                                                               delta_content=delta_dwca.core_content,
                                                               keys=self.core_content.keys)
 
-        if regen_ids:
-            self._update_core_ids(self.core_content.df_content)
-            for content in self.ext_content:
-                content.df_content = self._update_extension_ids(
-                    content.df_content, self.core_content.df_content, self.core_content.keys)
+    def get_content(self, class_type: MetaElementTypes = None, name_space: str = None, file_name: str = None) -> list:
+        """Get the content based on the class type, row type namespace and optional file name
 
-    def get_content(self, name_space):
-        """Get the content based on the row type namespace.
-
-        :param name_space: The row type (a namespace URI)
-        :return: A tuple of the content data frame and whether
-                 it is a core or extension (None, None) if not found
+        :param class_type: class_type MetaElementTypes class
+        :param name_space: The row type (a namespace URI) if it contains value
+        :param file_name: file_name to match if it contains value
+        :return: A list of tuples containing the content data frame and
+                 core or extension type
         """
-        if self.core_content.meta_info.type.row_type_ns == name_space:
-            return self.core_content, CoreOrExtType.CORE
+        def check_content(current_content, class_type_to_match, name_space_to_match):
+            if file_name and current_content.meta_info.file_name != file_name:
+                return False
+
+            if ((class_type_to_match and current_content.meta_info.type == class_type_to_match) or
+                    (name_space_to_match and current_content.meta_info.type.value == name_space_to_match)):
+                return True
+            return False
+
+        contents = []
+
+        if check_content(self.core_content, class_type_to_match=class_type, name_space_to_match=name_space):
+            contents.append((self.core_content, CoreOrExtType.CORE))
 
         for content in self.ext_content:
-            if content.meta_info.type.row_type_ns == name_space:
-                return content, CoreOrExtType.EXTENSION
+            if check_content(content, class_type_to_match=class_type, name_space_to_match=name_space):
+                contents.append((content, CoreOrExtType.EXTENSION))
 
-        return None, None
+        return contents
 
     def add_multimedia_info_to_content(self, multimedia_content: DfContent):
         """
@@ -732,7 +745,10 @@ class Dwca(BaseDwca):
                 multimedia_without_type.loc[:, 'type'] = multimedia_without_type['format'].map(lambda x: get_media_type(x))
                 multimedia_df.update(multimedia_without_type)
 
-            multimedia_content.df_content = multimedia_df
+            # Only update if there are additional info added
+            if len(multimedia_df.columns) > len(multimedia_content.df_content.columns):
+                multimedia_content.df_content = multimedia_df
+                self._update_meta_fields(content=multimedia_content)
 
     def _extract_media(self, content, assoc_media_col: str):
         """Extract embedded associated media and place it in a media extension data frame
@@ -745,16 +761,20 @@ class Dwca(BaseDwca):
         :param assoc_media_col: The column that contains the associated media
         :return: The images data frame
         """
-        image_df = pd.DataFrame(content[assoc_media_col])
-        # filter off empty rows with empty value
-        image_df = image_df[~image_df[assoc_media_col].isna()]
-        if len(image_df) > 0:
-            image_df = image_df.assign(identifier=image_df[assoc_media_col].
-                                       str.split(r'[\\|;]')).explode('identifier')
-            image_df.drop(columns=[assoc_media_col], inplace=True)
-            content.drop(columns=[assoc_media_col], inplace=True)
-
-        return image_df
+        cols = []
+        if len(self.core_content.df_content.index.names) > 0:
+            cols = self.core_content.keys.copy()
+            cols.append(assoc_media_col)
+            image_df = pd.DataFrame(content[cols])
+            # filter off empty rows with empty value
+            image_df = image_df[~image_df[assoc_media_col].isna()]
+            if len(image_df) > 0:
+                image_df = image_df.assign(identifier=image_df[assoc_media_col].
+                                           str.split(r'[\\|;]')).explode('identifier')
+                image_df.drop(columns=[assoc_media_col], inplace=True)
+                content.drop(columns=[assoc_media_col], inplace=True)
+            return image_df
+        return pd.DataFrame()
 
     def convert_associated_media_to_extension(self):
         """Convert any embedded associated media terms in the core frame into a simple
@@ -770,15 +790,19 @@ class Dwca(BaseDwca):
             assoc_media_col = filtered_column[0]
             image_df = self._extract_media(self.core_content.df_content, assoc_media_col)
             if len(image_df) > 0:
-                self._update_meta_fields(self.core_content)
+                image_df.drop_duplicates(inplace=True)
+                self._update_meta_fields(content=self.core_content, key_field=self.core_content.keys[0])
                 log.info("%s associated media extracted", str(len(image_df)))
-                return CsvFileType(files=image_df, type='multimedia', keys=image_df.index.names)
+                multimedia_keys = self.core_content.keys.copy()
+                multimedia_keys.append("identifier")
+                return ContentData(data=image_df, type=MetaElementTypes.MULTIMEDIA,
+                                   keys=multimedia_keys)
 
             log.info("Nothing to extract from associated media")
 
         return None
 
-    def _combine_contents(self, contents: list, csv_encoding, use_chunking=False):
+    def _combine_contents(self, contents: list, csv_encoding, extra_read_param: dict = None, use_chunking=False):
         """Combine the contents of a list of CSV files into a single content data frame.
 
         :param contents: The list of CSV files
@@ -795,7 +819,8 @@ class Dwca(BaseDwca):
                 df_content = self._add_new_rows(df_content,
                                                 self._read_csv(content, ignore_header_lines=0,
                                                                csv_encoding_param=csv_encoding,
-                                                               iterator=use_chunking))
+                                                               iterator=use_chunking,
+                                                               extra_param=extra_read_param))
 
             log.info("Extracted total of %d records from %s",
                      self.count_stat(df_content), ','.join(contents))
@@ -807,30 +832,32 @@ class Dwca(BaseDwca):
 
         raise ValueError('content is empty')
 
-    def __check_csv_info_value(self, csv_info: CsvFileType, col: str):
-        """Look for a column in a CSV file
-
-        :param csv_info: The CSV file
-        :param col: The column name
-        :return: Either column information or False for not found
+    def __report_error(self, content_type: MetaElementTypes, message: ValidationError,
+                       error_values: list, rows: list, error_df: pd.DataFrame = None):
+        """Update error report if this is set
+        :param content_type type of content
+        :param message Error message
+        :param error_values Values that fail validation
+        :param rows Row number that cause the failed validation. Starts with 0
         """
-        csv_info_dict = asdict(csv_info)
-        if col in csv_info_dict:
-            return csv_info_dict[col]
-        return False
+        if isinstance(error_df, pd.DataFrame):
+            error_report = {"Content": content_type.value,
+                            "Message": message.value,
+                            "Error": str(error_values),
+                            "Row": str(rows)}
+            error_df.loc[len(error_df)] = error_report
+            return error_df
 
-    def check_duplicates(self, content_keys_df, keys, error_file=None):
+    def check_duplicates(self, content_type: MetaElementTypes, content_keys_df: pd.DataFrame,
+                         keys: list, error_df: pd.DataFrame = None):
         """Check a content frame for duplicate keys
 
+        :param content_type: Content Type where the validation is occurring
         :param content_keys_df: The content frame to check
         :param keys: The key columns
-        :param error_file: A file to write problem records to
+        :param error_df: Report dataframe
         :return: True if there are no duplicates, False otherwise
         """
-
-        def report_error(content, keys, message, condition, error_file=None):
-            content.loc[condition.values, keys].to_csv(error_file, index=False)
-
         checks_status: bool = True
         if len(keys) > 0:
             empty_values_condition = content_keys_df.isnull()
@@ -839,8 +866,12 @@ class Dwca(BaseDwca):
                           empty_values_condition.sum().sum())
                 log.error("Empty values found in dataframe row: %s",
                           content_keys_df.index[empty_values_condition.all(axis=1)].tolist())
-                if error_file:
-                    report_error(content_keys_df, keys, "Empty Values", empty_values_condition)
+
+                self.__report_error(content_type=content_type,
+                                    message=ValidationError.EMPTY_KEYS,
+                                    error_values=[None],
+                                    rows=content_keys_df.index[empty_values_condition.all(axis=1)].tolist(),
+                                    error_df=error_df)
                 checks_status = False
 
             # check incase-sensitive duplicates
@@ -851,16 +882,18 @@ class Dwca(BaseDwca):
             df_keys = to_lower(content_keys_df)
             duplicate_condition = df_keys.duplicated(keep='first')
             if duplicate_condition.values.any():
-                log.error(f"Duplicate %s found. Total rows affected: %s", keys, duplicate_condition.sum())
+                log.error("Duplicate %s found. Total rows affected: %s", keys, duplicate_condition.sum())
                 log.error("Duplicate values: %s", pd.unique(content_keys_df[duplicate_condition].stack()))
-                if error_file:
-                    report_error(content_keys_df, keys, "Duplicate Values",
-                                 duplicate_condition, error_file)
+                self.__report_error(content_type=content_type,
+                                    message=ValidationError.EMPTY_KEYS,
+                                    error_values=list(pd.unique(content_keys_df[duplicate_condition].stack())),
+                                    rows=content_keys_df.index[duplicate_condition].tolist(),
+                                    error_df=error_df)
                 checks_status = False
 
         return checks_status
 
-    def _extract_keys(self, df_content, keys):
+    def _extract_keys(self, df_content: pd.DataFrame, keys: list):
         """Get the key columns for a data frame
 
         :param df_content: The content data frame
@@ -869,88 +902,129 @@ class Dwca(BaseDwca):
         """
         return df_content[keys]
 
-    def _validate_columns(self, content):
+    def _validate_columns(self, content_type: MetaElementTypes, content: DfContent, error_df: pd.DataFrame):
         """Validate the columns in content
             Validate the column header if any of it contains Unnamed header.
             This usually happens if a csv has empty column. Pandas automatically
             assigns the column header with a column name called Unnamed:
 
-        :param content: The content
+        :param content_type The Content Type
+        :param content: The content itself
+        :param error_df: The report dataframe containing the error validation
         :return: True if all columns have a valid name,
                 False if a name is blank or column contain some unnamed header
         """
         headers = self._read_header(content.df_content)
         if sum(not c or c.isspace() for c in headers) > 0:
             log.error("Some column headers are blank")
+            self.__report_error(content_type=content_type,
+                                message=ValidationError.UNNAMED_COLUMNS,
+                                error_values=[None],
+                                rows=[None],
+                                error_df=error_df)
             return False
 
         if content.df_content.columns.str.contains('^unnamed:', case=False).any():
             log.error("One or more column is unnamed. "
                       "This usually happens if there are empty column in the csv")
+            self.__report_error(content_type=content_type,
+                                message=ValidationError.UNNAMED_COLUMNS,
+                                error_values=["^unnamed"],
+                                rows=[None],
+                                error_df=error_df)
             return False
 
         return True
 
-    def validate_content(self, content_type_to_validate: list[str] = None, error_file: str = None):
-        """Validate the content of the DwCA
+    def validate_content(self, content_to_validate: dict = None, error_df: pd.DataFrame = None):
+        """Validate the content of the DwCA. Validates core content by default
 
         - No duplicate record keys
         - Valid columns
 
-        :param error_file: A file to record errors
+        :param content_to_validate: content to validate
+        :param error_df: A file to record errors
         :return: True if the DwCA is value, False otherwise
         """
 
-        if not content_type_to_validate:
-            content_type_to_validate = [self.core_content.meta_info.type.name]
+        set_to_validate = {self.core_content.meta_info.type: self.core_content.keys}
+        if content_to_validate:
+            for class_type, content_keys in content_to_validate.items():
+                if not (class_type == self.core_content.meta_info.type and
+                        set(content_keys) == set(self.core_content.keys)):
+                    set_to_validate[class_type] = content_keys
 
-        for content_type in content_type_to_validate:
-            content, _ = self.get_content(MetaElementTypes.get_element(content_type).row_type_ns)
-            keys_df = self._extract_keys(content.df_content, content.keys)
+        validation_success = True
+        for class_type, key in set_to_validate.items():
+            contents = self.get_content(class_type=class_type)
+            for content, _ in contents:
+                validation_content_success = True
+                keys_df = self._extract_keys(content.df_content, content.keys)
 
-            if not self.check_duplicates(keys_df, content.keys, error_file):
-                return False
+                if not self.check_duplicates(class_type, keys_df, content.keys, error_df):
+                    log.error("Validation failed for %s %s content for duplicates keys %s",
+                              content.meta_info.core_or_ext_type.value, content.meta_info.type, content.keys)
+                    validation_content_success = False
 
-            if not self._validate_columns(content):
-                return False
+                if not self._validate_columns(class_type, content, error_df):
+                    log.error("Validation failed for %s %s content for duplicate columns",
+                              content.meta_info.core_or_ext_type.value, content.meta_info.type)
+                    validation_content_success = False
 
-        return True
+                if validation_content_success:
+                    log.info("Validation successful for %s %s content for unique keys %s",
+                             content.meta_info.core_or_ext_type.value, content.meta_info.type, content.keys)
+                else:
+                    validation_success = False
 
-    def extract_csv_content(self, csv_info: CsvFileType,
-                            core_ext_type: CoreOrExtType):
-        """Read the files from a CSV description into a content frame and include it in the Dwca.
+        return True if validation_success else False
+
+    def extract_csv_content(self, csv_info: ContentData, core_ext_type: CoreOrExtType, extra_read_param: dict = None):
+        """Read the data from a CSV description into a content frame and include it in the Dwca.
 
         :param csv_info: The CSV file(s)
         :param core_ext_type: Whether this is a core or extension content frame
+        :param extra_read_param: extra read param to use when reading csv
         """
-        if isinstance(csv_info.files, pd.DataFrame):
-            csv_content = csv_info.files.copy(deep=True)
+        if isinstance(csv_info.data, pd.DataFrame) :
+            csv_content = csv_info.data
+        elif isinstance(csv_info.data, io.TextIOWrapper):
+            csv_content = self._read_csv(csv_file=csv_info.data, extra_param=extra_read_param)
         else:
-            csv_content = self._combine_contents(csv_info.files, csv_info.csv_encoding)
+            csv_content = self._combine_contents(contents=csv_info.data, csv_encoding=csv_info.csv_encoding,
+                                                 extra_read_param=extra_read_param)
 
-        # Use default occurrenceID if not provided
-        keys = csv_info.keys if self.__check_csv_info_value(csv_info, 'keys') else 'occurrenceID'
+        # Use default keys if not provided
         if core_ext_type == CoreOrExtType.CORE:
-            self._update_core_ids(csv_content)
-            self._build_index_for_content(csv_content, keys)
+            override_keys = {csv_info.type: csv_info.keys} if csv_info.keys and len(csv_info.keys) > 0 else None
+            keys = get_keys(class_type=csv_info.type, override_content_keys=override_keys)
         else:
-            csv_content = self._update_extension_ids(
-                csv_content, self.core_content.df_content, keys)
+            keys = self.core_content.keys
+        core_id_field: str = ""
+        if len(keys) > 1:
+            if core_ext_type == CoreOrExtType.CORE:
+                core_id_field = self._update_core_ids(csv_content)
+                self._build_index_for_content(csv_content, keys)
+            elif core_ext_type == CoreOrExtType.EXTENSION:
+                csv_content, core_id_field = self._update_extension_ids(
+                    csv_content, self.core_content.df_content, keys)
+        elif len(keys) > 0:
+            core_id_field = keys[0]
 
         if csv_info.associated_files_loc:
             self._update_associated_files([csv_info.associated_files_loc])
 
-        meta_type = MetaElementTypes.get_element(csv_info.type)
         meta_element_info = MetaElementInfo(
-            core_or_ext_type=core_ext_type, type=meta_type,
+            core_or_ext_type=core_ext_type, type=csv_info.type,
             csv_encoding=self.defaults_prop.csv_encoding, ignore_header_lines='1')
         content = DfContent(df_content=csv_content, meta_info=meta_element_info)
-        self._update_meta_fields(content)
+        self._update_meta_fields(content, core_id_field)
 
         if core_ext_type == CoreOrExtType.CORE:
             content.keys = keys
             self.core_content = content
         else:
+            content.keys = csv_info.keys
             self.ext_content.append(content)
 
     def _to_csv(self, df: pd.DataFrame, meta_info: MetaElementInfo,
@@ -993,13 +1067,18 @@ class Dwca(BaseDwca):
         for file in self.embedded_files:
             dwca_zip.write(file, file.name)
 
-    def write_dwca(self, output_dwca_path: Union[str | BytesIO]):
+    def write_dwca(self, output_dwca: Union[str, BytesIO]):
         """Write a full DwCA to a zip file
         Any parent directories needed are created during writing.
 
-        :param output_dwca_path: The file path to write the .zip file to
+        :param output_dwca: The file path to write the .zip file to or dwca in memory
         """
-        with ZipFile(output_dwca_path, 'w', allowZip64=True,
+        # Make sure that the memory that's being overwritten is r
+        if isinstance(output_dwca, BytesIO):
+            output_dwca.flush()
+            output_dwca.truncate(0)
+            output_dwca.seek(0)
+        with ZipFile(output_dwca, 'w', allowZip64=True,
                      compression=zipfile.ZIP_DEFLATED) as dwca_zip:
             self._write_df_content_to_zip_file(dwca_zip=dwca_zip, content=self.core_content)
             for ext in self.ext_content:
@@ -1008,17 +1087,19 @@ class Dwca(BaseDwca):
             if self.eml_content:
                 dwca_zip.writestr(self.defaults_prop.eml_xml_filename, self.eml_content)
             self._write_associated_files(dwca_zip=dwca_zip)
+            log.info("Dwca zip file created in %s: size %i, containing files: %s",
+                     output_dwca, dwca_zip.start_dir, ",".join(dwca_zip.namelist()))
             dwca_zip.close()
-        log.info("Dwca written to: %s", output_dwca_path)
 
     def _read_csv(self,
-                  csv_file: str | io.TextIOWrapper,
+                  csv_file: Union[str, io.TextIOWrapper],
                   csv_encoding_param: CSVEncoding = MISSING,
                   columns: list = None,
                   ignore_header_lines: int = 0,
                   iterator: bool = False,
                   chunksize: int = 100,
-                  nrows: int = 0) -> Union[pd.DataFrame, parsers.TextFileReader]:
+                  nrows: int = 0,
+                  extra_param: dict = None) -> Union[pd.DataFrame, parsers.TextFileReader]:
         """Read a CSV file and convert it into a data frame
 
         :param csv_file:  The file path
@@ -1030,8 +1111,11 @@ class Dwca(BaseDwca):
         :param iterator: Return an iterator, rather than a data frame (False by default)
         :param chunksize: The number of records to chunk
         :param nrows: The number of rows to read (all by default)
+        :param extra_param: A dictionary containing extra values to use.
         :return: Either a data frame or a reader, depending on the iterator parameter
         """
+        if extra_param is None:
+            extra_param = {}
         if csv_encoding_param is MISSING:
             csv_encoding_param = self.defaults_prop.csv_encoding
 
@@ -1047,18 +1131,46 @@ class Dwca(BaseDwca):
             else None
 
         try:
-            ret_val = pd.read_csv(csv_file, delimiter=csv_encoding_param.csv_delimiter,
-                                  escapechar=escape_char,
-                                  quotechar=quote_char,
-                                  lineterminator=line_terminator,
-                                  names=columns,
-                                  skiprows=ignore_header_lines,  # skip first n lines
-                                  skip_blank_lines=True,
-                                  dtype='str',
-                                  index_col=False,
-                                  chunksize=chunksize if iterator else None,
-                                  iterator=iterator,
-                                  nrows=nrows if nrows > 0 else None)
+            read_param = {"delimiter": csv_encoding_param.csv_delimiter,
+                          "escapechar": escape_char,
+                          "quotechar": quote_char,
+                          "lineterminator": line_terminator,
+                          "names": columns,
+                          "skiprows": ignore_header_lines,
+                          "skip_blank_lines": True,
+                          "dtype": 'str',
+                          "index_col": False,
+                          "chunksize": chunksize if iterator else None,
+                          "iterator": iterator,
+                          "nrows": nrows if nrows > 0 else None}
+            if extra_param and len(extra_param) > 0:
+                def __is_integer(s: str) -> bool:
+                    if re.match(r'^[+-]?[0-9]+$', s):
+                        return True
+                    return False
+
+                def __parse_bool(value_bool: str):
+                    if isinstance(value_bool, bool):
+                        return value_bool
+
+                    value_bool = str(value_bool).strip().lower()
+                    if value_bool in ('true', 'yes', '1'):
+                        return True
+                    elif value_bool in ('false', 'no', '0'):
+                        return False
+                    return None
+
+                for key, value in extra_param.items():
+                    if value.lower() in ["true", "false"]:
+                        read_param.update({key: __parse_bool(value)})
+                    elif value.lower() in ["nan", "none"]:
+                        read_param.update({key: None})
+                    elif __is_integer(value):
+                        read_param.update({key: int(value)})
+                    else:
+                        read_param.update({key: value})
+
+            ret_val = pd.read_csv(csv_file, **read_param)
 
             if isinstance(ret_val, pd.DataFrame):
                 # Drop rows where all the columns are Nan
@@ -1066,7 +1178,7 @@ class Dwca(BaseDwca):
                 log.debug("Extracted %d rows from csv %s", len(ret_val), csv_file)
 
                 # Strip column header spaces
-                ret_val.rename(str.strip, axis = 'columns', inplace=True)
+                ret_val.rename(str.strip, axis='columns', inplace=True)
 
             return ret_val
 

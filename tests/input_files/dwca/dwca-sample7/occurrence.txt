@@ -1,0 +1,10 @@
+gbifID	license	institutionCode	collectionCode	basisOfRecord	catalogNumber	occurrenceStatus	decimalLatitude	decimalLongitude	scientificName	kingdom	genus
+sample1	CC_BY_4_0	I1	COL-A	FOSSIL_SPECIMEN	33699	PRESENT	-33.7948	112.4737	"Species A"	"Kingdom A" "Genus A"
+sample2	CC_BY_4_0	I1	COL-A	FOSSIL_SPECIMEN	33703	PRESENT	-33.7948	112.4737	"Species A"	"Kingdom A" "Genus A"
+sample3	CC_BY_4_0	I1	COL-A	FOSSIL_SPECIMEN	31739	PRESENT	-19.887	112.254	"Species B"	"Kingdom A" "Genus A"
+sample	CC_BY_4_0	I1	COL-A	FOSSIL_SPECIMEN	31691	PRESENT	-19.887	112.254	"Species B"	"Kingdom A" "Genus A"
+sample5	CC_BY_4_0	I1	COL-A	FOSSIL_SPECIMEN	31697	PRESENT	-19.887	112.254	"Species B"	"Kingdom A" "Genus A"
+sample	CC_BY_4_0	I1	COL-A	FOSSIL_SPECIMEN	31695	PRESENT	-19.887	112.254	"Species B"	"Kingdom A" "Genus A"
+sample	CC_BY_4_0	I1	COL-A	FOSSIL_SPECIMEN	31693	PRESENT	-19.887	112.254	"Species B"	"Kingdom A" "Genus A"
+sample8	CC_BY_4_0	I1	COL-A	FOSSIL_SPECIMEN	31696	PRESENT	-19.887	112.254	"Species B"	"Kingdom A" "Genus A"
+sample9	CC_BY_4_0	I1	COL-A	FOSSIL_SPECIMEN	31735	PRESENT	-19.887	112.254	"Species B"	"Kingdom A" "Genus A"

@@ -1,6 +1,6 @@
 # flake8: noqa
 """
-Tools to convert data frames into Darwin Core Archive (DwCA) files.
+Tools to convert data frame or text files into Darwin Core Archive (DwCA) file.
 
 See https://ipt.gbif.org/manual/en/ipt/2.6/dwca-guide for a guide to DwCAs.
 
@@ -16,18 +16,52 @@ A particular function of the meta-file is that it can link columns to URIs that 
 the (usually Darwin Core) terms that each column contains.
 
 """
+from __future__ import annotations
+
+import io
+import logging
 from collections import namedtuple
 from dataclasses import dataclass, field
-from typing import Optional, Union
-import logging
-import pandas as pd
+from enum import Enum
 from functools import wraps
+from typing import Optional, Union
+import pandas as pd
 
-CoreOrExtType = namedtuple("CoreOrExtType", ["CORE", "EXTENSION"])(
-    CORE="core",
-    EXTENSION="extension"
+
+class CoreOrExtType(Enum):
+    CORE = "core"
+    EXTENSION = "extension"
+
+# Default keys for content when creating dwca
+DefaultKeys = namedtuple("DefaultKeys", ["EVENT", "OCCURRENCE", "MULTIMEDIA"])(
+    EVENT = "eventID",
+    OCCURRENCE = "occurrenceID",
+    MULTIMEDIA = "identifier"
 )
 
+class ValidationError(Enum):
+    EMPTY_KEYS = "EMPTY_KEYS"
+    DUPLICATE_KEYS = "DUPLICATE_KEYS"
+    DUPLICATE_COLUMNS = "DUPLICATE_COLUMNS"
+    UNNAMED_COLUMNS = "UNNAMED_COLUMNS"
+
+
+def get_error_report() -> pd.DataFrame:
+    return pd.DataFrame(pd.DataFrame(columns=["Content", "Message", "Error", "Row"]))
+
+def get_keys(class_type: MetaElementTypes, override_content_keys: dict[[MetaElementTypes, list]] = None):
+    """
+    # If override_content_keys not supplied, return the default keys based on content type
+    :param class_type: class_type of content
+    :param override_content_keys: given content keys
+    :return: the list of keys for the content
+    """
+    if override_content_keys:
+        for content_type, keys in override_content_keys.items():
+            if class_type == content_type and keys and len(keys) > 0:
+                return keys
+    defaults = DefaultKeys._asdict()
+    return [defaults[class_type.name]] if class_type.name in defaults.keys() else []
 
 @dataclass
 class CSVEncoding:
@@ -58,23 +92,6 @@ class CSVEncoding:
         :return: The actual character to use."""
         translate_table: dict = {'LF': '\r\n', '\\t': '\t', '\\n': '\n', '&quot;': '"'}
         return translate_table[v] if v in translate_table.keys() else v
-
-
-@dataclass
-class CsvFileType:
-    """A description of a CSV file in a DwCA
-    """
-    files: Union[list[str], pd.DataFrame]  # can accept more than one file or a dataframe
-    type: str  # 'occurrence', 'taxon', 'event', multimedia,...
-    keys: Optional[list] = None  # must be supplied for csv extensions to link extension records to core record
-    # when creating dwca. for core other than occurrence, this neeeds to be supplied as key.
-    # column keys lookup in core or extension for delete records
-    associated_files_loc: Optional[str] = None  # in case there are associated media that need to be packaged in dwca
-    csv_encoding: CSVEncoding = field(
-        default_factory=lambda: CSVEncoding(csv_delimiter=",", csv_eol="\n", csv_text_enclosure='"',
-                                            csv_escape_char='"'))
-    # delimiter: Optional[str] = None
-    # file delimiter type when reading the csv. if not supplied, the collectory setting delimiter is read in for the dr
 
 
 class Stat:
@@ -173,11 +190,51 @@ class Defaults:
     # Translation csv encoding values
     translate_table: dict = field(init=False,
                                   default_factory=lambda: {'LF': '\r\n', '\\t': '\t', '\\n': '\n'})
+    MetaDefaultFields: namedtuple = namedtuple("MetaDefaultFields", ["ID", "CORE_ID"])(
+                                        ID="id",
+                                        CORE_ID="coreid"
+                                    )
+
 
 
 # Imports at end of file to allow classes to be used
-from dwcahandler.dwca.terms import Terms
-from dwcahandler.dwca.dwca_meta import Element, MetaElementTypes, MetaElementInfo, MetaDwCA
+from dwcahandler.dwca.terms import Terms, NsPrefix
+from dwcahandler.dwca.dwca_meta import (MetaElementTypes, MetaElementInfo, MetaDwCA,
+                                        MetaElementAttributes, get_meta_class_row_type)
+@dataclass
+class ContentData:
+    """A class describing the content data used for core and extension.
+       Use this class to define the core content and extension content to build a DwCA (see README on usage)
+    """
+    data: Union[list[str], pd.DataFrame, io.TextIOWrapper]  # can accept more than one files, dataframe or file pointer
+    type: MetaElementTypes # Enumerated types from the class row type.
+    keys: Optional[list] = None # keys that uniquely identify a record in the content
+    associated_files_loc: Optional[str] = None  # provide a folder path containing the embedded images.
+                                # Embedded images file name must be supplied as associatedMedia in the content
+    csv_encoding: CSVEncoding = field(
+        default_factory=lambda: CSVEncoding(csv_delimiter=",", csv_eol="\n", csv_text_enclosure='"',
+                                            csv_escape_char='"'))
+
+    def check_for_empty(self, include_keys = True):
+        if self.data and len(self.data) > 0 and \
+                self.type and isinstance(self.type, MetaElementTypes) and \
+                (not include_keys or include_keys and self.keys and len(self.keys) > 0):
+            return True
+        return False
+
+    def add_data(self, other_csv_file_type: ContentData):
+        if self.type and self.type == other_csv_file_type.type:
+            if isinstance(self.data, pd.DataFrame) and isinstance(other_csv_file_type.data, pd.DataFrame):
+                self.data = pd.concat([self.data, other_csv_file_type.data], ignore_index=False)
+                return True
+            elif isinstance(self.data, list) and isinstance(other_csv_file_type.data, list):
+                self.data.append(other_csv_file_type.data)
+                return True
+        elif not self.type:
+            self.data = other_csv_file_type.data
+            self.type = other_csv_file_type.type
+        return False
+
 from dwcahandler.dwca.eml import Eml
 from dwcahandler.dwca.base_dwca import BaseDwca
 from dwcahandler.dwca.core_dwca import Dwca, DfContent
