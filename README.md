@@ -96,6 +96,7 @@ DwcaHandler.list_class_rowtypes()
 * If keys are supplied for the content extension, the validation will be run to check the uniqueness of the keys in the content
 * If keys are not provided, the default keys is eventID for event content and occurrenceID for occurrence content
 * In creating a dwca with multimedia extension, provide format and type values in the Simple Multimedia extension, otherwise, dwcahandler will attempt to fill these info by guessing the mimetype from url.
+* For convenience, if occurrence text file contain dwc term [associatedMedia](https://dwc.tdwg.org/terms/#dwc:associatedMedia) and no multimedia extension is supplied, dwcahandler attempts to extract out the multimedia url from associatedMedia into [simple multimedia extemsion](https://rs.gbif.org/extension/gbif/1.0/multimedia.xml).
 ```python
 from dwcahandler import ContentData
 from dwcahandler import DwcaHandler
@@ -177,7 +178,8 @@ eml = Eml(dataset_name='Test Dataset',
 DwcaHandler.create_dwca_from_zip_content(zip_file="/tmp/txt_files.zip",  eml_content=eml, output_dwca='/tmp/dwca.zip')
 ```
 &nbsp;
-* Merge Darwin Core Archive
+* Merge two Darwin Core Archives into a single file 
+* Set extension sync to True to remove existing extension records before merging. Default for extension sync is False
 ```python
 from dwcahandler import DwcaHandler, MetaElementTypes
 
