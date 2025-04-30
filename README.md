@@ -183,7 +183,7 @@ from dwcahandler import DwcaHandler, MetaElementTypes
 
 DwcaHandler.merge_dwca(dwca_file='/tmp/dwca.zip', delta_dwca_file='/tmp/delta-dwca.zip',
                        output_dwca='/tmp/new-dwca.zip', 
-                       keys_lookup={MetaElementTypes.OCCURRENCE:'occurrenceID'})
+                       keys_lookup={MetaElementTypes.OCCURRENCE:['occurrenceID']})
 ```
 &nbsp;
 * Delete Rows from core file in Darwin Core Archive
