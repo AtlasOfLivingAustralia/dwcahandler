@@ -388,36 +388,34 @@ class Dwca(BaseDwca):
         """
         return delta_df_content[~delta_df_content.index.isin(df_content.index)]
 
-    def _add_col_and_update_values(self, df_content, delta_df_content, keys, update, stat):
+    def _add_col_and_update_values(self, df_content, delta_df_content, keys, stat):
         """Add new columns, if needed, and update any values
 
         :param df_content: The existing content
         :param delta_df_content: The delta to apply
         :param keys: The unique term keys for the content
-        :param update: If true, update the values from the delta
         :param stat: The statistics to update
         :return: A list of any new columns
         """
         new_columns = self._add_new_columns(df_content, delta_df_content, keys)
 
-        if update:
-            self._update_values(df_content, delta_df_content, keys, stat)
+        self._update_values(df_content, delta_df_content, keys, stat)
 
         return new_columns
 
     @record_diff_stat
-    def _merge_df_content(self, content, delta_content, keys, update=True):
+    def _merge_df_content(self, content, delta_content, keys, update_ext=False):
         """Merge a delta into an existing content frame and update the meta-file description
 
         :param content: The existing content frame
         :param delta_content: The delta to apply
         :param keys: The list of columns that uniquely identify a core record
-        :param update: If true update existing records (otherwise just add new records)
+        :param update_ext: Indicate an extension merge
         :return: A new content frame with changes to existing values made and
                 additional records appended
         """
         new_columns = self._add_col_and_update_values(content.df_content, delta_content.df_content,
-                                                      keys, update, content.stat)
+                                                      keys, content.stat)
         if len(new_columns) > 0:
             log.info("New columns added: %s", ','.join(new_columns))
             self._update_meta_fields(content)
@@ -425,7 +423,21 @@ class Dwca(BaseDwca):
         new_rows = self._filter_content(content.df_content, delta_content.df_content)
 
         # return the merged content
-        return self._add_new_rows(content.df_content, new_rows)
+        updated_df = self._add_new_rows(content.df_content, new_rows[content.df_content.columns])
+
+        if update_ext:
+            core_id = self.__get_coreid_column(content)
+
+            if core_id == Defaults.MetaDefaultFields.CORE_ID:
+                updated_df = updated_df.droplevel(content.keys)
+                existing_core_delta = updated_df.index.isin(self.core_content.df_content.index)
+                if len(existing_core_delta) > 0:
+                    # both dataframes indexes are core content keys (for eg: institutionCode, collectionCode, catalogNumber)
+                    updated_df[Defaults.MetaDefaultFields.CORE_ID] = \
+                        self.core_content.df_content[Defaults.MetaDefaultFields.ID]
+                    log.info("Updated coreid from core content id")
+
+        return updated_df
 
     def _build_index_for_content(self, df_content: pd.DataFrame, keys: list):
         """Update a data frame index with values from a list of key columns.
@@ -463,31 +475,30 @@ class Dwca(BaseDwca):
         if isinstance(core_index_keys, pd.DataFrame):
             del core_index_keys
 
+    def __get_coreid_column(self, content: DfContent):
+        """
+        Get the column name of id or coreid
+        :param content: Content to find the id or coreid column
+        :return: The column name if found
+        """
+        for elm in self.meta_content.meta_elements:
+            if elm.meta_element_type.file_name == content.meta_info.file_name:
+                coreid_idx = elm.core_id.index
+                for a_field in elm.fields:
+                    if a_field.index == coreid_idx:
+                        return a_field.field_name
+                return Defaults.MetaDefaultFields.ID if content.meta_info.core_or_ext_type == CoreOrExtType.CORE \
+                    else Defaults.MetaDefaultFields.CORE_ID
+        return None
+
     def build_indexes(self):
         """Build unique indexes, using the key terms for both core and extensions
         """
-
-        def __get_coreid_column(content: DfContent):
-            """
-            Get the column name of id or coreid
-            :param content: Content to find the id or coreid column
-            :return: The column name if found
-            """
-            for elm in self.meta_content.meta_elements:
-                if elm.meta_element_type.file_name == content.meta_info.file_name:
-                    coreid_idx = elm.core_id.index
-                    for a_field in elm.fields:
-                        if a_field.index == coreid_idx:
-                            return a_field.field_name
-                    return Defaults.MetaDefaultFields.ID if content.meta_info.core_or_ext_type == CoreOrExtType.CORE \
-                        else Defaults.MetaDefaultFields.CORE_ID
-            return None
-
         if len(self.ext_content) > 0:
-            id_column = __get_coreid_column(self.core_content)
+            id_column = self.__get_coreid_column(self.core_content)
             core_index_keys = self._extract_core_keys(self.core_content.df_content, self.core_content.keys, id_column)
             for content in self.ext_content:
-                coreid_column = __get_coreid_column(content)
+                coreid_column = self.__get_coreid_column(content)
                 if coreid_column:
                     # Make sure coreid columns are populated by filtering off empty core ids.
                     log.info("content %s contains %i records before filtering empty coreid",
@@ -622,6 +633,10 @@ class Dwca(BaseDwca):
         self.build_indexes()
         delta_dwca.build_indexes()
 
+        self.core_content.df_content = self._merge_df_content(content=self.core_content,
+                                                              delta_content=delta_dwca.core_content,
+                                                              keys=self.core_content.keys)
+
         for _, delta_content in enumerate(delta_dwca.ext_content):
             contents = self.get_content(class_type=delta_content.meta_info.type,
                                         file_name=delta_content.meta_info.file_name if match_by_filename else "")
@@ -632,16 +647,14 @@ class Dwca(BaseDwca):
 
                 content.df_content = self._merge_df_content(content=content,
                                                             delta_content=delta_content,
-                                                            keys=self.core_content.keys)
+                                                            keys=self.core_content.keys,
+                                                            update_ext=True)
 
             if len(contents) == 0:
                 # Copy delta ext content into self ext content
                 self.ext_content.append(delta_content)
                 self._update_meta_fields(delta_content)
 
-        self.core_content.df_content = self._merge_df_content(content=self.core_content,
-                                                              delta_content=delta_dwca.core_content,
-                                                              keys=self.core_content.keys)
 
     def get_content(self, class_type: MetaElementTypes = None, name_space: str = None, file_name: str = None) -> list:
         """Get the content based on the class type, row type namespace and optional file name
@@ -729,8 +742,8 @@ class Dwca(BaseDwca):
                 multimedia_without_format = multimedia_df[multimedia_df['format'].isnull()]
                 if len(multimedia_without_format) > 0:
                     multimedia_without_format = multimedia_without_format.apply(
-                                                                    lambda row: get_multimedia_format_type(row),
-                                                                    axis=1)
+                        lambda row: get_multimedia_format_type(row),
+                        axis=1)
                     multimedia_df.update(multimedia_without_format)
             else:
                 multimedia_df = multimedia_df.apply(lambda row: get_multimedia_format_type(row), axis=1)
@@ -791,7 +804,8 @@ class Dwca(BaseDwca):
             image_df = self._extract_media(self.core_content.df_content, assoc_media_col)
             if len(image_df) > 0:
                 image_df.drop_duplicates(inplace=True)
-                self._update_meta_fields(content=self.core_content, key_field=self.core_content.keys[0])
+                id_column = self.__get_coreid_column(self.core_content)
+                self._update_meta_fields(content=self.core_content, key_field=id_column)
                 log.info("%s associated media extracted", str(len(image_df)))
                 multimedia_keys = self.core_content.keys.copy()
                 multimedia_keys.append("identifier")
