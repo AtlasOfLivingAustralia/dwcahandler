@@ -197,7 +197,7 @@ class TestMergeDwcaContent:
                                     columns=["occurrenceID", "scientificName", "decimalLatitude", "decimalLongitude",
                                              "basisOfRecord"])
 
-        delta_multimedia_df = pd.DataFrame(data=[["3", "https://image3.jpg", "image/webp", "StillImage", "RightsHolder3"],
+        delta_multimedia_df = pd.DataFrame(data=[["3", "https://image3.jpg", "image/jpeg", "StillImage", "RightsHolder3"],
                                                  ["3", "https://new-image3.webp", "image/webp", "StillImage", "RightsHolder3"],
                                                  ["4", "https://image4.webp", "image/webp", "StillImage", nan],
                                                  ["5", "https://image5.webp", "image/webp", "StillImage", "RightsHolder5"],
@@ -227,7 +227,7 @@ class TestMergeDwcaContent:
 
         expected_multimedia_df = pd.DataFrame(data=[["1", "https://image1.jpg", "image/jpeg", "StillImage", nan],
                                                     ["2", "https://image2.jpg", "image/jpeg", "StillImage", nan],
-                                                    ["3", "https://image3.jpg", "image/webp", "StillImage", "RightsHolder3"],
+                                                    ["3", "https://image3.jpg", "image/jpeg", "StillImage", "RightsHolder3"],
                                                     ["3", "https://new-image3.webp", "image/webp", "StillImage", "RightsHolder3"],
                                                     ["4", "https://image4.webp", "image/webp", "StillImage", nan],
                                                     ["5", "https://image5.webp", "image/webp", "StillImage", "RightsHolder5"],
@@ -281,7 +281,7 @@ class TestMergeDwcaContent:
                                     columns=["id", "occurrenceID", "scientificName", "decimalLatitude", "decimalLongitude",
                                              "basisOfRecord"])
 
-        delta_multimedia_df = pd.DataFrame(data=[["3-delta", "https://image3.jpg", "image/webp", "StillImage", "RightsHolder3"],
+        delta_multimedia_df = pd.DataFrame(data=[["3-delta", "https://image3.jpg", "image/jpeg", "StillImage", "RightsHolder3"],
                                                  ["3-delta", "https://new-image3.webp", "image/webp", "StillImage", "RightsHolder3"],
                                                  ["4-delta", "https://image4.webp", "image/webp", "StillImage", nan],
                                                  ["5-delta", "https://image5.webp", "image/webp", "StillImage", "RightsHolder5"],
@@ -311,7 +311,7 @@ class TestMergeDwcaContent:
 
         expected_multimedia_df = pd.DataFrame(data=[["1", "https://image1.jpg", "image/jpeg", "StillImage", nan],
                                                     ["2", "https://image2.jpg", "image/jpeg", "StillImage", nan],
-                                                    ["3", "https://image3.jpg", "image/webp", "StillImage", "RightsHolder3"],
+                                                    ["3", "https://image3.jpg", "image/jpeg", "StillImage", "RightsHolder3"],
                                                     ["3", "https://new-image3.webp", "image/webp", "StillImage", "RightsHolder3"],
                                                     ["4-delta", "https://image4.webp", "image/webp", "StillImage", nan],
                                                     ["5-delta", "https://image5.webp", "image/webp", "StillImage", "RightsHolder5"],
@@ -370,7 +370,7 @@ class TestMergeDwcaContent:
                                     columns=["id", "institutionCode", "collectionCode", "catalogNumber", "scientificName",
                                              "decimalLatitude", "decimalLongitude", "basisOfRecord"])
 
-        delta_multimedia_df = pd.DataFrame(data=[["8", "https://image3.jpg", "image/webp", "StillImage", "RightsHolder3"],
+        delta_multimedia_df = pd.DataFrame(data=[["8", "https://image3.jpg", "image/jpeg", "StillImage", "RightsHolder3"],
                                                  ["8", "https://new-image3.webp", "image/webp", "StillImage", "RightsHolder3"],
                                                  ["9", "https://image4.webp", "image/webp", "StillImage", nan],
                                                  ["10", "https://image5.webp", "image/webp", "StillImage", "RightsHolder5"],
@@ -402,7 +402,7 @@ class TestMergeDwcaContent:
 
         expected_multimedia_df = pd.DataFrame(data=[["1", "https://image1.jpg", "image/jpeg", "StillImage", nan],
                                                     ["2", "https://image2.jpg", "image/jpeg", "StillImage", nan],
-                                                    ["3", "https://image3.jpg", "image/webp", "StillImage", "RightsHolder3"],
+                                                    ["3", "https://image3.jpg", "image/jpeg", "StillImage", "RightsHolder3"],
                                                     ["3", "https://image3-1.jpg", "image/jpeg", "StillImage", nan],
                                                     ["5", "https://image5-occ2.jpg", "image/jpeg", "StillImage", nan],
                                                     ["3", "https://new-image3.webp", "image/webp", "StillImage", "RightsHolder3"],
@@ -464,7 +464,7 @@ class TestMergeDwcaContent:
                                     columns=["id", "institutionCode", "collectionCode", "catalogNumber", "scientificName",
                                              "decimalLatitude", "decimalLongitude", "basisOfRecord"])
 
-        delta_multimedia_df = pd.DataFrame(data=[["8", "https://image3.jpg", "image/webp", "StillImage", "RightsHolder3"],
+        delta_multimedia_df = pd.DataFrame(data=[["8", "https://image3.jpg", "image/jpeg", "StillImage", "RightsHolder3"],
                                                  ["8", "https://new-image3.webp", "image/webp", "StillImage", "RightsHolder3"],
                                                  ["9", "https://image4.webp", "image/webp", "StillImage", nan],
                                                  ["10", "https://image5.webp", "image/webp", "StillImage", "RightsHolder5"],
@@ -498,7 +498,7 @@ class TestMergeDwcaContent:
         expected_multimedia_df = pd.DataFrame(data=[["1", "https://image1.jpg", "image/jpeg", "StillImage", nan],
                                                     ["2", "https://image2.jpg", "image/jpeg", "StillImage", nan],
                                                     ["5", "https://image5-occ2.jpg", "image/jpeg", "StillImage", nan],
-                                                    ["3", "https://image3.jpg", "image/webp", "StillImage", "RightsHolder3"],
+                                                    ["3", "https://image3.jpg", "image/jpeg", "StillImage", "RightsHolder3"],
                                                     ["3", "https://new-image3.webp", "image/webp", "StillImage", "RightsHolder3"],
                                                     ["9", "https://image4.webp", "image/webp", "StillImage", nan],
                                                     ["10", "https://image5.webp", "image/webp", "StillImage", "RightsHolder5"],
