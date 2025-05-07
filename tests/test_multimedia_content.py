@@ -23,7 +23,7 @@ image_ext = ContentData(data=pd.DataFrame(data=[["1", IMAGE_URL],
                                                 ["3", MIMETYPE_IMAGE_URL]],
                                           columns=['occurrenceID', 'identifier']),
                         type=MetaElementTypes.MULTIMEDIA,
-                        keys=['occurrenceID'])
+                        keys=['identifier'])
 
 
 def mock_guess_type(url):
@@ -150,7 +150,8 @@ class TestMultimediaExtension:
         dwca.extract_csv_content(csv_info=ContentData(data=pd.DataFrame(data=image_data,
                                                                         columns=["occurrenceID", "identifier",
                                                                                  "format", "type"]),
-                                                      type=MetaElementTypes.MULTIMEDIA),
+                                                      type=MetaElementTypes.MULTIMEDIA,
+                                                      keys=["identifier"]),
                                  core_ext_type=CoreOrExtType.EXTENSION)
 
         # Fill multimedia extension info
