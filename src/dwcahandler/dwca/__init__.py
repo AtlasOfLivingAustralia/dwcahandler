@@ -233,6 +233,8 @@ class ContentData:
         elif not self.type:
             self.data = other_csv_file_type.data
             self.type = other_csv_file_type.type
+            self.keys = other_csv_file_type.keys
+            self.csv_encoding = other_csv_file_type.csv_encoding
         return False
 
 from dwcahandler.dwca.eml import Eml
