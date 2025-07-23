@@ -68,6 +68,6 @@ jobs:
             CHANGEDFILES="$CHANGEDFILES ${{ steps.check-file-diff-step.outputs.file-diff3 }} "          
           fi          
           git push origin $BRANCH
-          gh pr create -H $BRANCH -B main --title "New updates to gbif extension on $BRANCH" --body "$CHANGEDFILES"
+          gh pr create -H $BRANCH -B develop --title "New updates to gbif extension on $BRANCH" --body "$CHANGEDFILES"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
