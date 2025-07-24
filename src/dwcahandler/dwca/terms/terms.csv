@@ -67,6 +67,7 @@ dwc,bed,http://rs.tdwg.org/dwc/terms/bed
 dwc,behavior,http://rs.tdwg.org/dwc/terms/behavior
 dwc,caste,http://rs.tdwg.org/dwc/terms/caste
 dwc,catalogNumber,http://rs.tdwg.org/dwc/terms/catalogNumber
+dwc,causeOfDeath,http://rs.tdwg.org/dwc/terms/causeOfDeath
 dwc,chronometricAgeConversionProtocol,http://rs.tdwg.org/chrono/terms/chronometricAgeConversionProtocol
 dwc,chronometricAgeDeterminedBy,http://rs.tdwg.org/chrono/terms/chronometricAgeDeterminedBy
 dwc,chronometricAgeDeterminedDate,http://rs.tdwg.org/chrono/terms/chronometricAgeDeterminedDate
@@ -94,6 +95,8 @@ dwc,day,http://rs.tdwg.org/dwc/terms/day
 dwc,decimalLatitude,http://rs.tdwg.org/dwc/terms/decimalLatitude
 dwc,decimalLongitude,http://rs.tdwg.org/dwc/terms/decimalLongitude
 dwc,degreeOfEstablishment,http://rs.tdwg.org/dwc/terms/degreeOfEstablishment
+dwc,digitalSpecimenID,http://rs.tdwg.org/dwc/terms/digitalSpecimenID
+dwc,discipline,http://rs.tdwg.org/dwc/terms/discipline
 dwc,disposition,http://rs.tdwg.org/dwc/terms/disposition
 dwc,dynamicProperties,http://rs.tdwg.org/dwc/terms/dynamicProperties
 dwc,earliestAgeOrLowestStage,http://rs.tdwg.org/dwc/terms/earliestAgeOrLowestStage
@@ -112,6 +115,7 @@ dwc,eventRemarks,http://rs.tdwg.org/dwc/terms/eventRemarks
 dwc,eventTime,http://rs.tdwg.org/dwc/terms/eventTime
 dwc,eventType,http://rs.tdwg.org/dwc/terms/eventType
 dwc,family,http://rs.tdwg.org/dwc/terms/family
+dwc,feedbackURL,http://rs.tdwg.org/dwc/terms/feedbackURL
 dwc,fieldNotes,http://rs.tdwg.org/dwc/terms/fieldNotes
 dwc,fieldNumber,http://rs.tdwg.org/dwc/terms/fieldNumber
 dwc,footprintSpatialFit,http://rs.tdwg.org/dwc/terms/footprintSpatialFit
@@ -119,6 +123,7 @@ dwc,footprintSRS,http://rs.tdwg.org/dwc/terms/footprintSRS
 dwc,footprintWKT,http://rs.tdwg.org/dwc/terms/footprintWKT
 dwc,formation,http://rs.tdwg.org/dwc/terms/formation
 dwc,FossilSpecimen,http://rs.tdwg.org/dwc/terms/FossilSpecimen
+dwc,fundingAttributionID,http://rs.tdwg.org/dwc/terms/fundingAttributionID
 dwc,genericName,http://rs.tdwg.org/dwc/terms/genericName
 dwc,genus,http://rs.tdwg.org/dwc/terms/genus
 dwc,geodeticDatum,http://rs.tdwg.org/dwc/terms/geodeticDatum
@@ -178,6 +183,7 @@ dwc,materialDatedRelationship,http://rs.tdwg.org/chrono/terms/materialDatedRelat
 dwc,MaterialEntity,http://rs.tdwg.org/dwc/terms/MaterialEntity
 dwc,materialEntityID,http://rs.tdwg.org/dwc/terms/materialEntityID
 dwc,materialEntityRemarks,http://rs.tdwg.org/dwc/terms/materialEntityRemarks
+dwc,materialEntityType,http://rs.tdwg.org/dwc/terms/materialEntityType
 dwc,MaterialSample,http://rs.tdwg.org/dwc/terms/MaterialSample
 dwc,materialSampleID,http://rs.tdwg.org/dwc/terms/materialSampleID
 dwc,maximumDepthInMeters,http://rs.tdwg.org/dwc/terms/maximumDepthInMeters
@@ -232,6 +238,8 @@ dwc,pointRadiusSpatialFit,http://rs.tdwg.org/dwc/terms/pointRadiusSpatialFit
 dwc,preparations,http://rs.tdwg.org/dwc/terms/preparations
 dwc,PreservedSpecimen,http://rs.tdwg.org/dwc/terms/PreservedSpecimen
 dwc,previousIdentifications,http://rs.tdwg.org/dwc/terms/previousIdentifications
+dwc,projectID,http://rs.tdwg.org/dwc/terms/projectID
+dwc,projectTitle,http://rs.tdwg.org/dwc/terms/projectTitle
 dwc,recordedBy,http://rs.tdwg.org/dwc/terms/recordedBy
 dwc,recordedByID,http://rs.tdwg.org/dwc/terms/recordedByID
 dwc,recordNumber,http://rs.tdwg.org/dwc/terms/recordNumber
@@ -268,6 +276,7 @@ dwc,taxonRank,http://rs.tdwg.org/dwc/terms/taxonRank
 dwc,taxonRemarks,http://rs.tdwg.org/dwc/terms/taxonRemarks
 dwc,tribe,http://rs.tdwg.org/dwc/terms/tribe
 dwc,typeStatus,http://rs.tdwg.org/dwc/terms/typeStatus
+dwc,typifiedName,http://rs.tdwg.org/dwc/terms/typifiedName
 dwc,uncalibratedChronometricAge,http://rs.tdwg.org/chrono/terms/uncalibratedChronometricAge
 dwc,verbatimChronometricAge,http://rs.tdwg.org/chrono/terms/verbatimChronometricAge
 dwc,verbatimCoordinates,http://rs.tdwg.org/dwc/terms/verbatimCoordinates
@@ -280,6 +289,7 @@ dwc,verbatimLabel,http://rs.tdwg.org/dwc/terms/verbatimLabel
 dwc,verbatimLatitude,http://rs.tdwg.org/dwc/terms/verbatimLatitude
 dwc,verbatimLocality,http://rs.tdwg.org/dwc/terms/verbatimLocality
 dwc,verbatimLongitude,http://rs.tdwg.org/dwc/terms/verbatimLongitude
+dwc,verbatimMeasurementType,http://rs.tdwg.org/dwc/terms/verbatimMeasurementType
 dwc,verbatimSRS,http://rs.tdwg.org/dwc/terms/verbatimSRS
 dwc,verbatimTaxonRank,http://rs.tdwg.org/dwc/terms/verbatimTaxonRank
 dwc,vernacularName,http://rs.tdwg.org/dwc/terms/vernacularName
