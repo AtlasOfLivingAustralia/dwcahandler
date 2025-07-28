@@ -38,8 +38,7 @@ def check_output(output_obj: BytesIO, test_files_folder: str,
                             expected_df = pd.read_csv(test_file, dtype='str',
                                                       delimiter=csv_encoding.csv_delimiter,
                                                       quotechar=csv_encoding.csv_text_enclosure,
-                                                      escapechar=csv_encoding.csv_escape_char,
-                                                      lineterminator=csv_encoding.csv_eol)
+                                                      escapechar=csv_encoding.csv_escape_char)
                         else:
                             expected_df = pd.read_csv(test_file, dtype='str')
                         if not check_core_id:
@@ -180,13 +179,13 @@ class TestCreateDwca:
 
         check_output(output_obj, test_files_folder)
 
-    def test_create_occurrence_with_chars_in_remarks_dwca_occurrence_with_eml(self):
+    def test_create_occurrence_with_backslash_chars_in_remarks_dwca_occurrence(self):
         test_files_folder = "./input_files/occurrence/sample6"
 
         csv_encoding = CSVEncoding(csv_delimiter=",",
                                    csv_escape_char="\\",
                                    csv_text_enclosure='"',
-                                   csv_eol='\n')
+                                   csv_eol='\r\n')
 
         core_csv = ContentData(data=[f"{test_files_folder}/occurrence.txt"],
                                type=MetaElementTypes.OCCURRENCE,
