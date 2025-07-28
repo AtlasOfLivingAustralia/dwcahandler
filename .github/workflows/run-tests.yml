@@ -2,7 +2,7 @@ name: Run test
 
 on:
   push:
-    branches: [ "main", "develop" ]
+    branches: [ "main", "develop", "feature/test_read_write" ]
   pull_request:
     branches: [ "main", "develop" ]
 
