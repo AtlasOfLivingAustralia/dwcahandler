@@ -77,7 +77,7 @@ class CSVEncoding:
     csv_delimiter: str = field(default=',')
     csv_eol: str = field(default='\n')
     csv_text_enclosure: str = field(default='"')
-    csv_escape_char: str = field(default='"')
+    csv_escape_char: str = field(default='\\')
 
     def __post_init__(self):
         self.csv_delimiter = self.__convert_values(self.csv_delimiter)
@@ -184,7 +184,7 @@ class Defaults:
     """
     csv_encoding: CSVEncoding = field(
         default_factory=lambda: CSVEncoding(csv_delimiter=",", csv_eol="\n", csv_text_enclosure='"',
-                                            csv_escape_char='"'))
+                                            csv_escape_char='\\'))
     eml_xml_filename: str = 'eml.xml'
     meta_xml_filename: str = 'meta.xml'
     # Translation csv encoding values
@@ -213,7 +213,7 @@ class ContentData:
                                 # Embedded images file name must be supplied as associatedMedia in the content
     csv_encoding: CSVEncoding = field(
         default_factory=lambda: CSVEncoding(csv_delimiter=",", csv_eol="\n", csv_text_enclosure='"',
-                                            csv_escape_char='"'))
+                                            csv_escape_char='\\'))
 
     def check_for_empty(self, include_keys = True):
         if self.data and len(self.data) > 0 and \
