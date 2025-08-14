@@ -213,10 +213,11 @@ DwcaHandler.delete_records(dwca_file='/tmp/dwca.zip',
 &nbsp;
 
 ### Support for building Ecological Markup Language (EML) via dwcahandler Eml class 
-dwcahandler supports generating EML for provide the dataset metadata.
+DwcaHandler supports generating EML for dataset metadata.
 Eml object can be passed into DwcaHandler to create DwCA.
-Dataset information is required by Eml class to form eml string 
-For more info on the Eml Class, see [eml,py](src/dwcahandler/dwca/eml.py)
+Eml class requires a mandatory dataset metadata and 
+an optional additional metadata to generate the eml, otherwise, it will throw and error 
+For more info on the Eml Class, see [eml.py](src/dwcahandler/dwca/eml.py)
 
 ```python
 
