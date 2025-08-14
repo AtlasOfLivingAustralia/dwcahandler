@@ -101,18 +101,20 @@ DwcaHandler.list_class_rowtypes()
 from dwcahandler import ContentData
 from dwcahandler import DwcaHandler
 from dwcahandler import MetaElementTypes
-from dwcahandler import Eml
+from dwcahandler import Dataset, Eml, Description, Contact, Name
 
-core_csv = ContentData(data=['/tmp/occurrence.csv'], type=MetaElementTypes.OCCURRENCE, keys=['occurrenceID'])
-ext_csvs = [ContentData(data=['/tmp/multimedia.csv'], type=MetaElementTypes.MULTIMEDIA)]
+core_csv = ContentData(data=["/tmp/occurrence.csv"], type=MetaElementTypes.OCCURRENCE, keys=["occurrenceID"])
+ext_csvs = [ContentData(data=["/tmp/multimedia.csv"], type=MetaElementTypes.MULTIMEDIA)]
 
-eml = Eml(dataset_name='Test Dataset',
-          description='Dataset description',
-          license='Creative Commons Attribution (International) (CC-BY 4.0 (Int) 4.0)',
-          citation="test citation",
-          rights="test rights")
+eml = Eml(
+    dataset=Dataset(
+        dataset_name="A Dataset",
+        abstract=Description("Description of dataset"),
+        creator=Contact(individual_name=Name(first_name="Jane", last_name="Doe"), email="jane.doe@org.com"),
+    )
+)
 
-DwcaHandler.create_dwca(core_csv=core_csv, ext_csv_list=ext_csvs, eml_content=eml, output_dwca='/tmp/dwca.zip')
+DwcaHandler.create_dwca(core_csv=core_csv, ext_csv_list=ext_csvs, eml_content=eml, output_dwca="/tmp/dwca.zip")
 ```
 &nbsp;
 * Create Darwin Core Archive from pandas dataframe
@@ -122,22 +124,24 @@ DwcaHandler.create_dwca(core_csv=core_csv, ext_csv_list=ext_csvs, eml_content=em
 from dwcahandler import DwcaHandler
 from dwcahandler.dwca import ContentData
 from dwcahandler import MetaElementTypes
-from dwcahandler import Eml
+from dwcahandler import Dataset, Eml, Description, Contact, Name
 import pandas as pd
 
 core_df = pd.read_csv("/tmp/occurrence.csv")
-core_frame = ContentData(data=core_df, type=MetaElementTypes.OCCURRENCE, keys=['occurrenceID'])
+core_frame = ContentData(data=core_df, type=MetaElementTypes.OCCURRENCE, keys=["occurrenceID"])
 
 ext_df = pd.read_csv("/tmp/multimedia.csv")
 ext_frame = [ContentData(data=ext_df, type=MetaElementTypes.MULTIMEDIA)]
 
-eml = Eml(dataset_name='Test Dataset',
-          description='Dataset description',
-          license='Creative Commons Attribution (International) (CC-BY 4.0 (Int) 4.0)',
-          citation="test citation",
-          rights="test rights")
+eml = Eml(
+    dataset=Dataset(
+        dataset_name="A Dataset",
+        abstract=Description("Description of dataset"),
+        creator=Contact(individual_name=Name(first_name="Jane", last_name="Doe"), email="jane.doe@org.com"),
+    )
+)
 
-DwcaHandler.create_dwca(core_csv=core_frame, ext_csv_list=ext_frame, eml_content=eml, output_dwca='/tmp/dwca.zip')
+DwcaHandler.create_dwca(core_csv=core_frame, ext_csv_list=ext_frame, eml_content=eml, output_dwca="/tmp/dwca.zip")
 ```
 &nbsp;
 * Convenient helper function to build Darwin Core Archive from a list of csv files.
@@ -148,15 +152,20 @@ DwcaHandler.create_dwca(core_csv=core_frame, ext_csv_list=ext_frame, eml_content
 * Delimiter for txt files are comma delimiter by default. For tab delimiter, supply CsvEncoding
 ```python
 from dwcahandler import DwcaHandler
-from dwcahandler import Eml
+from dwcahandler import Dataset, Eml, Description, Contact, Name
 
-eml = Eml(dataset_name='Test Dataset',
-          description='Dataset description',
-          license='Creative Commons Attribution (International) (CC-BY 4.0 (Int) 4.0)',
-          citation="test citation",
-          rights="test rights")
+eml = Eml(
+    dataset=Dataset(
+        dataset_name="A Dataset",
+        abstract=Description("Description of dataset"),
+        creator=Contact(individual_name=Name(first_name="Jane", last_name="Doe"), email="jane.doe@org.com"),
+    )
+)
 
-DwcaHandler.create_dwca_from_file_list(files=["/tmp/event.csv", "/tmp/occurrence.csv"],  eml_content=eml, output_dwca='/tmp/dwca.zip')
+DwcaHandler.create_dwca_from_file_list(
+    files=["/tmp/event.csv", "/tmp/occurrence.csv"], eml_content=eml, output_dwca="/tmp/dwca.zip"
+)
+
 ```
 &nbsp;
 * Convenient helper function to create Darwin Core Archive from csv files in a zip files.
@@ -167,15 +176,17 @@ DwcaHandler.create_dwca_from_file_list(files=["/tmp/event.csv", "/tmp/occurrence
 * Delimiter for txt files are comma delimiter by default. For tab delimiter, supply CsvEncoding
 ```python
 from dwcahandler import DwcaHandler
-from dwcahandler import Eml
+from dwcahandler import Dataset, Eml, Description, Contact, Name
 
-eml = Eml(dataset_name='Test Dataset',
-          description='Dataset description',
-          license='Creative Commons Attribution (International) (CC-BY 4.0 (Int) 4.0)',
-          citation="test citation",
-          rights="test rights")
+eml = Eml(
+    dataset=Dataset(
+        dataset_name="A Dataset",
+        abstract=Description("Description of dataset"),
+        creator=Contact(individual_name=Name(first_name="Jane", last_name="Doe"), email="jane.doe@org.com"),
+    )
+)
 
-DwcaHandler.create_dwca_from_zip_content(zip_file="/tmp/txt_files.zip",  eml_content=eml, output_dwca='/tmp/dwca.zip')
+DwcaHandler.create_dwca_from_zip_content(zip_file="/tmp/txt_files.zip", eml_content=eml, output_dwca="/tmp/dwca.zip")
 ```
 &nbsp;
 * Merge two Darwin Core Archives into a single file 
@@ -200,3 +211,113 @@ DwcaHandler.delete_records(dwca_file='/tmp/dwca.zip',
                            output_dwca='/tmp/new-dwca.zip')
 ```
 &nbsp;
+
+### Support for building Ecological Markup Language (EML) via dwcahandler Eml class 
+dwcahandler supports generating EML for provide the dataset metadata.
+Eml object can be passed into DwcaHandler to create DwCA.
+Dataset information is required by Eml class to form eml string 
+For more info on the Eml Class, see [eml,py](src/dwcahandler/dwca/eml.py)
+
+```python
+
+from dwcahandler import (
+    Name,
+    Address,
+    Contact,
+    Description,
+    BoundingCoordinates,
+    GeographicCoverage,
+    DateRange,
+    CalendarDate,
+    TemporalCoverage,
+    TaxonomicClassification,
+    TaxonomicCoverage,
+    Coverage,
+    KeywordSet,
+    Dataset,
+    AdditionalMetadata,
+    Metadata,
+    Eml,
+)
+
+contact_person: Contact = Contact(
+    individual_name=Name(first_name="John", last_name="Doe"),
+    address=Address(city="City", postal_code="ABC-123", country="Country"),
+    organization_name="An Organization",
+    email="john.doe@org.com",
+    userid="https://orcid.org/0000-0000-0000-0000",
+)
+
+dataset = Dataset(
+    dataset_name="Test Dataset",
+    alternate_identifier=[
+        "https://ipt/eml.do?r=a-resource",
+        "https://another-website/dataset-info",
+    ],
+    keyword_set=[
+        KeywordSet(
+            keyword="Occurrence",
+            keyword_thesaurus="http://rs.gbif.org/vocabulary/gbif/dataset_type_2015-07-10.xml",
+        )
+    ],
+    abstract=Description(
+        description="Lorem Ipsum is simply dummy text of the printing and typesetting industry. \n"
+                    "Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when \n"
+                    "an unknown printer took a galley of type and scrambled it to make a type specimen book"
+    ),
+    creator=contact_person,
+    published_date="2020-05-01",
+    coverage=Coverage(
+        geographic_coverage=GeographicCoverage(
+            description="The data set contains records of herbarium specimens",
+            bounding_coordinates=BoundingCoordinates(west="1.0", east="2.0", north="3.0", south="4.0"),
+        ),
+        temporal_coverage=TemporalCoverage(
+            DateRange(
+                begin_date=CalendarDate(calendar_date="2020-01-01"),
+                end_date=CalendarDate(calendar_date="2020-01-31"),
+            )
+        ),
+        taxonomic_coverage=TaxonomicCoverage(
+            general_taxonomic_coverage="All vascular plants are identified as species or genus",
+            taxonomic_classification=[
+                TaxonomicClassification(taxon_rank_name="Genus", taxon_rank_value="Acacia"),
+                TaxonomicClassification(taxon_rank_name="Genus", taxon_rank_value="Acacia"),
+            ],
+        ),
+    ),
+    intellectual_rights=[
+        Description(
+            description="""This work is licensed under a 
+                                    <ulink url='http://creativecommons.org/licenses/by/4.0/legalcode'> 
+                                    <citetitle>Creative Commons Attribution (CC-BY) 4.0 License</citetitle></ulink>"""
+        )
+    ],
+    contact=contact_person,
+)
+
+additional_metadata = AdditionalMetadata(
+    metadata=Metadata(
+        citation=Description(description="Researchers should cite this work as follows: xxxxx"),
+        additional_info=Description(
+            description="""
+                            <gbif>
+                                <dateStamp>2025-03-03T03:37:21</dateStamp>
+                                <hierarchyLevel>dataset</hierarchyLevel>
+                                <resourceLogoUrl>https://logo-url/logo.png</resourceLogoUrl>
+                            </gbif>
+                            """
+        ),
+    )
+)
+
+eml = Eml(dataset=dataset,
+          additional_metadata=additional_metadata)
+
+eml_xml_str = eml.build_eml_xml()
+print(eml_xml_str)
+
+```
+
+
+

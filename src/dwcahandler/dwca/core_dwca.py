@@ -826,10 +826,10 @@ class Dwca(BaseDwca):
                                                                iterator=use_chunking,
                                                                extra_param=extra_read_param))
 
-            log.info("Extracted total of %d records",self.count_stat(df_content))
+            log.info("Extracted total of %d records", self.count_stat(df_content))
             # Drop rows where all the values are duplicates
             df_content.drop_duplicates(inplace=True)
-            log.debug("Extracted %d unique rows",len(df_content))
+            log.debug("Extracted %d unique rows", len(df_content))
             return df_content
 
         raise ValueError('content is empty')
