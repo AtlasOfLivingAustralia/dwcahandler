@@ -1,3 +1,18 @@
+"""
+This module provides dataclasses and helper methods for constructing and validating EML (Ecological Metadata Language) XML documents using the metapype library.
+
+Key Features:
+- BaseElements: Base class for converting dataclass fields into EML XML nodes, supporting nested and list structures.
+- Data Model Classes: Name, Address, Contact, Description, Coverage, Dataset, etc., each mapping to EML elements via field metadata.
+- Eml: Top-level class for assembling and validating the EML XML tree.
+
+Usage:
+- Instantiate the dataclasses to represent EML metadata.
+- Use the Eml class and its build_eml_xml() method to generate and validate the EML XML string.
+
+Logging:
+- Validation errors are logged using Python's logging module.
+"""
 from dataclasses import dataclass, field, fields
 import metapype.eml.export
 from metapype.eml import names
@@ -18,22 +33,42 @@ EML_ELM_MAPPING = "node_name"
 
 @dataclass
 class BaseElements:
+    """
+    Base class for EML dataclasses. Provides methods to convert dataclass fields into EML XML nodes,
+    supporting nested and list structures for EML document construction.
+    """
     def get_class_fields(self):
+        """
+        Returns a list of dataclass fields for the current instance.
+        Used to introspect the dataclass for EML element mapping.
+        """
         return fields(globals()[self.__class__.__name__])
 
     def make_node(self, node_name: str, parent_node: Node, content_value: str = None):
+        """
+        Creates an EML node with the given name and content, and attaches it to the parent node.
+        If content_value is None, creates an empty node.
+        """
         node = Node(node_name, parent=parent_node)
         if content_value:
             node.content = content_value
         return node
 
     def make_children_node(self, child_obj, node_name: str, parent_node: Node):
+        """
+        Recursively creates child EML nodes from a dataclass or list of dataclasses and attaches them to the parent node.
+        Handles both single objects and lists.
+        """
         node = child_obj.make_node(node_name=node_name, parent_node=parent_node)
         child_node = child_obj.make_node_from_elements(parent_node=node)
         parent_node.add_child(child_node)
         return parent_node
 
     def make_node_from_elements(self, parent_node: Node):
+        """
+        Converts all dataclass fields into EML nodes and attaches them to the parent node.
+        Handles nested dataclasses and lists for complex EML structures.
+        """
         elm_fields = self.get_class_fields()
         for elm_field in elm_fields:
             node_name = (
@@ -81,12 +116,18 @@ class BaseElements:
 
 @dataclass
 class Name(BaseElements):
+    """
+    Represents an individual's name in EML, mapping to given name and surname elements.
+    """
     first_name: str = field(default=None, metadata={EML_ELM_MAPPING: names.GIVENNAME})
     last_name: str = field(default=None, metadata={EML_ELM_MAPPING: names.SURNAME})
 
 
 @dataclass
 class Address(BaseElements):
+    """
+    Represents a postal address in EML, including delivery point, city, administrative area, postal code, and country.
+    """
     delivery_point: str = field(
         default=None, metadata={EML_ELM_MAPPING: names.DELIVERYPOINT}
     )
@@ -100,6 +141,9 @@ class Address(BaseElements):
 
 @dataclass
 class Contact(BaseElements):
+    """
+    Represents a contact or party in EML, including name, organization, position, address, phone, email, and user ID.
+    """
     individual_name: Name = field(
         default=None, metadata={EML_ELM_MAPPING: names.INDIVIDUALNAME}
     )
@@ -121,11 +165,17 @@ class Contact(BaseElements):
 
 @dataclass()
 class Description(BaseElements):
+    """
+    Represents a descriptive text element in EML, such as abstract or citation.
+    """
     description: str = field(default=None, metadata={EML_ELM_MAPPING: names.PARA})
 
 
 @dataclass
 class BoundingCoordinates(BaseElements):
+    """
+    Represents the bounding coordinates (west, east, north, south) for geographic coverage in EML.
+    """
     west: str = field(
         default=None, metadata={EML_ELM_MAPPING: names.WESTBOUNDINGCOORDINATE}
     )
@@ -142,6 +192,9 @@ class BoundingCoordinates(BaseElements):
 
 @dataclass
 class GeographicCoverage(BaseElements):
+    """
+    Represents the geographic coverage section in EML, including description and bounding coordinates.
+    """
     description: str = field(
         default=None, metadata={EML_ELM_MAPPING: names.GEOGRAPHICDESCRIPTION}
     )
@@ -152,17 +205,26 @@ class GeographicCoverage(BaseElements):
 
 @dataclass
 class CalendarDate(BaseElements):
+    """
+    Represents a calendar date in EML, used for temporal coverage.
+    """
     calendar_date: str = field(default=None, metadata={EML_ELM_MAPPING: names.CALENDARDATE})
 
 
 @dataclass
 class DateRange(BaseElements):
+    """
+    Represents a date range in EML, with begin and end dates for temporal coverage.
+    """
     begin_date: CalendarDate = field(default=None, metadata={EML_ELM_MAPPING: names.BEGINDATE})
     end_date: CalendarDate = field(default=None, metadata={EML_ELM_MAPPING: names.ENDDATE})
 
 
 @dataclass
 class TemporalCoverage(BaseElements):
+    """
+    Represents the temporal coverage section in EML, specifying the range of dates covered by the dataset.
+    """
     range_of_dates: DateRange = field(
         default=None, metadata={EML_ELM_MAPPING: names.RANGEOFDATES}
     )
@@ -170,6 +232,9 @@ class TemporalCoverage(BaseElements):
 
 @dataclass
 class TaxonomicClassification(BaseElements):
+    """
+    Represents a single taxonomic classification in EML, including rank name and value.
+    """
     taxon_rank_name: str = field(
         default=None, metadata={EML_ELM_MAPPING: names.TAXONRANKNAME}
     )
@@ -179,6 +244,9 @@ class TaxonomicClassification(BaseElements):
 
 @dataclass
 class TaxonomicCoverage(BaseElements):
+    """
+    Represents the taxonomic coverage section in EML, including general coverage and a list of classifications.
+    """
     general_taxonomic_coverage: str = field(
         default=None, metadata={EML_ELM_MAPPING: names.GENERALTAXONOMICCOVERAGE}
     )
@@ -189,6 +257,9 @@ class TaxonomicCoverage(BaseElements):
 
 @dataclass
 class Coverage(BaseElements):
+    """
+    Represents the overall coverage section in EML, including geographic, temporal, and taxonomic coverage.
+    """
     geographic_coverage: GeographicCoverage = field(
         default=None, metadata={EML_ELM_MAPPING: names.GEOGRAPHICCOVERAGE}
     )
@@ -202,6 +273,9 @@ class Coverage(BaseElements):
 
 @dataclass
 class KeywordSet(BaseElements):
+    """
+    Represents a set of keywords and an optional thesaurus in EML.
+    """
     keyword: str = field(default=None, metadata={EML_ELM_MAPPING: names.KEYWORD})
     keyword_thesaurus: str = field(
         default=None, metadata={EML_ELM_MAPPING: names.KEYWORDTHESAURUS}
@@ -210,6 +284,9 @@ class KeywordSet(BaseElements):
 
 @dataclass
 class Dataset(BaseElements):
+    """
+    Represents the main dataset section in EML, including title, identifiers, keywords, creators, abstract, rights, coverage, and contacts.
+    """
     dataset_name: str = field(
         default=None, metadata={EML_ELM_MAPPING: names.TITLE}
     )  # dataset -> title
@@ -250,6 +327,9 @@ class Dataset(BaseElements):
 
 @dataclass
 class Metadata(BaseElements):
+    """
+    Represents additional metadata in EML, such as citation and extra information.
+    """
     citation: Description = field(
         default=None, metadata={EML_ELM_MAPPING: names.CITATION}
     )
@@ -260,6 +340,9 @@ class Metadata(BaseElements):
 
 @dataclass
 class AdditionalMetadata(BaseElements):
+    """
+    Represents the additionalMetadata section in EML, containing extra metadata blocks.
+    """
     metadata: Metadata = field(
         default=None, metadata={EML_ELM_MAPPING: names.METADATA}
     )
@@ -267,6 +350,10 @@ class AdditionalMetadata(BaseElements):
 
 @dataclass
 class Eml(BaseElements):
+    """
+    Top-level class for assembling and validating an EML XML document. Contains dataset and additional metadata.
+    Use build_eml_xml() to generate and validate the EML XML string.
+    """
     dataset: Dataset = field(
         default=None, metadata={EML_ELM_MAPPING: names.DATASET}
     )
@@ -276,12 +363,21 @@ class Eml(BaseElements):
     eml: Node = field(init=False)
 
     def __post_init__(self):
+        """
+        Initializes the Eml object by creating the root EML node and setting required attributes.
+        This method is automatically called after the dataclass is initialized.
+        """
         node = Node(names.EML)
         node.add_attribute("packageId", "ala")
         node.add_attribute("system", "dwcahandler")
         self.eml = node
 
     def build_eml_xml(self):
+        """
+        Builds the EML XML string from the dataclass structure and validates it.
+        Returns:
+            str: The generated EML XML as a string. Logs validation errors if present.
+        """
         eml = self.eml
         eml = self.make_node_from_elements(parent_node=eml)
         xml_str = metapype.eml.export.to_xml(eml)
