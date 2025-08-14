@@ -6,6 +6,7 @@ from metapype.model import metapype_io
 from metapype.eml import validate
 from metapype.eml.validation_errors import ValidationError
 from datetime import datetime
+from xml.sax.saxutils import unescape
 import logging
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -284,7 +285,6 @@ class Eml(BaseElements):
         eml = self.eml
         eml = self.make_node_from_elements(parent_node=eml)
         xml_str = metapype.eml.export.to_xml(eml)
-        from xml.sax.saxutils import unescape
         xml_str = unescape(xml_str)
 
         # Validate eml string that's built

@@ -194,9 +194,9 @@ DwcaHandler.create_dwca_from_zip_content(zip_file="/tmp/txt_files.zip", eml_cont
 ```python
 from dwcahandler import DwcaHandler, MetaElementTypes
 
-DwcaHandler.merge_dwca(dwca_file='/tmp/dwca.zip', delta_dwca_file='/tmp/delta-dwca.zip',
-                       output_dwca='/tmp/new-dwca.zip', 
-                       keys_lookup={MetaElementTypes.OCCURRENCE:['occurrenceID']})
+DwcaHandler.merge_dwca(dwca_file="/tmp/dwca.zip", delta_dwca_file="/tmp/delta-dwca.zip",
+                       output_dwca="/tmp/new-dwca.zip", 
+                       keys_lookup={MetaElementTypes.OCCURRENCE:["occurrenceID"]})
 ```
 &nbsp;
 * Delete Rows from core file in Darwin Core Archive
@@ -204,20 +204,20 @@ DwcaHandler.merge_dwca(dwca_file='/tmp/dwca.zip', delta_dwca_file='/tmp/delta-dw
 from dwcahandler import ContentData
 from dwcahandler import DwcaHandler, MetaElementTypes
 
-delete_csv = ContentData(data=['/tmp/old-records.csv'], type=MetaElementTypes.OCCURRENCE, keys=['occurrenceID'])
+delete_csv = ContentData(data=["/tmp/old-records.csv"], type=MetaElementTypes.OCCURRENCE, keys=["occurrenceID"])
 
-DwcaHandler.delete_records(dwca_file='/tmp/dwca.zip',
+DwcaHandler.delete_records(dwca_file="/tmp/dwca.zip",
                            records_to_delete=delete_csv,
-                           output_dwca='/tmp/new-dwca.zip')
+                           output_dwca="/tmp/new-dwca.zip")
 ```
 &nbsp;
 
-### Support for building Ecological Markup Language (EML) via dwcahandler Eml class 
-DwcaHandler supports generating EML for dataset metadata.
-Eml object can be passed into DwcaHandler to create DwCA.
-Eml class requires a mandatory dataset metadata and 
-an optional additional metadata to generate the eml, otherwise, it will throw and error 
-For more info on the Eml Class, see [eml.py](src/dwcahandler/dwca/eml.py)
+### Support for building Ecological Markup Language (EML) via DwcaHandler Eml class 
+* DwcaHandler supports generating EML for dataset metadata.
+* Eml object can be passed into DwcaHandler to create DwCA.
+* Eml class requires a mandatory dataset and an optional additional metadata to generate the eml. 
+* Failure to provide dataset or an empty additional metadata is supplied, Eml class will still generate the eml string but an error will be displayed. 
+* For more info on the Eml Class, see [eml.py](src/dwcahandler/dwca/eml.py)
 
 ```python
 
