@@ -154,12 +154,12 @@ class Contact(BaseElements):
         default=None, metadata={EML_ELM_MAPPING: names.POSITIONNAME}
     )
     address: Address = field(default=None, metadata={EML_ELM_MAPPING: names.ADDRESS})
-    phone: str = field(default="", metadata={EML_ELM_MAPPING: names.PHONE})
+    phone: str = field(default=None, metadata={EML_ELM_MAPPING: names.PHONE})
     email: str = field(
-        default="", metadata={EML_ELM_MAPPING: names.ELECTRONICMAILADDRESS}
+        default=None, metadata={EML_ELM_MAPPING: names.ELECTRONICMAILADDRESS}
     )
     userid: str = field(
-        default="", metadata={EML_ELM_MAPPING: names.USERID}
+        default=None, metadata={EML_ELM_MAPPING: names.USERID}
     )  # orcid directory link
 
 
