@@ -23,6 +23,7 @@ from dwcahandler import (
     Eml,
 )
 
+EML_METADATA_NOT_COMPLETE = "Errors with the generated eml: Dataset must be defined or AdditionalMetadata is defined but it's not complete"
 
 def extract_content_from_children(node: Node):
     children_content = {}
@@ -36,16 +37,9 @@ def compare_child_node_content(
     node: Node,
     expected_node: Node,
 ):
-    """
-    Compare at a level
-    :param node:
-    :param expected_node:
-    :return:
-    """
     node_children_content = extract_content_from_children(node)
     expected_children_node_content = extract_content_from_children(expected_node)
     assert node_children_content == expected_children_node_content
-
 
 def compare_node_contents(node: Node, expected_node: Node, child_node_names: list[str]):
     child_node = node
@@ -284,25 +278,34 @@ class TestBuildEml:
     def test_eml_only_dataset_supplied(self, dataset, caplog):
         eml = Eml(dataset=dataset)
         eml_str = eml.build_eml_xml()
-        print(eml_str)
         assert eml_str
+        print(eml_str)
+        assert EML_METADATA_NOT_COMPLETE not in caplog.messages
 
     def test_eml_dataset_incomplete(self, dataset, caplog):
         eml = Eml(dataset=Dataset())
         eml_str = eml.build_eml_xml()
-        print(eml_str)
         assert eml_str
-        assert "Errors with the generated eml: Dataset must be defined or AdditionalMetadata is defined but it's not complete" in caplog.messages
+        print(eml_str)
+        assert EML_METADATA_NOT_COMPLETE in caplog.messages
 
     def test_eml_without_dataset(self, additional_metadata, caplog):
         eml = Eml(additional_metadata=additional_metadata)
         eml_str = eml.build_eml_xml()
+        assert eml_str
         print(eml_str)
-        assert "Errors with the generated eml: Dataset must be defined or AdditionalMetadata is defined but it's not complete" in caplog.messages
+        assert EML_METADATA_NOT_COMPLETE in caplog.messages
 
     def test_eml_additional_metadata_incomplete(self, caplog):
         eml = Eml(additional_metadata=AdditionalMetadata())
         eml_str = eml.build_eml_xml()
+        assert eml_str
         print(eml_str)
+        assert EML_METADATA_NOT_COMPLETE in caplog.messages
 
-        assert "Errors with the generated eml: Dataset must be defined or AdditionalMetadata is defined but it's not complete" in caplog.messages
+    def test_eml_empty_dataset_and_metadata(self, caplog):
+        eml = Eml(dataset=Dataset(), additional_metadata=AdditionalMetadata())
+        eml_str = eml.build_eml_xml()
+        assert eml_str
+        print(eml_str)
+        assert EML_METADATA_NOT_COMPLETE in caplog.messages

@@ -289,9 +289,11 @@ dataset = Dataset(
     ),
     intellectual_rights=[
         Description(
-            description="""This work is licensed under a 
-                                    <ulink url='http://creativecommons.org/licenses/by/4.0/legalcode'> 
-                                    <citetitle>Creative Commons Attribution (CC-BY) 4.0 License</citetitle></ulink>"""
+            description=
+    """"
+    This work is licensed under a 
+    <ulink url='http://creativecommons.org/licenses/by/4.0/legalcode'><citetitle>Creative Commons Attribution (CC-BY) 4.0 License</citetitle></ulink>
+    """
         )
     ],
     contact=contact_person,
@@ -301,13 +303,14 @@ additional_metadata = AdditionalMetadata(
     metadata=Metadata(
         citation=Description(description="Researchers should cite this work as follows: xxxxx"),
         additional_info=Description(
-            description="""
-                            <gbif>
-                                <dateStamp>2025-03-03T03:37:21</dateStamp>
-                                <hierarchyLevel>dataset</hierarchyLevel>
-                                <resourceLogoUrl>https://logo-url/logo.png</resourceLogoUrl>
-                            </gbif>
-                            """
+            description=
+    """
+    <gbif>
+        <dateStamp>2025-03-03T03:37:21</dateStamp>
+        <hierarchyLevel>dataset</hierarchyLevel>
+        <resourceLogoUrl>https://logo-url/logo.png</resourceLogoUrl>
+    </gbif>
+    """
         ),
     )
 )
