@@ -123,6 +123,7 @@ dwc,footprintSRS,http://rs.tdwg.org/dwc/terms/footprintSRS
 dwc,footprintWKT,http://rs.tdwg.org/dwc/terms/footprintWKT
 dwc,formation,http://rs.tdwg.org/dwc/terms/formation
 dwc,FossilSpecimen,http://rs.tdwg.org/dwc/terms/FossilSpecimen
+dwc,fundingAttribution,http://rs.tdwg.org/ac/terms/fundingAttribution
 dwc,fundingAttributionID,http://rs.tdwg.org/dwc/terms/fundingAttributionID
 dwc,genericName,http://rs.tdwg.org/dwc/terms/genericName
 dwc,genus,http://rs.tdwg.org/dwc/terms/genus
@@ -275,6 +276,7 @@ dwc,taxonomicStatus,http://rs.tdwg.org/dwc/terms/taxonomicStatus
 dwc,taxonRank,http://rs.tdwg.org/dwc/terms/taxonRank
 dwc,taxonRemarks,http://rs.tdwg.org/dwc/terms/taxonRemarks
 dwc,tribe,http://rs.tdwg.org/dwc/terms/tribe
+dwc,type,http://purl.org/dc/elements/1.1/type
 dwc,typeStatus,http://rs.tdwg.org/dwc/terms/typeStatus
 dwc,typifiedName,http://rs.tdwg.org/dwc/terms/typifiedName
 dwc,uncalibratedChronometricAge,http://rs.tdwg.org/chrono/terms/uncalibratedChronometricAge
@@ -298,7 +300,6 @@ dwc,vitality,http://rs.tdwg.org/dwc/terms/vitality
 dwc,waterBody,http://rs.tdwg.org/dwc/terms/waterBody
 dwc,year,http://rs.tdwg.org/dwc/terms/year
 ac,associatedObservationReference,http://rs.tdwg.org/ac/terms/accessURI
-ac,attributionLinkURL,http://rs.tdwg.org/ac/terms/fundingAttribution
 ac,available,http://rs.tdwg.org/ac/terms/hasServiceAccessPoint
 ac,commenterLiteral,http://rs.tdwg.org/ac/terms/commenter
 ac,comments,http://rs.tdwg.org/ac/terms/reviewerLiteral
@@ -310,7 +311,6 @@ ac,derivedFrom,http://rs.tdwg.org/ac/terms/associatedSpecimenReference
 ac,description,http://rs.tdwg.org/ac/terms/caption
 ac,digitizationDate,http://rs.tdwg.org/ac/terms/captureDevice
 ac,hashFunction,http://rs.tdwg.org/ac/terms/hashValue
-ac,identifier,http://purl.org/dc/elements/1.1/type
 ac,licensingException,http://rs.tdwg.org/ac/terms/serviceExpectation
 ac,lifeStage,http://rs.tdwg.org/ac/terms/subjectOrientation
 ac,LocationShown,http://iptc.org/std/Iptc4xmpExt/2008-02-29/WorldRegion
