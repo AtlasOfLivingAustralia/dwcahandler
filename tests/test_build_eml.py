@@ -236,7 +236,7 @@ class TestBuildEml:
         compare_node_contents(
             dataset_node,
             expected_dataset_node,
-            [names.CREATOR, names.INDIVIDUALNAME, names.ADDRESS],
+            ["gbif"],
         )
 
         # Check the contact and sub levels of individual name and address
