@@ -236,7 +236,7 @@ class TestBuildEml:
         compare_node_contents(
             dataset_node,
             expected_dataset_node,
-            ["gbif"],
+            [names.CREATOR, names.INDIVIDUALNAME, names.ADDRESS]
         )
 
         # Check the contact and sub levels of individual name and address
@@ -262,7 +262,7 @@ class TestBuildEml:
         compare_node_contents(
             metadata_node,
             expected_metadata_node,
-            [names.CITATION, names.ADDITIONALINFO],
+            ["gbif"],
         )
 
     def test_eml_only_dataset_supplied(self, dataset, caplog):
