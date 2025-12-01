@@ -292,7 +292,7 @@ class Dataset(BaseElements):
     )  # dataset -> title
     alternate_identifier: list[str] = field(
         default=None, metadata={EML_ELM_MAPPING: names.ALTERNATEIDENTIFIER}
-    )  # dataset -> title
+    )  # dataset -> alternateIdentifiers
     keyword_set: list[KeywordSet] = field(
         default=None, metadata={EML_ELM_MAPPING: names.KEYWORDSET}
     )  # dataset -> keywordSet
@@ -372,17 +372,6 @@ class GBIFMetadata(Metadata):
                     gbif_node.add_child(child_node)
         parent_node.add_child(gbif_node)
         return parent_node
-
-
-@dataclass
-class KeywordSet(BaseElements):
-    """
-    Represents a set of keywords and an optional thesaurus in EML.
-    """
-    keyword: str = field(default=None, metadata={EML_ELM_MAPPING: names.KEYWORD})
-    keyword_thesaurus: str = field(
-        default=None, metadata={EML_ELM_MAPPING: names.KEYWORDTHESAURUS}
-    )
 
 
 @dataclass
