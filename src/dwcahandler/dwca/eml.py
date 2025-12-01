@@ -343,11 +343,9 @@ class GBIFMetadata(Metadata):
     """
     Represents GBIF-specific metadata in EML.
     """
-    #citation: str = field(
-    #    default=None, metadata={EML_ELM_MAPPING: names.CITATION}
-    #)
     gbif: list[dict] = None
 
+    # Override the make_node_from_elements to handle gbif element
     def make_node_from_elements(self, parent_node: Node):
         if not self.gbif:
             self.gbif = []
@@ -372,7 +370,7 @@ class GBIFMetadata(Metadata):
                     child_node = self.make_node(key, parent_node=gbif_node)
                     child_node.content = value
                     gbif_node.add_child(child_node)
-            parent_node.add_child(gbif_node)
+        parent_node.add_child(gbif_node)
         return parent_node
 
 

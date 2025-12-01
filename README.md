@@ -218,6 +218,7 @@ DwcaHandler.delete_records(dwca_file="/tmp/dwca.zip",
 * Eml class requires a mandatory dataset and an optional additional metadata to generate the eml. 
 * Failure to provide dataset or an empty additional metadata is supplied, Eml class will still generate the eml string but an error will be displayed. 
 * For more info on the Eml Class, see [eml.py](src/dwcahandler/dwca/eml.py)
+* See sample EML [eml-sample.xml](tests/input_files/eml/eml-sample.xml)
 
 ```python
 
@@ -299,6 +300,8 @@ dataset = Dataset(
     contact=contact_person,
 )
 
+# GBIF Additional Metadata require at least a citation. 
+# If gbif field is supplied, it must be a list of dictionaries
 additional_metadata = AdditionalMetadata(
     metadata=GBIFMetadata(
         citation="Researchers should cite this work as follows: xxxxx",
