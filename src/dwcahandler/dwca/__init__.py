@@ -273,6 +273,7 @@ from dwcahandler.dwca.eml import (
     KeywordSet,
     Dataset,
     AdditionalMetadata,
+    GBIFMetadata,
     Metadata,
     Eml,
 )

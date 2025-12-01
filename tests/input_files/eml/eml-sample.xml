@@ -82,18 +82,11 @@
     </dataset>
     <additionalMetadata>
         <metadata>
-            <citation>
-                <para>Researchers should cite this work as follows: xxxxx</para>
-            </citation>
-            <additionalInfo>
-                <para>
-                    <gbif>
-                        <dateStamp>2025-03-03T03:37:21</dateStamp>
-                        <hierarchyLevel>dataset</hierarchyLevel>
-                        <resourceLogoUrl>https://logo-url/logo.png</resourceLogoUrl>
-                    </gbif>
-                </para>
-            </additionalInfo>
+            <gbif>
+                <citation>Researchers should cite this work as follows: xxxxx</citation>
+                <resourceLogoUrl>http://logo_url</resourceLogoUrl>
+                <hierarchyLevel>dataset</hierarchyLevel>
+            </gbif>
         </metadata>
     </additionalMetadata>
 </eml:eml>

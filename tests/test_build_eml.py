@@ -19,7 +19,7 @@ from dwcahandler import (
     KeywordSet,
     Dataset,
     AdditionalMetadata,
-    Metadata,
+    GBIFMetadata,
     Eml,
 )
 
@@ -125,19 +125,9 @@ class TestBuildEml:
     @pytest.fixture()
     def additional_metadata(self):
         additional_metadata = AdditionalMetadata(
-                metadata=Metadata(
-                    citation=Description(description="Researchers should cite this work as follows: xxxxx"),
-                    additional_info=Description(
-                        description="""
-                            <gbif>
-                                <dateStamp>2025-03-03T03:37:21</dateStamp>
-                                <hierarchyLevel>dataset</hierarchyLevel>
-                                <resourceLogoUrl>https://logo-url/logo.png</resourceLogoUrl>
-                            </gbif>
-                            """
-                    ),
-                )
-            )
+                metadata=GBIFMetadata(
+                    citation="Researchers should cite this work as follows: xxxxx",
+                    gbif=[{"resourceLogoUrl": "http://logo_url"}, {"hierarchyLevel":"dataset"}]))
 
         return additional_metadata
 
@@ -204,7 +194,7 @@ class TestBuildEml:
         compare_node_contents(
             metadata_node,
             expected_metadata_node,
-            [names.CITATION, names.ADDITIONALINFO],
+            ["gbif"],
         )
 
     def test_build_eml(self, dataset, additional_metadata):

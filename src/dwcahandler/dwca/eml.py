@@ -330,11 +330,60 @@ class Metadata(BaseElements):
     """
     Represents additional metadata in EML, such as citation and extra information.
     """
-    citation: Description = field(
+    citation: str = field(
         default=None, metadata={EML_ELM_MAPPING: names.CITATION}
     )
     additional_info: Description = field(
         default=None, metadata={EML_ELM_MAPPING: names.ADDITIONALINFO}
+    )
+
+
+@dataclass
+class GBIFMetadata(Metadata):
+    """
+    Represents GBIF-specific metadata in EML.
+    """
+    #citation: str = field(
+    #    default=None, metadata={EML_ELM_MAPPING: names.CITATION}
+    #)
+    gbif: list[dict] = None
+
+    def make_node_from_elements(self, parent_node: Node):
+        if not self.gbif:
+            self.gbif = []
+        gbif_node = self.make_node(
+            node_name="gbif",
+            parent_node=parent_node,
+        )
+        citation_field = None
+        citation_fields = [f for f in self.get_class_fields() if f.name == "citation"]
+        if len(citation_fields) > 0:
+            citation_field = citation_fields[0]
+        if citation_field:
+            citation_node = self.make_node(
+                node_name=self.get_class_fields()[0].metadata[EML_ELM_MAPPING],
+                content_value=self.citation,
+                parent_node=gbif_node,
+            )
+            gbif_node.add_child(citation_node)
+        if self.gbif and len(self.gbif) > 0:
+            for gbif_item in self.gbif:
+                for key, value in gbif_item.items():
+                    child_node = self.make_node(key, parent_node=gbif_node)
+                    child_node.content = value
+                    gbif_node.add_child(child_node)
+            parent_node.add_child(gbif_node)
+        return parent_node
+
+
+@dataclass
+class KeywordSet(BaseElements):
+    """
+    Represents a set of keywords and an optional thesaurus in EML.
+    """
+    keyword: str = field(default=None, metadata={EML_ELM_MAPPING: names.KEYWORD})
+    keyword_thesaurus: str = field(
+        default=None, metadata={EML_ELM_MAPPING: names.KEYWORDTHESAURUS}
     )
 
 
