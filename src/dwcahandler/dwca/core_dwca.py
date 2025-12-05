@@ -826,10 +826,10 @@ class Dwca(BaseDwca):
                                                                iterator=use_chunking,
                                                                extra_param=extra_read_param))
 
-            log.info("Extracted total of %d records",self.count_stat(df_content))
+            log.info("Extracted total of %d records", self.count_stat(df_content))
             # Drop rows where all the values are duplicates
             df_content.drop_duplicates(inplace=True)
-            log.debug("Extracted %d unique rows",len(df_content))
+            log.debug("Extracted %d unique rows", len(df_content))
             return df_content
 
         raise ValueError('content is empty')
@@ -974,8 +974,9 @@ class Dwca(BaseDwca):
                     validation_content_success = False
 
                 if validation_content_success:
-                    log.info("Validation successful for %s %s content for unique keys %s",
-                             content.meta_info.core_or_ext_type.value, content.meta_info.type, content.keys)
+                    log.info("Validation successful for %s %s content for unique keys %s with total records: %d",
+                             content.meta_info.core_or_ext_type.value, content.meta_info.type, content.keys,
+                             len(content.df_content))
                 else:
                     validation_success = False
 

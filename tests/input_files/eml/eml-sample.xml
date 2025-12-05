@@ -1,0 +1,92 @@
+<eml:eml packageId="ala" system="dwcahandler" xmlns:eml="https://eml.ecoinformatics.org/eml-2.2.0" xmlns:stmml="http://www.xml-cml.org/schema/stmml-1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://eml.ecoinformatics.org/eml-2.2.0 https://nis.lternet.edu/schemas/EML/eml-2.2.0/xsd/eml.xsd">
+    <dataset>
+        <title>Test Dataset</title>
+        <alternateIdentifier>https://ipt/eml.do?r=a-resource</alternateIdentifier>
+        <alternateIdentifier>https://another-website/dataset-info</alternateIdentifier>
+        <keywordSet>
+            <keyword>Occurrence</keyword>
+            <keywordThesaurus>http://rs.gbif.org/vocabulary/gbif/dataset_type_2015-07-10.xml</keywordThesaurus>
+        </keywordSet>
+        <creator>
+            <individualName>
+                <givenName>John</givenName>
+                <surName>Doe</surName>
+            </individualName>
+            <organizationName>An Organization</organizationName>
+            <address>
+                <city>City</city>
+                <postalCode>ABC-123</postalCode>
+                <country>Country</country>
+            </address>
+            <electronicMailAddress>john.doe@org.com</electronicMailAddress>
+            <userId>https://orcid.org/0000-0000-0000-0000</userId>
+        </creator>
+        <pubDate>2020-08-31</pubDate>
+        <abstract>
+            <para>Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+                Lorem Ipsum has been the industry's standard dummy text ever since the 1500s,
+                when an unknown printer took a galley of type and scrambled it to make a type specimen book.
+            </para>
+        </abstract>
+        <intellectualRights>
+            <para>This work is licensed under a
+                <ulink url='http://creativecommons.org/licenses/by/4.0/legalcode'>
+                    <citetitle>Creative Commons Attribution (CC-BY) 4.0 License</citetitle></ulink></para>
+        </intellectualRights>
+        <coverage>
+            <geographicCoverage>
+                <geographicDescription>The data set contains records of herbarium specimens</geographicDescription>
+                <boundingCoordinates>
+                    <westBoundingCoordinate>1.0</westBoundingCoordinate>
+                    <eastBoundingCoordinate>2.0</eastBoundingCoordinate>
+                    <northBoundingCoordinate>3.0</northBoundingCoordinate>
+                    <southBoundingCoordinate>4.0</southBoundingCoordinate>
+                </boundingCoordinates>
+            </geographicCoverage>
+            <temporalCoverage>
+                <rangeOfDates>
+                    <beginDate>
+                        <calendarDate>2020-01-01</calendarDate>
+                    </beginDate>
+                    <endDate>
+                        <calendarDate>2020-01-31</calendarDate>
+                    </endDate>
+                </rangeOfDates>
+            </temporalCoverage>
+            <taxonomicCoverage>
+                <generalTaxonomicCoverage>All vascular plants are identified as species or genus</generalTaxonomicCoverage>
+                <taxonomicClassification>
+                    <taxonRankName>Genus</taxonRankName>
+                    <taxonRankValue>Acacia</taxonRankValue>
+                </taxonomicClassification>
+                <taxonomicClassification>
+                    <taxonRankName>Genus</taxonRankName>
+                    <taxonRankValue>Acacia</taxonRankValue>
+                </taxonomicClassification>
+            </taxonomicCoverage>
+        </coverage>
+        <contact>
+            <individualName>
+                <givenName>John</givenName>
+                <surName>Doe</surName>
+            </individualName>
+            <organizationName>An Organization</organizationName>
+            <address>
+                <city>City</city>
+                <postalCode>ABC-123</postalCode>
+                <country>Country</country>
+            </address>
+            <electronicMailAddress>john.doe@org.com</electronicMailAddress>
+            <userId>https://orcid.org/0000-0000-0000-0000</userId>
+        </contact>
+    </dataset>
+    <additionalMetadata>
+        <metadata>
+            <gbif>
+                <citation>Researchers should cite this work as follows: xxxxx</citation>
+                <resourceLogoUrl>http://logo_url</resourceLogoUrl>
+                <hierarchyLevel>dataset</hierarchyLevel>
+            </gbif>
+        </metadata>
+    </additionalMetadata>
+</eml:eml>

@@ -1,6 +1,6 @@
 
 import pandas as pd
-from dwcahandler import ContentData, DwcaHandler, MetaElementTypes
+from dwcahandler import ContentData, DwcaHandler, MetaElementTypes, CSVEncoding
 from pathlib import Path
 from io import BytesIO
 from tests import get_eml_content, get_xml_from_file
@@ -9,7 +9,8 @@ import glob
 import os
 
 
-def check_output(output_obj: BytesIO, test_files_folder: str, check_core_id: bool = False):
+def check_output(output_obj: BytesIO, test_files_folder: str,
+                 check_core_id: bool = False, csv_encoding: CSVEncoding = None):
 
     test_files_list = glob.glob(os.path.join(test_files_folder, "*.txt"))
     expected_meta_xml_path = os.path.join(test_files_folder, "meta.xml")
@@ -33,7 +34,13 @@ def check_output(output_obj: BytesIO, test_files_folder: str, check_core_id: boo
                 for test_file in test_files_list:
                     if txt_file.name == Path(test_file).name:
                         actual_df = pd.read_csv(txt_file, dtype='str')
-                        expected_df = pd.read_csv(test_file, dtype='str')
+                        if csv_encoding:
+                            expected_df = pd.read_csv(test_file, dtype='str',
+                                                      delimiter=csv_encoding.csv_delimiter,
+                                                      quotechar=csv_encoding.csv_text_enclosure,
+                                                      escapechar=csv_encoding.csv_escape_char)
+                        else:
+                            expected_df = pd.read_csv(test_file, dtype='str')
                         if not check_core_id:
                             pd.testing.assert_frame_equal(actual_df, expected_df)
                         else:
@@ -156,3 +163,40 @@ class TestCreateDwca:
         assert output_obj
 
         check_output(output_obj, test_files_folder)
+
+    def test_create_occurrence_with_doublequote_escapechars_in_remarks_dwca_occurrence(self):
+        test_files_folder = "./input_files/occurrence/sample5"
+
+        core_csv = ContentData(data=[f"{test_files_folder}/occurrence.txt"],
+                               type=MetaElementTypes.OCCURRENCE)
+
+        output_obj = BytesIO()
+
+        DwcaHandler.create_dwca(core_csv=core_csv, ext_csv_list=[], output_dwca=output_obj,
+                                eml_content=get_eml_content())
+
+        assert output_obj
+
+        check_output(output_obj, test_files_folder)
+
+    def test_create_occurrence_with_backslash_chars_in_remarks_dwca_occurrence(self):
+        test_files_folder = "./input_files/occurrence/sample6"
+
+        csv_encoding = CSVEncoding(csv_delimiter=",",
+                                   csv_escape_char="\\",
+                                   csv_text_enclosure='"',
+                                   csv_eol='\r\n')
+
+        core_csv = ContentData(data=[f"{test_files_folder}/occurrence.txt"],
+                               type=MetaElementTypes.OCCURRENCE,
+                               csv_encoding=csv_encoding)
+
+        output_obj = BytesIO()
+
+        DwcaHandler.create_dwca(core_csv=core_csv, ext_csv_list=[], output_dwca=output_obj,
+                                eml_content=get_eml_content())
+
+        assert output_obj
+
+        check_output(output_obj=output_obj, test_files_folder=test_files_folder,
+                     check_core_id=False, csv_encoding=csv_encoding)
