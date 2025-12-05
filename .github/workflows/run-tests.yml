@@ -2,7 +2,7 @@ name: Run test
 
 on:
   push:
-    branches: [ "main", "develop" ]
+    branches: [ "main", "develop", "feature/test_read_write" ]
   pull_request:
     branches: [ "main", "develop" ]
 
@@ -21,6 +21,7 @@ jobs:
           - "3.10"
           - "3.11"
           - "3.12"
+          - "3.13"
 
     runs-on: ${{ matrix.os }}
 

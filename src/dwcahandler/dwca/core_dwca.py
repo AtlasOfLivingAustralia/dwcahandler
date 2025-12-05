@@ -974,8 +974,9 @@ class Dwca(BaseDwca):
                     validation_content_success = False
 
                 if validation_content_success:
-                    log.info("Validation successful for %s %s content for unique keys %s",
-                             content.meta_info.core_or_ext_type.value, content.meta_info.type, content.keys)
+                    log.info("Validation successful for %s %s content for unique keys %s with total records: %d",
+                             content.meta_info.core_or_ext_type.value, content.meta_info.type, content.keys,
+                             len(content.df_content))
                 else:
                     validation_success = False
 
