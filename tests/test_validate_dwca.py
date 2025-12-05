@@ -98,8 +98,8 @@ class TestValidateDwca:
         dwca_result = DwcaHandler.validate_dwca(dwca_file=simple_dwca, content_keys=content_keys, error_df=df)
         assert dwca_result
         assert len(df) == 0
-        assert "Validation successful for core MetaElementTypes.OCCURRENCE content for unique keys ['gbifID']" in caplog.messages
-        assert "Validation successful for extension MetaElementTypes.OCCURRENCE content for unique keys ['gbifID']" in caplog.messages
+        assert "Validation successful for core MetaElementTypes.OCCURRENCE content for unique keys ['gbifID'] with total records: 9" in caplog.messages
+        assert "Validation successful for extension MetaElementTypes.OCCURRENCE content for unique keys ['gbifID'] with total records: 9" in caplog.messages
 
     def test_dwca_with_occ_core_ext_with_url_as_key(self, caplog):
         """
@@ -113,8 +113,8 @@ class TestValidateDwca:
         dwca_result = DwcaHandler.validate_dwca(dwca_file=simple_dwca, content_keys=content_keys, error_df=df)
         assert dwca_result
         assert len(df) == 0
-        assert "Validation successful for core MetaElementTypes.OCCURRENCE content for unique keys ['gbifID']" in caplog.messages
-        assert "Validation successful for extension MetaElementTypes.OCCURRENCE content for unique keys ['gbifID']" in caplog.messages
+        assert "Validation successful for core MetaElementTypes.OCCURRENCE content for unique keys ['gbifID'] with total records: 9" in caplog.messages
+        assert "Validation successful for extension MetaElementTypes.OCCURRENCE content for unique keys ['gbifID'] with total records: 9" in caplog.messages
 
     def test_dwca_with_occ_core_ext_with_duplicates(self, caplog):
         """
