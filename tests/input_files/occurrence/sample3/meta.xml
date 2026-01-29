@@ -13,7 +13,7 @@
     <field index="6" term="http://rs.tdwg.org/dwc/terms/decimalLongitude"/>
     <field index="7" term="http://rs.tdwg.org/dwc/terms/basisOfRecord"/>
   </core>
-  <extension encoding="UTF-8" rowType="http://rs.gbif.org/terms/1.0/Multimedia" fieldsTerminatedBy="," linesTerminatedBy="\r\n" fieldsEnclosedBy="&quot;" ignoreHeaderLines="1">
+  <extension encoding="UTF-8" rowType="http://rs.gbif.org/terms/1.0/Multimedia" fieldsTerminatedBy="," linesTerminatedBy="\n" fieldsEnclosedBy="&quot;" ignoreHeaderLines="1">
     <files>
       <location>multimedia.txt</location>
     </files>
