@@ -215,10 +215,20 @@ class MetaDwCA:
         elem = ET.SubElement(self.dwca_meta, meta_elem_attrib.meta_element_type.core_or_ext_type.value)
         elem.attrib['encoding'] = meta_elem_attrib.meta_element_type.charset_encoding
         elem.attrib['rowType'] = meta_elem_attrib.meta_element_type.type.value
-        elem.attrib['fieldsTerminatedBy'] = meta_elem_attrib.meta_element_type.csv_encoding.csv_delimiter
-        elem.attrib['linesTerminatedBy'] = \
-            "\\r\\n" if (meta_elem_attrib.meta_element_type.csv_encoding.csv_eol in ['\r\n', '\n', '\\n']) \
-            else meta_elem_attrib.meta_element_type.csv_encoding.csv_eol
+        elem.attrib['fieldsTerminatedBy'] = (
+            "\\t"
+            if meta_elem_attrib.meta_element_type.csv_encoding.csv_delimiter == "\t"
+            else meta_elem_attrib.meta_element_type.csv_encoding.csv_delimiter
+        )
+        elem.attrib['linesTerminatedBy'] = (
+            "\\n"
+            if (meta_elem_attrib.meta_element_type.csv_encoding.csv_eol == "\n")
+            else (
+                "\\r\\n"
+                if (meta_elem_attrib.meta_element_type.csv_encoding.csv_eol == "\r\n")
+                else meta_elem_attrib.meta_element_type.csv_encoding.csv_eol
+            )
+        )
         elem.attrib['fieldsEnclosedBy'] = meta_elem_attrib.meta_element_type.csv_encoding.csv_text_enclosure
         elem.attrib['ignoreHeaderLines'] = meta_elem_attrib.meta_element_type.ignore_header_lines
 
