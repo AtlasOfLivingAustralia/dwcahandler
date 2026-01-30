@@ -84,7 +84,7 @@ class Dwca(BaseDwca):
         """
         return len(content)
 
-    def _update_core_ids(self, core_df) -> str:
+    def _update_core_ids(self, core_df, exist_ok=False) -> str:
         """Generate core identifiers for a core data frame.
 
         UUID identifiers are generated for each row in the core data frame.
@@ -95,7 +95,15 @@ class Dwca(BaseDwca):
         return id field
         """
         if self.defaults_prop.MetaDefaultFields.ID not in core_df.columns.to_list():
-            core_df.insert(0, self.defaults_prop.MetaDefaultFields.ID, core_df.apply(lambda _: uuid.uuid4(), axis=1), False)
+            core_df.insert(
+                0, self.defaults_prop.MetaDefaultFields.ID, core_df.apply(lambda _: uuid.uuid4(), axis=1), False
+            )
+            return self.defaults_prop.MetaDefaultFields.ID
+        elif exist_ok:
+            filter = core_df[self.defaults_prop.MetaDefaultFields.ID].isna()
+            core_df.loc[filter, self.defaults_prop.MetaDefaultFields.ID] = [
+                str(uuid.uuid4()) for _ in range(filter.sum())
+            ]
             return self.defaults_prop.MetaDefaultFields.ID
         else:
             raise ValueError("core df should not contain id column")
@@ -483,12 +491,16 @@ class Dwca(BaseDwca):
         """
         for elm in self.meta_content.meta_elements:
             if elm.meta_element_type.file_name == content.meta_info.file_name:
-                coreid_idx = elm.core_id.index
-                for a_field in elm.fields:
-                    if a_field.index == coreid_idx:
-                        return a_field.field_name
-                return Defaults.MetaDefaultFields.ID if content.meta_info.core_or_ext_type == CoreOrExtType.CORE \
-                    else Defaults.MetaDefaultFields.CORE_ID
+                if elm.core_id and elm.core_id.index:
+                    coreid_idx = elm.core_id.index
+                    for a_field in elm.fields:
+                        if a_field.index == coreid_idx:
+                            return a_field.field_name
+                    return (
+                        Defaults.MetaDefaultFields.ID
+                        if content.meta_info.core_or_ext_type == CoreOrExtType.CORE
+                        else Defaults.MetaDefaultFields.CORE_ID
+                    )
         return None
 
     def build_indexes(self):
@@ -633,9 +645,15 @@ class Dwca(BaseDwca):
         self.build_indexes()
         delta_dwca.build_indexes()
 
-        self.core_content.df_content = self._merge_df_content(content=self.core_content,
-                                                              delta_content=delta_dwca.core_content,
-                                                              keys=self.core_content.keys)
+        self.core_content.df_content = self._merge_df_content(
+            content=self.core_content, delta_content=delta_dwca.core_content, keys=self.core_content.keys
+        )
+
+        id_col = self.__get_coreid_column(self.core_content)
+        if id_col == Defaults.MetaDefaultFields.ID:
+            if self.core_content.df_content[Defaults.MetaDefaultFields.ID].isnull().sum() > 0:
+                self._update_core_ids(self.core_content.df_content, exist_ok=True)
+                log.info("Updated core ids for new core records")
 
         for _, delta_content in enumerate(delta_dwca.ext_content):
             contents = self.get_content(class_type=delta_content.meta_info.type,
