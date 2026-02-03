@@ -113,9 +113,9 @@ class Dwca(BaseDwca):
             )
             return self.defaults_prop.MetaDefaultFields.ID
         elif exist_ok:
-            filter = core_df[self.defaults_prop.MetaDefaultFields.ID].isna()
-            core_df.loc[filter, self.defaults_prop.MetaDefaultFields.ID] = [
-                str(uuid.uuid4()) for _ in range(filter.sum())
+            filter_mask = core_df[self.defaults_prop.MetaDefaultFields.ID].isna()
+            core_df.loc[filter_mask, self.defaults_prop.MetaDefaultFields.ID] = [
+                str(uuid.uuid4()) for _ in range(filter_mask.sum())
             ]
             return self.defaults_prop.MetaDefaultFields.ID
         else:
