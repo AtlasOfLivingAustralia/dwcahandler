@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 from dwcahandler.dwca import CSVEncoding, CoreOrExtType, Terms, Defaults
 from enum import Enum
-
+import sys
 
 DwcClassRowTypes = Terms.get_class_row_types()
 
@@ -109,7 +109,9 @@ class MetaDwCA:
                 csv_text_enclosure=(
                     node_elm.attrib["fieldsEnclosedBy"] if node_elm.attrib["fieldsEnclosedBy"] != "" else '"'
                 ),
-                csv_escape_char='"',  # Set default as meta.xml does not specify. Found issue with QM dataset with "\\".
+                csv_escape_char=(
+                    '"' if sys.version_info < (3, 13) else "\\"
+                ),  # Set default as meta.xml does not specify. Found issue with QM dataset with "\\".
             ),
             ignore_header_lines=node_elm.attrib["ignoreHeaderLines"],
             charset_encoding=node_elm.attrib["encoding"],
