@@ -99,13 +99,17 @@ class MetaDwCA:
             core_or_ext_type=core_or_ext_type,
             type=get_meta_class_row_type(node_elm.attrib['rowType']),
             csv_encoding=CSVEncoding(
-                csv_delimiter=node_elm.attrib['fieldsTerminatedBy'],
-                csv_eol=node_elm.attrib['linesTerminatedBy'],
-                csv_text_enclosure=node_elm.attrib['fieldsEnclosedBy']
-                if node_elm.attrib['fieldsEnclosedBy'] != '' else '"'),
-            ignore_header_lines=node_elm.attrib['ignoreHeaderLines'],
-            charset_encoding=node_elm.attrib['encoding'],
-            file_name=file_name)
+                csv_delimiter=node_elm.attrib["fieldsTerminatedBy"],
+                csv_eol=node_elm.attrib["linesTerminatedBy"],
+                csv_text_enclosure=(
+                    node_elm.attrib["fieldsEnclosedBy"] if node_elm.attrib["fieldsEnclosedBy"] != "" else '"'
+                ),
+                csv_escape_char='"',  # Set default as meta.xml does not specify. Found issue with QM dataset with "\\".
+            ),
+            ignore_header_lines=node_elm.attrib["ignoreHeaderLines"],
+            charset_encoding=node_elm.attrib["encoding"],
+            file_name=file_name,
+        )
 
         field_list = []
         field_list.extend(
