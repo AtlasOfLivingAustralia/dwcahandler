@@ -89,7 +89,7 @@ class TestMultimediaExtension:
 
         assert dwca.meta_content.meta_elements[1].core_id.index == dwca.meta_content.meta_elements[1].fields[0].index
 
-    @pytest.mark.skipif(sys.version_info >= (3, 13), reason="Python 3.13 uses newer functionality")
+    @pytest.mark.skipif(sys.version_info >= (3, 13), reason="mimetypes module changes")
     def test_fill_additional_multimedia_info(self, mock_mime_types):
         """
         Test for fill additional multimedia info if format and type is not provided
@@ -129,7 +129,7 @@ class TestMultimediaExtension:
         # Test that the multimedia extension will now contain the format and type
         pd.testing.assert_frame_equal(dwca.ext_content[0].df_content, expected_multimedia_df)
 
-    @pytest.mark.skipif(sys.version_info >= (3, 13), reason="Python 3.13 uses newer functionality")
+    @pytest.mark.skipif(sys.version_info >= (3, 13), reason="mimetypes module changes")
     def test_fill_multimedia_info_with_format_type_partially_supplied(self, mock_mime_types):
         """
         Test fill_additional_multimedia_info if format or type is already present.
@@ -207,7 +207,7 @@ class TestMultimediaExtension:
         # if format and type is provided it remains as provided
         pd.testing.assert_frame_equal(dwca.ext_content[0].df_content, expected_multimedia_df)
 
-    @pytest.mark.skipif(sys.version_info >= (3, 13), reason="Python 3.13 uses newer functionality")
+    @pytest.mark.skipif(sys.version_info >= (3, 13), reason="mimetypes module changes")
     def test_fill_multimedia_info_type_from_format(self, mock_mime_types):
         """
         Test fill_additional_multimedia_info if only format is already present.
