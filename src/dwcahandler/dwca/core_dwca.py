@@ -19,7 +19,7 @@ from typing import Union
 from zipfile import ZipFile
 import pandas as pd
 import numpy as np
-from pandas.errors import EmptyDataError
+from pandas.errors import EmptyDataError, ParserError
 from pandas.io import parsers
 from dwcahandler.dwca import (
     BaseDwca,
@@ -1305,3 +1305,9 @@ class Dwca(BaseDwca):
                 )
 
             return pd.DataFrame()
+        except ParserError as error:
+            log.error(f"ParserError when parsing csv file {csv_file}: {error}")
+            raise error
+        except Exception as error:
+            log.error(f"Error encountered when reading csv file {csv_file}: {error}")
+            raise error
