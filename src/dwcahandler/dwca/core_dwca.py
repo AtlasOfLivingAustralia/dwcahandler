@@ -314,7 +314,7 @@ class Dwca(BaseDwca):
         zf.close()
 
         if not valid:
-            raise SystemExit(Exception("The darwin core archive is not valid"))
+            raise Exception("The darwin core archive is not valid")
 
     def _add_new_columns(self, df_content, delta_df_content, keys):
         """Add additional columns to a data frame if they're not part of the keys
