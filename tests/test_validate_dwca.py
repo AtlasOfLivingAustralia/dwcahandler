@@ -84,10 +84,9 @@ class TestValidateDwca:
             DwcaHandler.validate_dwca(dwca_file=simple_dwca, content_keys=content_keys, error_df=df)
             assert len(df) > 0
 
-        assert "The darwin core archive is not valid" in exc_info.value.args[0]
         assert any(
             "Duplicate columns ['catalogNumber'] specified in the metadata for occurrence.csv" in message
-            for message in caplog.messages
+            for message in exc_info.value.args
         )
 
     def test_dwca_with_occ_core_ext(self, caplog):

@@ -245,9 +245,7 @@ class Dwca(BaseDwca):
 
         valid: bool = True
         with ZipFile(self.dwca_file_loc, "r") as zf:
-
             files = zf.namelist()
-
             if len(files) >= 2 and files.count(self.defaults_prop.meta_xml_filename) == 1:
                 log.info(
                     "Reading from %s. Zip file size is %i, containing files: %s",
@@ -272,19 +270,20 @@ class Dwca(BaseDwca):
 
                 for meta_elm in self.meta_content.meta_elements:
                     csv_file_name = meta_elm.meta_element_type.file_name
-                    try:
-                        with io.TextIOWrapper(zf.open(csv_file_name), encoding="utf-8") as csv_file:
-                            dwc_headers = _add_first_id_field_if_exists(meta_elm)
-                            dwc_headers.extend([f.field_name for f in meta_elm.fields if f.index is not None])
-                            duplicates = [i for i in set(dwc_headers) if dwc_headers.count(i) > 1]
-                            if len(duplicates) > 0:
-                                raise ValueError(
-                                    f"Duplicate columns {duplicates} specified in the metadata for {csv_file_name}"
-                                )
-                            csv_encoding = {
-                                key: convert_values(value)
-                                for key, value in asdict(meta_elm.meta_element_type.csv_encoding).items()
-                            }
+                    with io.TextIOWrapper(zf.open(csv_file_name), encoding="utf-8") as csv_file:
+                        dwc_headers = _add_first_id_field_if_exists(meta_elm)
+                        dwc_headers.extend([f.field_name for f in meta_elm.fields if f.index is not None])
+                        duplicates = [i for i in set(dwc_headers) if dwc_headers.count(i) > 1]
+                        if len(duplicates) > 0:
+                            valid = False
+                            raise ValueError(
+                                f"Duplicate columns {duplicates} specified in the metadata for {csv_file_name}"
+                            )
+                        csv_encoding = {
+                            key: convert_values(value)
+                            for key, value in asdict(meta_elm.meta_element_type.csv_encoding).items()
+                        }
+                        try:
                             csv_content = self._read_csv(
                                 csv_file,
                                 columns=dwc_headers,
@@ -297,17 +296,24 @@ class Dwca(BaseDwca):
                             else:
                                 self.ext_content.append(self._set_content(csv_content, meta_elm.meta_element_type))
                             csv_file.close()
-                    except Exception as e:
-                        valid = False
-                        log.error(
-                            "Error while reading text file from darwin core archive %s. %s", self.dwca_file_loc, e
-                        )
-
-            else:
+                        except KeyError as e:
+                            valid = False
+                            log.error(
+                                "Error while reading text file %s from darwin core archive %s. %s",
+                                csv_file_name,
+                                self.dwca_file_loc,
+                                e,
+                            )
+            elif files.count(self.defaults_prop.meta_xml_filename) > 1:
                 valid = False
                 log.error(
-                    "Error while reading darwin core archive file %s"
-                    "The file may contain more than one meta xml or it does not meet the requirements. ",
+                    "The darwin core archive file %s contain more than one meta xml",
+                    self.dwca_file_loc,
+                )
+            elif len(files) < 2:
+                valid = False
+                log.error(
+                    "The darwin core archive file %s contains less than 2 files",
                     self.dwca_file_loc,
                 )
 
