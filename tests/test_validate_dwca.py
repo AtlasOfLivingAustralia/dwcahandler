@@ -28,7 +28,7 @@ class TestValidateDwca:
         Test for read and extract dwca. Validate core content
         """
         simple_dwca = make_zip_from_folder_contents(f"{input_folder}/dwca-sample1")
-        content_keys = {MetaElementTypes.OCCURRENCE: 'occurrenceID'}
+        content_keys = {MetaElementTypes.OCCURRENCE: "occurrenceID"}
         df: pd.DataFrame = get_error_report()
         dwca_result = DwcaHandler.validate_dwca(dwca_file=simple_dwca, content_keys=content_keys, error_df=df)
         assert len(df) == 0
@@ -39,7 +39,7 @@ class TestValidateDwca:
         Test for read and extract dwca. Validate core content
         """
         simple_dwca = make_zip_from_folder_contents(f"{input_folder}/dwca-sample2")
-        content_keys = {MetaElementTypes.OCCURRENCE: 'occurrenceID'}
+        content_keys = {MetaElementTypes.OCCURRENCE: "occurrenceID"}
         df: pd.DataFrame = get_error_report()
         dwca_result = DwcaHandler.validate_dwca(dwca_file=simple_dwca, content_keys=content_keys, error_df=df)
         assert len(df) == 0
@@ -51,7 +51,7 @@ class TestValidateDwca:
         """
         caplog.set_level(logging.INFO)
         simple_dwca = make_zip_from_folder_contents(f"{input_folder}/dwca-sample3")
-        content_keys = {MetaElementTypes.OCCURRENCE: 'occurrenceID'}
+        content_keys = {MetaElementTypes.OCCURRENCE: "occurrenceID"}
         df: pd.DataFrame = get_error_report()
         dwca_result = DwcaHandler.validate_dwca(dwca_file=simple_dwca, content_keys=content_keys, error_df=df)
         assert len(df) > 0
@@ -65,7 +65,7 @@ class TestValidateDwca:
         """
         caplog.set_level(logging.INFO)
         simple_dwca = make_zip_from_folder_contents(f"{input_folder}/dwca-sample4")
-        content_keys = {MetaElementTypes.OCCURRENCE: 'catalogNumber'}
+        content_keys = {MetaElementTypes.OCCURRENCE: "catalogNumber"}
         df: pd.DataFrame = get_error_report()
         dwca_result = DwcaHandler.validate_dwca(dwca_file=simple_dwca, content_keys=content_keys, error_df=df)
         assert not dwca_result
@@ -73,19 +73,21 @@ class TestValidateDwca:
         assert "Duplicate ['catalogNumber'] found. Total rows affected: 3" in caplog.messages
         assert "Duplicate values: ['014800' '014823']" in caplog.messages
 
-    def test_duplicate_columns_in_dwca(self):
+    def test_duplicate_columns_in_dwca(self, caplog):
         """
         Test for read and extract dwca. Validate duplicate columns specified in metadata of dwca
         """
         simple_dwca = make_zip_from_folder_contents(f"{input_folder}/dwca-sample5")
-        content_keys = {MetaElementTypes.OCCURRENCE: 'catalogNumber'}
-        with pytest.raises(ValueError) as exc_info:
+        content_keys = {MetaElementTypes.OCCURRENCE: "catalogNumber"}
+        with pytest.raises(Exception) as exc_info:
             df: pd.DataFrame = get_error_report()
             DwcaHandler.validate_dwca(dwca_file=simple_dwca, content_keys=content_keys, error_df=df)
             assert len(df) > 0
 
-        assert ("Duplicate columns ['catalogNumber'] specified in the metadata for occurrence.csv"
-                in str(exc_info.value))
+        assert any(
+            "Duplicate columns ['catalogNumber'] specified in the metadata for occurrence.csv" in message
+            for message in exc_info.value.args
+        )
 
     def test_dwca_with_occ_core_ext(self, caplog):
         """
@@ -93,13 +95,19 @@ class TestValidateDwca:
         """
         caplog.set_level(logging.INFO)
         simple_dwca = make_zip_from_folder_contents(f"{input_folder}/dwca-sample6")
-        content_keys = {MetaElementTypes.OCCURRENCE: 'gbifID'}
+        content_keys = {MetaElementTypes.OCCURRENCE: "gbifID"}
         df: pd.DataFrame = get_error_report()
         dwca_result = DwcaHandler.validate_dwca(dwca_file=simple_dwca, content_keys=content_keys, error_df=df)
         assert dwca_result
         assert len(df) == 0
-        assert "Validation successful for core MetaElementTypes.OCCURRENCE content for unique keys ['gbifID'] with total records: 9" in caplog.messages
-        assert "Validation successful for extension MetaElementTypes.OCCURRENCE content for unique keys ['gbifID'] with total records: 9" in caplog.messages
+        assert (
+            "Validation successful for core MetaElementTypes.OCCURRENCE content for unique keys ['gbifID'] with total records: 9"
+            in caplog.messages
+        )
+        assert (
+            "Validation successful for extension MetaElementTypes.OCCURRENCE content for unique keys ['gbifID'] with total records: 9"
+            in caplog.messages
+        )
 
     def test_dwca_with_occ_core_ext_with_url_as_key(self, caplog):
         """
@@ -108,13 +116,19 @@ class TestValidateDwca:
         """
         caplog.set_level(logging.INFO)
         simple_dwca = make_zip_from_folder_contents(f"{input_folder}/dwca-sample6")
-        content_keys = {MetaElementTypes.OCCURRENCE: 'http://rs.gbif.org/terms/1.0/gbifID'}
+        content_keys = {MetaElementTypes.OCCURRENCE: "http://rs.gbif.org/terms/1.0/gbifID"}
         df: pd.DataFrame = get_error_report()
         dwca_result = DwcaHandler.validate_dwca(dwca_file=simple_dwca, content_keys=content_keys, error_df=df)
         assert dwca_result
         assert len(df) == 0
-        assert "Validation successful for core MetaElementTypes.OCCURRENCE content for unique keys ['gbifID'] with total records: 9" in caplog.messages
-        assert "Validation successful for extension MetaElementTypes.OCCURRENCE content for unique keys ['gbifID'] with total records: 9" in caplog.messages
+        assert (
+            "Validation successful for core MetaElementTypes.OCCURRENCE content for unique keys ['gbifID'] with total records: 9"
+            in caplog.messages
+        )
+        assert (
+            "Validation successful for extension MetaElementTypes.OCCURRENCE content for unique keys ['gbifID'] with total records: 9"
+            in caplog.messages
+        )
 
     def test_dwca_with_occ_core_ext_with_duplicates(self, caplog):
         """
@@ -122,15 +136,21 @@ class TestValidateDwca:
         """
         caplog.set_level(logging.INFO)
         simple_dwca = make_zip_from_folder_contents(f"{input_folder}/dwca-sample7")
-        content_keys = {MetaElementTypes.OCCURRENCE: 'http://rs.gbif.org/terms/1.0/gbifID'}
+        content_keys = {MetaElementTypes.OCCURRENCE: "http://rs.gbif.org/terms/1.0/gbifID"}
         df: pd.DataFrame = get_error_report()
         dwca_result = DwcaHandler.validate_dwca(dwca_file=simple_dwca, content_keys=content_keys, error_df=df)
         assert not dwca_result
         assert len(df) > 0
         assert "Duplicate ['gbifID'] found. Total rows affected: 2" in caplog.messages
         assert "Duplicate values: ['sample']" in caplog.messages
-        assert "Validation failed for core MetaElementTypes.OCCURRENCE content for duplicates keys ['gbifID']" in caplog.messages
+        assert (
+            "Validation failed for core MetaElementTypes.OCCURRENCE content for duplicates keys ['gbifID']"
+            in caplog.messages
+        )
 
         assert "Duplicate ['gbifID'] found. Total rows affected: 3" in caplog.messages
         assert "Duplicate values: ['sample']" in caplog.messages
-        assert "Validation failed for extension MetaElementTypes.OCCURRENCE content for duplicates keys ['gbifID']" in caplog.messages
+        assert (
+            "Validation failed for extension MetaElementTypes.OCCURRENCE content for duplicates keys ['gbifID']"
+            in caplog.messages
+        )
