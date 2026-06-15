@@ -1,4 +1,7 @@
 prefix,class,class_uri
+dwc,AGENT,http://purl.org/dc/terms/Agent
+dwc,ASSERTION,http://rs.tdwg.org/dwc/terms/Assertion
+dwc,BIBLIOGRAPHIC_RESOURCE,http://purl.org/dc/terms/BibliographicResource
 dwc,CHRONOMETRIC_AGE,http://rs.tdwg.org/chrono/terms/ChronometricAge
 dwc,EVENT,http://rs.tdwg.org/dwc/terms/Event
 dwc,GEOLOGICAL_CONTEXT,http://rs.tdwg.org/dwc/terms/GeologicalContext
@@ -7,8 +10,14 @@ dwc,LOCATION,http://purl.org/dc/terms/Location
 dwc,MATERIAL_ENTITY,http://rs.tdwg.org/dwc/terms/MaterialEntity
 dwc,MATERIAL_SAMPLE,http://rs.tdwg.org/dwc/terms/MaterialSample
 dwc,MEASUREMENT_OR_FACT,http://rs.tdwg.org/dwc/terms/MeasurementOrFact
+dwc,MOLECULAR_PROTOCOL,http://rs.tdwg.org/dwc/terms/MolecularProtocol
+dwc,NUCLEOTIDE_ANALYSIS,http://rs.tdwg.org/dwc/terms/NucleotideAnalysis
+dwc,NUCLEOTIDE_SEQUENCE,http://rs.tdwg.org/dwc/terms/NucleotideSequence
 dwc,OCCURRENCE,http://rs.tdwg.org/dwc/terms/Occurrence
 dwc,ORGANISM,http://rs.tdwg.org/dwc/terms/Organism
+dwc,ORGANISM_INTERACTION,http://rs.tdwg.org/dwc/terms/OrganismInteraction
+dwc,PROTOCOL,http://rs.tdwg.org/dwc/terms/Protocol
+dwc,PROVENANCE,http://rs.tdwg.org/dwc/terms/Provenance
 dwc,RESOURCE_RELATIONSHIP,http://rs.tdwg.org/dwc/terms/ResourceRelationship
 dwc,TAXON,http://rs.tdwg.org/dwc/terms/Taxon
 ac,AC_MULTIMEDIA,http://rs.tdwg.org/ac/terms/Multimedia
