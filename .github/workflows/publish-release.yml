@@ -12,9 +12,11 @@ jobs:
       version: ${{ steps.build-step.outputs.version }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+        with:
+          ref: 'main'
       - name: Set up Python 3.9
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.9"
       - name: Install pip and flake package
@@ -47,10 +49,11 @@ jobs:
         run: |
           echo "the version number is ${{ steps.build-step.outputs.version }}"
       - name: Archive production artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dwcahandler-dist-v${{ steps.build-step.outputs.version }}
           path: dist
+          retention-days: 30
 
   publish-to-pypi:
     name: Publish dwcahandler distribution to PyPI
