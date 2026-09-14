@@ -44,11 +44,6 @@ jobs:
       - name: Output the release version of dwcahandler
         run: |
           echo "the version number is ${{ steps.build-step.outputs.version }}"
-      - name: Archive test artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: dwcahandler-test-dist-v${{ steps.build-step.outputs.version }}
-          path: dist
 
   publish-to-pypi:
     name: Publish dwcahandler distribution to TestPyPI
