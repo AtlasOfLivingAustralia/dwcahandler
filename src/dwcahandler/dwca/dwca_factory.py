@@ -27,6 +27,44 @@ class DwcaHandler:
             print(f"{name}: {member.value}")
 
     @staticmethod
+    def derive_file_meta_types(file_list: list[str]) -> dict[MetaElementTypes, str]:
+        """Find meta type for each file in a list of files.
+
+        :param file_list: list of files
+        :return dict: meta type to file mapping
+        """
+        meta_files: dict[MetaElementTypes, str] = {}
+        meta_duplicates: dict[MetaElementTypes, list[str]] = {}
+
+        for file in file_list:
+            upper_filename = Path(file).stem.upper()
+            matched_types = [meta_type for meta_type in MetaElementTypes if meta_type.name in upper_filename]
+            if not matched_types:
+                continue
+
+            if len(matched_types) > 1:
+                raise ValueError(f"File '{file}' matches multiple meta types ({', '.join(match.name for match in matched_types)})")
+
+            matched_meta = matched_types[0]
+            if matched_meta in meta_files:
+                if matched_meta not in meta_duplicates:
+                    meta_duplicates[matched_meta] = [meta_files[matched_meta]]
+
+                meta_duplicates[matched_meta].append(file)
+                continue
+
+            meta_files[matched_meta] = file
+
+        if not meta_duplicates:
+            return meta_files
+
+        errors = []
+        for meta_type, duplicate_list in meta_duplicates.items():
+            errors.append(f"Found duplicate files for meta type {meta_type.name}: {', '.join(duplicate_list)}")
+
+        raise ValueError("\n\t".join(errors))
+
+    @staticmethod
     def get_contents_from_file_names(files: list, csv_encoding: CSVEncoding = CSVEncoding(),
                                      content_keys: dict[MetaElementTypes, list] = None, zf: ZipFile = None) \
             -> (ContentData, list[ContentData]):
@@ -40,40 +78,28 @@ class DwcaHandler:
         :param zf: Zipfile pointer if using
         :return dict of core content type and file name and dict containing ext content type and file name
         """
-        def derive_type(file_list: list) -> dict[str, MetaElementTypes]:
-            file_types = {}
-            for file in file_list:
-                if (filename := Path(file).stem.upper()) in dict(MetaElementTypes.__members__.items()).keys():
-                    file_types[file] = dict(MetaElementTypes.__members__.items())[str(filename)]
-            return file_types
-
-        contents = derive_type(files)
-
-        core_file = {k: v for k, v in contents.items() if v == MetaElementTypes.EVENT}
-        if not core_file:
-            core_file = {k: v for k, v in contents.items() if v == MetaElementTypes.OCCURRENCE}
-
-        if core_file:
-            core_filename = next(iter(core_file))
-            core_type = core_file[core_filename]
-            ext_files = {k: v for k, v in contents.items() if v != core_type}
-
-            core_data = [core_filename] if not zf else io.TextIOWrapper(zf.open(core_filename), encoding="utf-8")
-            core_content = ContentData(data=core_data,
-                                       type=core_type, csv_encoding=csv_encoding,
-                                       keys=get_keys(class_type=core_type,
-                                                     override_content_keys=content_keys))
-            ext_content = []
-            for ext_file, ext_type in ext_files.items():
-                ext_data = [ext_file] if not zf else io.TextIOWrapper(zf.open(ext_file), encoding="utf-8")
-                ext_content.append(ContentData(data=ext_data,
-                                               type=ext_type, csv_encoding=csv_encoding,
-                                               keys=get_keys(class_type=ext_type,
-                                                             override_content_keys=content_keys)))
-            return core_content, ext_content
+        content_types = DwcaHandler.derive_file_meta_types(files)
+        for core_type in (MetaElementTypes.EVENT, MetaElementTypes.OCCURRENCE):
+            core_filename = content_types.pop(core_type, None)
+            if core_filename is not None:
+                break
         else:
             raise ValueError("The core content cannot be determined. Please check filenames against the class type. "
-                             "Use list_class_rowtypes to print the class types. ")
+                                "Use list_class_rowtypes to print the class types.")
+
+        core_data = [core_filename] if not zf else io.TextIOWrapper(zf.open(core_filename), encoding="utf-8")
+        core_content = ContentData(data=core_data,
+                                    type=core_type, csv_encoding=csv_encoding,
+                                    keys=get_keys(class_type=core_type,
+                                                    override_content_keys=content_keys))
+        ext_content = []
+        for ext_type, ext_file in content_types.items():
+            ext_data = [ext_file] if not zf else io.TextIOWrapper(zf.open(ext_file), encoding="utf-8")
+            ext_content.append(ContentData(data=ext_data,
+                                            type=ext_type, csv_encoding=csv_encoding,
+                                            keys=get_keys(class_type=ext_type,
+                                                            override_content_keys=content_keys)))
+        return core_content, ext_content
 
     """Perform various DwCA operations"""
     @staticmethod
