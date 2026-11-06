@@ -6,7 +6,7 @@ on:
     - cron: '0 0 15 * *'
 jobs:
   updateterms:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       file-diff1: ${{ steps.check-file-diff-steps.outputs.file-diff1 }}
       file-diff2: ${{ steps.check-file-diff-steps.outputs.file-diff2 }}
