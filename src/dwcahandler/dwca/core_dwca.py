@@ -1118,7 +1118,8 @@ class Dwca(BaseDwca):
         if isinstance(csv_info.data, pd.DataFrame):
             csv_content = csv_info.data
         elif isinstance(csv_info.data, io.TextIOWrapper):
-            csv_content = self._read_csv(csv_file=csv_info.data, extra_param=extra_read_param)
+            csv_content = self._read_csv(csv_file=csv_info.data, csv_encoding_param=csv_info.csv_encoding,
+                                         extra_param=extra_read_param)
         else:
             csv_content = self._combine_contents(
                 contents=csv_info.data, csv_encoding=csv_info.csv_encoding, extra_read_param=extra_read_param
