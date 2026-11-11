@@ -96,6 +96,30 @@ class CSVEncoding:
         translate_table: dict = {"LF": "\r\n", "\\t": "\t", "\\n": "\n", "&quot;": '"'}
         return translate_table[v] if v in translate_table.keys() else v
 
+    @classmethod
+    def from_dict(cls, values: dict[str, str] | None) -> CSVEncoding:
+        instance = cls()
+        instance.set_csv_encoding_from_dict(values)
+        return instance
+
+    def set_csv_encoding_from_dict(self, values: dict[str, str] | None):
+        if not values:
+            return self
+
+        def __get_valid_prop(csv_encoding_dict: dict[str, str], prop: str, default_value: str) -> str:
+            return (
+                csv_encoding_dict[prop]
+                if prop in csv_encoding_dict.keys() and csv_encoding_dict[prop]
+                else default_value
+            )
+
+        self.csv_delimiter = __get_valid_prop(values, "csv_delimiter", self.csv_delimiter)
+        self.csv_eol = __get_valid_prop(values, "csv_eol", self.csv_eol)
+        self.csv_text_enclosure = __get_valid_prop(values, "csv_text_enclosure", self.csv_text_enclosure)
+        self.csv_escape_char = __get_valid_prop(values, "csv_escape_char", self.csv_escape_char)
+
+        return self
+
 
 class Stat:
     """Record statistics for a DwCA"""
