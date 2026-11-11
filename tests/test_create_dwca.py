@@ -1,7 +1,7 @@
-
 import pandas as pd
 from dwcahandler import ContentData, DwcaHandler, MetaElementTypes, CSVEncoding
 from pathlib import Path
+from io import TextIOWrapper
 from io import BytesIO
 from tests import get_eml_content, get_xml_from_file
 from zipfile import ZipFile
@@ -72,6 +72,37 @@ class TestCreateDwca:
         assert output_obj
 
         check_output(output_obj, test_files_folder)
+
+    def test_create_dwca_from_zipfile(self):
+        test_files_folder = "./input_files/occurrence/sample7"
+        csv_encoding_dict = {"csv_delimiter": "\t", "csv_eol": "\n", "csv_text_enclosure": "\n", "csv_escape_char": '\\'}
+
+
+        core_csv = ContentData(data=TextIOWrapper(open(f"{test_files_folder}/occurrence.txt", "rb"),
+                                                  encoding="utf-8"),
+                               csv_encoding=CSVEncoding.from_dict(csv_encoding_dict),
+                               keys=['occurrenceID'],
+                               type=MetaElementTypes.OCCURRENCE)
+
+        ext_csv = ContentData(data=TextIOWrapper(open(f"{test_files_folder}/multimedia.txt", "rb"),
+                                                  encoding="utf-8"),
+                              csv_encoding=CSVEncoding.from_dict(csv_encoding_dict),
+                               type=MetaElementTypes.MULTIMEDIA)
+
+        output_obj = BytesIO()
+
+        DwcaHandler.create_dwca(core_csv=core_csv, ext_csv_list=[ext_csv], output_dwca=output_obj,
+                                eml_content=get_eml_content())
+
+        assert output_obj
+
+        #dwcahandler creates dwca with comma delimiter
+        check_output(output_obj, "./input_files/occurrence/sample1")
+
+        if isinstance(core_csv.data, TextIOWrapper):
+            core_csv.data.close()
+        if isinstance(ext_csv.data, TextIOWrapper):
+            ext_csv.data.close()
 
     def test_create_occurrence_dwca_occurrence_multiple_keys(self):
         test_files_folder = "./input_files/occurrence/sample2"
