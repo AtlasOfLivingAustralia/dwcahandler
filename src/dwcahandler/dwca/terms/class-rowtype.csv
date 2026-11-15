@@ -5,6 +5,7 @@ dwc,BIBLIOGRAPHIC_RESOURCE,http://purl.org/dc/terms/BibliographicResource
 dwc,CHRONOMETRIC_AGE,http://rs.tdwg.org/chrono/terms/ChronometricAge
 dwc,EVENT,http://rs.tdwg.org/dwc/terms/Event
 dwc,GEOLOGICAL_CONTEXT,http://rs.tdwg.org/dwc/terms/GeologicalContext
+dwc,GEOLOGICAL_MATERIAL,http://rs.tdwg.org/dwc/terms/GeologicalMaterial
 dwc,IDENTIFICATION,http://rs.tdwg.org/dwc/terms/Identification
 dwc,LOCATION,http://purl.org/dc/terms/Location
 dwc,MATERIAL_ENTITY,http://rs.tdwg.org/dwc/terms/MaterialEntity
@@ -19,7 +20,9 @@ dwc,ORGANISM_INTERACTION,http://rs.tdwg.org/dwc/terms/OrganismInteraction
 dwc,PROTOCOL,http://rs.tdwg.org/dwc/terms/Protocol
 dwc,PROVENANCE,http://rs.tdwg.org/dwc/terms/Provenance
 dwc,RESOURCE_RELATIONSHIP,http://rs.tdwg.org/dwc/terms/ResourceRelationship
+dwc,SURVEY,http://rs.tdwg.org/eco/terms/Survey
 dwc,TAXON,http://rs.tdwg.org/dwc/terms/Taxon
+dwc,USAGE_POLICY,http://rs.tdwg.org/dwc/terms/UsagePolicy
 ac,AC_MULTIMEDIA,http://rs.tdwg.org/ac/terms/Multimedia
 eco,ECO_EVENT,http://rs.tdwg.org/eco/terms/Event
 eol,DOCUMENT,http://eol.org/schema/media/Document

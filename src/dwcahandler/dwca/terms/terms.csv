@@ -82,9 +82,12 @@ dwc,associatedTaxa,http://rs.tdwg.org/dwc/terms/associatedTaxa
 dwc,basisOfRecord,http://rs.tdwg.org/dwc/terms/basisOfRecord
 dwc,bed,http://rs.tdwg.org/dwc/terms/bed
 dwc,behavior,http://rs.tdwg.org/dwc/terms/behavior
+dwc,bibliographicIdentifier,http://rs.tdwg.org/dwc/terms/bibliographicIdentifier
+dwc,bibliographicIdentifierType,http://rs.tdwg.org/dwc/terms/bibliographicIdentifierType
 dwc,caste,http://rs.tdwg.org/dwc/terms/caste
 dwc,catalogNumber,http://rs.tdwg.org/dwc/terms/catalogNumber
 dwc,causeOfDeath,http://rs.tdwg.org/dwc/terms/causeOfDeath
+dwc,chemistryRemarks,http://rs.tdwg.org/dwc/terms/chemistryRemarks
 dwc,chronometricAgeConversionProtocol,http://rs.tdwg.org/chrono/terms/chronometricAgeConversionProtocol
 dwc,chronometricAgeDeterminedBy,http://rs.tdwg.org/chrono/terms/chronometricAgeDeterminedBy
 dwc,chronometricAgeDeterminedDate,http://rs.tdwg.org/chrono/terms/chronometricAgeDeterminedDate
@@ -95,6 +98,8 @@ dwc,chronometricAgeRemarks,http://rs.tdwg.org/chrono/terms/chronometricAgeRemark
 dwc,chronometricAgeUncertaintyInYears,http://rs.tdwg.org/chrono/terms/chronometricAgeUncertaintyInYears
 dwc,chronometricAgeUncertaintyMethod,http://rs.tdwg.org/chrono/terms/chronometricAgeUncertaintyMethod
 dwc,class,http://rs.tdwg.org/dwc/terms/class
+dwc,classificationCodes,http://rs.tdwg.org/dwc/terms/classificationCodes
+dwc,classificationSystem,http://rs.tdwg.org/dwc/terms/classificationSystem
 dwc,collectionCode,http://rs.tdwg.org/dwc/terms/collectionCode
 dwc,collectionID,http://rs.tdwg.org/dwc/terms/collectionID
 dwc,continent,http://rs.tdwg.org/dwc/terms/continent
@@ -104,6 +109,7 @@ dwc,country,http://rs.tdwg.org/dwc/terms/country
 dwc,countryCode,http://rs.tdwg.org/dwc/terms/countryCode
 dwc,county,http://rs.tdwg.org/dwc/terms/county
 dwc,cultivarEpithet,http://rs.tdwg.org/dwc/terms/cultivarEpithet
+dwc,damageRemarks,http://rs.tdwg.org/dwc/terms/damageRemarks
 dwc,dataGeneralizations,http://rs.tdwg.org/dwc/terms/dataGeneralizations
 dwc,datasetID,http://rs.tdwg.org/dwc/terms/datasetID
 dwc,datasetName,http://rs.tdwg.org/dwc/terms/datasetName
@@ -147,6 +153,12 @@ dwc,genus,http://rs.tdwg.org/dwc/terms/genus
 dwc,geodeticDatum,http://rs.tdwg.org/dwc/terms/geodeticDatum
 dwc,GeologicalContext,http://rs.tdwg.org/dwc/terms/GeologicalContext
 dwc,geologicalContextID,http://rs.tdwg.org/dwc/terms/geologicalContextID
+dwc,GeologicalMaterial,http://rs.tdwg.org/dwc/terms/GeologicalMaterial
+dwc,geologicalMaterialNames,http://rs.tdwg.org/dwc/terms/geologicalMaterialNames
+dwc,geologicalMaterialNameTypes,http://rs.tdwg.org/dwc/terms/geologicalMaterialNameTypes
+dwc,geologicEvent,http://rs.tdwg.org/dwc/terms/geologicEvent
+dwc,geologicMaterialNameID,http://rs.tdwg.org/dwc/terms/geologicMaterialNameID
+dwc,geologicProvince,http://rs.tdwg.org/dwc/terms/geologicProvince
 dwc,georeferencedBy,http://rs.tdwg.org/dwc/terms/georeferencedBy
 dwc,georeferencedDate,http://rs.tdwg.org/dwc/terms/georeferencedDate
 dwc,georeferenceProtocol,http://rs.tdwg.org/dwc/terms/georeferenceProtocol
@@ -155,6 +167,9 @@ dwc,georeferenceSources,http://rs.tdwg.org/dwc/terms/georeferenceSources
 dwc,georeferenceVerificationStatus,http://rs.tdwg.org/dwc/terms/georeferenceVerificationStatus
 dwc,group,http://rs.tdwg.org/dwc/terms/group
 dwc,habitat,http://rs.tdwg.org/dwc/terms/habitat
+dwc,handlingRequirements,http://rs.tdwg.org/dwc/terms/handlingRequirements
+dwc,hazardRemarks,http://rs.tdwg.org/dwc/terms/hazardRemarks
+dwc,hazardType,http://rs.tdwg.org/dwc/terms/hazardType
 dwc,higherClassification,http://rs.tdwg.org/dwc/terms/higherClassification
 dwc,higherGeography,http://rs.tdwg.org/dwc/terms/higherGeography
 dwc,higherGeographyID,http://rs.tdwg.org/dwc/terms/higherGeographyID
@@ -178,6 +193,7 @@ dwc,institutionID,http://rs.tdwg.org/dwc/terms/institutionID
 dwc,isAcceptedIdentification,http://rs.tdwg.org/dwc/terms/isAcceptedIdentification
 dwc,island,http://rs.tdwg.org/dwc/terms/island
 dwc,islandGroup,http://rs.tdwg.org/dwc/terms/islandGroup
+dwc,isPartOfMaterialEntityID,http://rs.tdwg.org/dwc/terms/isPartOfMaterialEntityID
 dwc,kingdom,http://rs.tdwg.org/dwc/terms/kingdom
 dwc,latestAgeOrHighestStage,http://rs.tdwg.org/dwc/terms/latestAgeOrHighestStage
 dwc,latestChronometricAge,http://rs.tdwg.org/chrono/terms/latestChronometricAge
@@ -187,6 +203,7 @@ dwc,latestEpochOrHighestSeries,http://rs.tdwg.org/dwc/terms/latestEpochOrHighest
 dwc,latestEraOrHighestErathem,http://rs.tdwg.org/dwc/terms/latestEraOrHighestErathem
 dwc,latestPeriodOrHighestSystem,http://rs.tdwg.org/dwc/terms/latestPeriodOrHighestSystem
 dwc,lifeStage,http://rs.tdwg.org/dwc/terms/lifeStage
+dwc,lithodemicUnit,http://rs.tdwg.org/dwc/terms/lithodemicUnit
 dwc,lithostratigraphicTerms,http://rs.tdwg.org/dwc/terms/lithostratigraphicTerms
 dwc,LivingSpecimen,http://rs.tdwg.org/dwc/terms/LivingSpecimen
 dwc,locality,http://rs.tdwg.org/dwc/terms/locality
@@ -199,16 +216,22 @@ dwc,MaterialCitation,http://rs.tdwg.org/dwc/terms/MaterialCitation
 dwc,materialDated,http://rs.tdwg.org/chrono/terms/materialDated
 dwc,materialDatedID,http://rs.tdwg.org/chrono/terms/materialDatedID
 dwc,materialDatedRelationship,http://rs.tdwg.org/chrono/terms/materialDatedRelationship
+dwc,materialDescription,http://rs.tdwg.org/dwc/terms/materialDescription
 dwc,MaterialEntity,http://rs.tdwg.org/dwc/terms/MaterialEntity
 dwc,materialEntityCategory,http://rs.tdwg.org/dwc/terms/materialEntityCategory
 dwc,materialEntityID,http://rs.tdwg.org/dwc/terms/materialEntityID
 dwc,materialEntityRemarks,http://rs.tdwg.org/dwc/terms/materialEntityRemarks
 dwc,materialEntityType,http://rs.tdwg.org/dwc/terms/materialEntityType
+dwc,materialProportion,http://rs.tdwg.org/dwc/terms/materialProportion
+dwc,materialRole,http://rs.tdwg.org/dwc/terms/materialRole
 dwc,MaterialSample,http://rs.tdwg.org/dwc/terms/MaterialSample
 dwc,materialSampleID,http://rs.tdwg.org/dwc/terms/materialSampleID
 dwc,maximumDepthInMeters,http://rs.tdwg.org/dwc/terms/maximumDepthInMeters
 dwc,maximumDistanceAboveSurfaceInMeters,http://rs.tdwg.org/dwc/terms/maximumDistanceAboveSurfaceInMeters
 dwc,maximumElevationInMeters,http://rs.tdwg.org/dwc/terms/maximumElevationInMeters
+dwc,measuredChemistry,http://rs.tdwg.org/dwc/terms/measuredChemistry
+dwc,measuredChemistrySource,http://rs.tdwg.org/dwc/terms/measuredChemistrySource
+dwc,measuredMassInGrams,http://rs.tdwg.org/dwc/terms/measuredMassInGrams
 dwc,measurementAccuracy,http://rs.tdwg.org/dwc/terms/measurementAccuracy
 dwc,measurementDeterminedBy,http://rs.tdwg.org/dwc/terms/measurementDeterminedBy
 dwc,measurementDeterminedDate,http://rs.tdwg.org/dwc/terms/measurementDeterminedDate
@@ -220,6 +243,8 @@ dwc,measurementType,http://rs.tdwg.org/dwc/terms/measurementType
 dwc,measurementUnit,http://rs.tdwg.org/dwc/terms/measurementUnit
 dwc,measurementValue,http://rs.tdwg.org/dwc/terms/measurementValue
 dwc,member,http://rs.tdwg.org/dwc/terms/member
+dwc,mineralogicalAnalysisProtocol,http://rs.tdwg.org/dwc/terms/mineralogicalAnalysisProtocol
+dwc,mineralSequence,http://rs.tdwg.org/dwc/terms/mineralSequence
 dwc,minimumDepthInMeters,http://rs.tdwg.org/dwc/terms/minimumDepthInMeters
 dwc,minimumDistanceAboveSurfaceInMeters,http://rs.tdwg.org/dwc/terms/minimumDistanceAboveSurfaceInMeters
 dwc,minimumElevationInMeters,http://rs.tdwg.org/dwc/terms/minimumElevationInMeters
@@ -229,6 +254,7 @@ dwc,month,http://rs.tdwg.org/dwc/terms/month
 dwc,municipality,http://rs.tdwg.org/dwc/terms/municipality
 dwc,nameAccordingTo,http://rs.tdwg.org/dwc/terms/nameAccordingTo
 dwc,nameAccordingToID,http://rs.tdwg.org/dwc/terms/nameAccordingToID
+dwc,namedPlace,http://rs.tdwg.org/dwc/terms/namedPlace
 dwc,namePublishedIn,http://rs.tdwg.org/dwc/terms/namePublishedIn
 dwc,namePublishedInID,http://rs.tdwg.org/dwc/terms/namePublishedInID
 dwc,namePublishedInYear,http://rs.tdwg.org/dwc/terms/namePublishedInYear
@@ -251,6 +277,7 @@ dwc,organismInteractionDescription,http://rs.tdwg.org/dwc/terms/organismInteract
 dwc,organismInteractionID,http://rs.tdwg.org/dwc/terms/organismInteractionID
 dwc,organismInteractionType,http://rs.tdwg.org/dwc/terms/organismInteractionType
 dwc,organismName,http://rs.tdwg.org/dwc/terms/organismName
+dwc,organismPart,http://rs.tdwg.org/dwc/terms/organismPart
 dwc,organismQuantity,http://rs.tdwg.org/dwc/terms/organismQuantity
 dwc,organismQuantityType,http://rs.tdwg.org/dwc/terms/organismQuantityType
 dwc,organismRemarks,http://rs.tdwg.org/dwc/terms/organismRemarks
@@ -280,6 +307,8 @@ dwc,protocolReferences,http://rs.tdwg.org/dwc/terms/protocolReferences
 dwc,protocolRemarks,http://rs.tdwg.org/dwc/terms/protocolRemarks
 dwc,protocolType,http://rs.tdwg.org/dwc/terms/protocolType
 dwc,Provenance,http://rs.tdwg.org/dwc/terms/Provenance
+dwc,provenanceID,http://rs.tdwg.org/dwc/terms/provenanceID
+dwc,rawTotalReadCount,http://rs.tdwg.org/dwc/terms/rawTotalReadCount
 dwc,readCount,http://rs.tdwg.org/dwc/terms/readCount
 dwc,recordedBy,http://rs.tdwg.org/dwc/terms/recordedBy
 dwc,recordedByID,http://rs.tdwg.org/dwc/terms/recordedByID
@@ -297,6 +326,7 @@ dwc,reproductiveCondition,http://rs.tdwg.org/dwc/terms/reproductiveCondition
 dwc,resourceID,http://rs.tdwg.org/dwc/terms/resourceID
 dwc,ResourceRelationship,http://rs.tdwg.org/dwc/terms/ResourceRelationship
 dwc,resourceRelationshipID,http://rs.tdwg.org/dwc/terms/resourceRelationshipID
+dwc,sampledFeatureType,http://rs.tdwg.org/dwc/terms/sampledFeatureType
 dwc,sampledSubstrateCategory,http://rs.tdwg.org/dwc/terms/sampledSubstrateCategory
 dwc,sampledSubstrateLayer,http://rs.tdwg.org/dwc/terms/sampledSubstrateLayer
 dwc,sampleSizeUnit,http://rs.tdwg.org/dwc/terms/sampleSizeUnit
@@ -314,6 +344,7 @@ dwc,startDayOfYear,http://rs.tdwg.org/dwc/terms/startDayOfYear
 dwc,stateProvince,http://rs.tdwg.org/dwc/terms/stateProvince
 dwc,subfamily,http://rs.tdwg.org/dwc/terms/subfamily
 dwc,subgenus,http://rs.tdwg.org/dwc/terms/subgenus
+dwc,substrate,http://rs.tdwg.org/dwc/terms/substrate
 dwc,subtribe,http://rs.tdwg.org/dwc/terms/subtribe
 dwc,superfamily,http://rs.tdwg.org/dwc/terms/superfamily
 dwc,Taxon,http://rs.tdwg.org/dwc/terms/Taxon
@@ -323,12 +354,16 @@ dwc,taxonID,http://rs.tdwg.org/dwc/terms/taxonID
 dwc,taxonomicStatus,http://rs.tdwg.org/dwc/terms/taxonomicStatus
 dwc,taxonRank,http://rs.tdwg.org/dwc/terms/taxonRank
 dwc,taxonRemarks,http://rs.tdwg.org/dwc/terms/taxonRemarks
+dwc,taxonSortOrder,http://rs.tdwg.org/dwc/terms/taxonSortOrder
+dwc,tectonicUnits,http://rs.tdwg.org/dwc/terms/tectonicUnits
+dwc,treatments,http://rs.tdwg.org/dwc/terms/treatments
 dwc,tribe,http://rs.tdwg.org/dwc/terms/tribe
 dwc,typeOfType,http://rs.tdwg.org/dwc/terms/typeOfType
 dwc,typeStatus,http://rs.tdwg.org/dwc/terms/typeStatus
 dwc,typifiedName,http://rs.tdwg.org/dwc/terms/typifiedName
 dwc,uncalibratedChronometricAge,http://rs.tdwg.org/chrono/terms/uncalibratedChronometricAge
 dwc,UsagePolicy,http://rs.tdwg.org/dwc/terms/UsagePolicy
+dwc,usagePolicyID,http://rs.tdwg.org/dwc/terms/usagePolicyID
 dwc,verbatimAssertionType,http://rs.tdwg.org/dwc/terms/verbatimAssertionType
 dwc,verbatimChronometricAge,http://rs.tdwg.org/chrono/terms/verbatimChronometricAge
 dwc,verbatimCoordinates,http://rs.tdwg.org/dwc/terms/verbatimCoordinates
@@ -341,6 +376,7 @@ dwc,verbatimLabel,http://rs.tdwg.org/dwc/terms/verbatimLabel
 dwc,verbatimLatitude,http://rs.tdwg.org/dwc/terms/verbatimLatitude
 dwc,verbatimLocality,http://rs.tdwg.org/dwc/terms/verbatimLocality
 dwc,verbatimLongitude,http://rs.tdwg.org/dwc/terms/verbatimLongitude
+dwc,verbatimMass,http://rs.tdwg.org/dwc/terms/verbatimMass
 dwc,verbatimMeasurementType,http://rs.tdwg.org/dwc/terms/verbatimMeasurementType
 dwc,verbatimSRS,http://rs.tdwg.org/dwc/terms/verbatimSRS
 dwc,verbatimTaxonRank,http://rs.tdwg.org/dwc/terms/verbatimTaxonRank
